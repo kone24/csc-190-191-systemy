@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt'; // needed for JSON tokens
 
 @Injectable()
 export class AuthService {
-    async login(identifier: string, password: string) {
-        // Temporary fake logic
-        // Accept either username 'admin' or email 'admin@example.com' for local testing
-        const validIdentifiers = ['admin@example.com'];
-        if (validIdentifiers.includes(identifier) && password === '1234') {
-            return { message: 'Login successful', user: { identifier } };
-        } else {
-            return { message: 'Invalid credentials' };
-        }
+  constructor(private readonly jwtService: JwtService) {} 
+
+  async login(username: string, password: string) {
+    // Temporary fake logic
+    if (username === 'admin' && password === '1234') {
+      const payload = { username };
+      const token = this.jwtService.sign(payload, { expiresIn: '20m' }); 
+      return { message: 'Login successful', user: { username }, token };
+    } else {
+      return { message: 'Invalid credentials' };
     }
+  }
 }
