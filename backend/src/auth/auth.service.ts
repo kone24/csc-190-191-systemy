@@ -8,9 +8,12 @@ export class AuthService {
   async login(username: string, password: string) {
     // Temporary fake logic
     if (username === 'admin' && password === '1234') {
+      const user = { username };
       const payload = { username };
+
       const token = this.jwtService.sign(payload, { expiresIn: '20m' }); 
-      return { message: 'Login successful', user: { username }, token };
+      
+      return { message: 'Login successful', user, token };
     } else {
       return { message: 'Invalid credentials' };
     }
