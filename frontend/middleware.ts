@@ -35,10 +35,6 @@ export function middleware(req: NextRequest) {
 
   if (!isProtected) return NextResponse.next();
 
-  // // Simple auth check: look for a cookie named `token` (stub).
-  // const token = req.cookies.get("token")?.value;
-  // if (token) return NextResponse.next();
-
   // No cookie and route is protected -> redirect to /login and preserve original path in `from` query.
   if(!token) {
     const loginUrl = req.nextUrl.clone();
