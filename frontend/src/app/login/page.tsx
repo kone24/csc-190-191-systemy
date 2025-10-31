@@ -1,32 +1,39 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage(null);
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    const email = String(formData.get("email") || "").trim();
-    const password = String(formData.get("password") || "").trim();
-
     setLoading(true);
+
     try {
       // backend expects `username` and `password` (hardcoded check uses username === 'admin')
-      const res = await fetch("http://localhost:4000/auth/login", {
+      const res = await fetch("http://localhost:3000/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
-      setMessage(data?.message || JSON.stringify(data));
-    } catch (err: any) {
-      setMessage(err?.message || String(err));
+
+      if (res.ok && data?.ok) {
+        setMessage(`Welcome, ${username}! Redirecting...`);
+        router.replace("/dashboard");
+      } else {
+        setMessage(data?.message || "Invalid credentials");
+      }
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -48,13 +55,15 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="flex flex-col">
-              <span className="text-sm font-medium">Email</span>
+              <span className="text-sm font-medium">Username</span>
               <input
-                name="email"
-                type="email"
+                name="username"
+                type="text"
                 required
                 className="mt-1 p-2 border rounded"
-                aria-label="Email"
+                aria-label="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </label>
 
@@ -68,6 +77,8 @@ export default function LoginPage() {
                 required
                 className="mt-1 p-2 border rounded"
                 aria-label="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </label>
 

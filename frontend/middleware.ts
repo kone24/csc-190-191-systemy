@@ -7,6 +7,13 @@ const PROTECTED_PREFIXES = ["/dashboard", "/profile", "/settings", "/protected"]
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+ // Redirect root "/" to "/login"
+  if (pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
   // Allow Next internals, static files, and API routes to pass through.
   if (
     pathname.startsWith("/_next") ||
@@ -50,6 +57,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   // Apply middleware only to protected route patterns for efficiency.
   matcher: [
+    "/",
     "/login",
     "/dashboard/:path*",
     "/profile/:path*",
