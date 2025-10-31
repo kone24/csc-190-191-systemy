@@ -10,7 +10,7 @@ import { JwtAuthGuard } from './jwt.guard';
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'YOUR_SECRET_KEY', // REPLACE AFTER TESTING!
+      secret: process.env.JWT_SECRET || 'dev-secret', // REPLACE AFTER TESTING!
       signOptions: { expiresIn: '20m' }, // sign in only valid for 20 minutes of inactivity
     }),
   ],
