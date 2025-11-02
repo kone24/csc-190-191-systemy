@@ -16,7 +16,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // backend expects `username` and `password` (hardcoded check uses username === 'admin')
       const res = await fetch("http://localhost:3000/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,14 +40,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-[#0b0b0b]">
-<<<<<<< HEAD
-      {/*TEMP SEARCH BAR LOCATION FOR TESTING*/}
+      {/* TEMP SEARCH BAR LOCATION FOR TESTING */}
       <a href="/search" className="text-blue-600 underline text-sm mt-2">
         Go to Search Bar Testing
       </a>
 
-=======
->>>>>>> main
       {/* Page container / header */}
       <header className="w-full max-w-3xl mx-auto mb-6 flex items-center justify-center">
         <div className="text-center">
@@ -107,7 +103,9 @@ export default function LoginPage() {
 
         {/* Footer links under the card */}
         <footer className="mt-6 text-center text-sm text-gray-600 dark:text-gray-300">
-          <a className="text-sm text-blue-600 hover:underline" href="#">Forgot password?</a>
+          <a className="text-sm text-blue-600 hover:underline" href="#">
+            Forgot password?
+          </a>
         </footer>
       </main>
     </div>
