@@ -5,7 +5,6 @@ import { Country, State } from 'country-state-city';
 export const COUNTRIES: ICountry[] = Country.getAllCountries().map(country => ({
   code: country.isoCode,
   name: country.name,
-  flag: country.flag || getFlagEmoji(country.isoCode),
 }));
 
 // Create a record of states by country
@@ -20,12 +19,3 @@ export const STATES_BY_COUNTRY: Record<string, IState[]> =
     }
     return acc;
   }, {} as Record<string, IState[]>);
-
-// Helper function to generate flag emoji from country code
-function getFlagEmoji(countryCode: string): string {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
-};

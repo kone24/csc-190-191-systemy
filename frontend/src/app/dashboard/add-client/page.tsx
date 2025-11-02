@@ -29,7 +29,7 @@ export default function AddClientPage() {
       city: "",
       state: { code: "", name: "" },
       postalCode: "",
-      country: { code: "", name: "", flag: "" },
+      country: { code: "", name: ""},
       additionalInfo: "",
     },
     socialLinks: {

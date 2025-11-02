@@ -1,7 +1,6 @@
 export interface Country {
   code: string;  // ISO 3166-1 alpha-2
   name: string;
-  flag: string;
 }
 
 export interface State {
@@ -21,7 +20,6 @@ export interface StandardizedAddress {
   country: {
     code: string;
     name: string;
-    flag: string;
   };
   additionalInfo?: string;
 }
