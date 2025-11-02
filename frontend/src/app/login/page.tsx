@@ -41,11 +41,14 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-[#0b0b0b]">
+<<<<<<< HEAD
       {/*TEMP SEARCH BAR LOCATION FOR TESTING*/}
       <a href="/search" className="text-blue-600 underline text-sm mt-2">
         Go to Search Bar Testing
       </a>
 
+=======
+>>>>>>> main
       {/* Page container / header */}
       <header className="w-full max-w-3xl mx-auto mb-6 flex items-center justify-center">
         <div className="text-center">
