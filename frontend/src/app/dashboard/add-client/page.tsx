@@ -344,7 +344,7 @@ export default function AddClientPage() {
                   placeholder="City"
                 />
               </div>
-              <div>
+                            <div>
                 <label className="block text-sm font-medium">Country <span className="text-red-500">*</span></label>
                 <Select
                   options={COUNTRIES}
@@ -363,10 +363,45 @@ export default function AddClientPage() {
                       }));
                     }
                   }}
-                  getOptionLabel={(option) => `${option.flag} ${option.name}`}
+                  getOptionLabel={(option) => option.name}
                   getOptionValue={(option) => option.code}
                   className="mt-1"
                   placeholder="Select a country"
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      backgroundColor: '#1f2937',
+                      borderColor: state.isFocused ? '#3b82f6' : '#4b5563',
+                      boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
+                      '&:hover': {
+                        borderColor: '#3b82f6'
+                      }
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: '#1f2937',
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#374151' : '#1f2937',
+                      color: '#f9fafb',
+                      '&:active': {
+                        backgroundColor: '#3b82f6'
+                      }
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: '#f9fafb'
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: '#9ca3af'
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: '#f9fafb'
+                    })
+                  }}
                 />
               </div>
               <div>
@@ -390,6 +425,42 @@ export default function AddClientPage() {
                   className="mt-1"
                   placeholder="Select a state/province"
                   isDisabled={!selectedCountry}
+                  styles={{
+                    control: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isDisabled ? '#111827' : '#1f2937',
+                      borderColor: state.isFocused ? '#3b82f6' : '#4b5563',
+                      boxShadow: state.isFocused ? '0 0 0 1px #3b82f6' : 'none',
+                      opacity: state.isDisabled ? 0.5 : 1,
+                      '&:hover': {
+                        borderColor: state.isDisabled ? '#4b5563' : '#3b82f6'
+                      }
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      backgroundColor: '#1f2937',
+                    }),
+                    option: (base, state) => ({
+                      ...base,
+                      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#374151' : '#1f2937',
+                      color: '#f9fafb',
+                      '&:active': {
+                        backgroundColor: '#3b82f6'
+                      }
+                    }),
+                    singleValue: (base) => ({
+                      ...base,
+                      color: '#f9fafb'
+                    }),
+                    placeholder: (base) => ({
+                      ...base,
+                      color: '#9ca3af'
+                    }),
+                    input: (base) => ({
+                      ...base,
+                      color: '#f9fafb'
+                    })
+                  }}
                 />
               </div>
               <div>
