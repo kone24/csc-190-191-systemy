@@ -1,8 +1,17 @@
 "use client";
 
 import Link from 'next/link';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 export default function DashboardPage() {
+  // Add chart data
+  const chartData = [
+    { name: 'Task Type A', value: 10, color: '#537FF1' },
+    { name: 'Task Type B', value: 20, color: '#FF928A' },
+    { name: 'Task Type C', value: 40, color: '#8979FF' },
+    { name: 'Task Type D', value: 12, color: '#FFAE4C' },
+    { name: 'Task Type E', value: 18, color: '#3CC3DF' }
+  ];
   return (
     <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
       {/* Sidebar */}
@@ -11,7 +20,7 @@ export default function DashboardPage() {
         minHeight: '100vh',
         background: 'linear-gradient(180deg, rgba(255, 172, 128, 0) 1%, rgba(255, 172, 128, 0.40) 100%), white',
         boxShadow: '0px 4px 5px black',
-        flexShrink: 0
+        flexShrink: 0,
       }}>
         {/* Sidebar Navigation Content */}
         <div style={{ padding: 10, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 10, display: 'flex', height: '100%' }}>
@@ -69,7 +78,7 @@ export default function DashboardPage() {
           {/* Bottom Navigation */}
           <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
             <div style={{ width: 20, height: 23.60, position: 'relative', borderRadius: 10 }}>
-              <img style={{ width: 20, height: 23.60, left: 0, top: 0, position: 'absolute', borderRadius: 5 }} src="/images/icons/account.png" alt="Account" />
+              <img style={{ width: 20, height: 23.60, left: 0, top: 0, position: 'absolute', borderRadius: 5 }} src="/images/images/account.png" alt="Account" />
             </div>
             <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Account</div>
           </div>
@@ -89,7 +98,7 @@ export default function DashboardPage() {
         display: 'flex',
         flexDirection: 'column',
         background: 'rgba(217, 217, 217, 0.15)',
-        padding: '20px 20px 20px 5px',
+        padding: '20px 20px 20px 30px',
         gap: '20px'
       }}>
 
@@ -222,8 +231,8 @@ export default function DashboardPage() {
           {/* Manage Projects Panel */}
           <div style={{
             width: '100%',
-            maxWidth: '600px',
-            minHeight: 328,
+            maxWidth: '95%',
+            minHeight: 380,
             background: 'linear-gradient(180deg, rgba(255, 89.25, 0, 0.01) 0%, rgba(255, 89.25, 0, 0.05) 100%), white',
             boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
             borderRadius: 20,
@@ -259,7 +268,7 @@ export default function DashboardPage() {
                 padding: '10px 0',
                 borderBottom: '1px solid #f0f0f0'
               }}>
-                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/avatars/client1.png" alt="Client" />
+                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Client" />
                 <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Client #22</div>
                 <div style={{ color: 'black', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>blah blah #1</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Dec 31</div>
@@ -286,7 +295,7 @@ export default function DashboardPage() {
                 padding: '10px 0',
                 borderBottom: '1px solid #f0f0f0'
               }}>
-                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/avatars/client2.png" alt="Client" />
+                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-2.png" alt="Client" />
                 <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Client #21</div>
                 <div style={{ color: 'black', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>blah blah #2</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Nov 3</div>
@@ -313,7 +322,7 @@ export default function DashboardPage() {
                 padding: '10px 0',
                 borderBottom: '1px solid #f0f0f0'
               }}>
-                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/avatars/client3.png" alt="Client" />
+                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Client" />
                 <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Client #3</div>
                 <div style={{ color: 'black', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>blah blah #3</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Dec 31</div>
@@ -337,14 +346,14 @@ export default function DashboardPage() {
         {/* Middle Section - Tasks and Statistics */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'auto 1fr',
+          gridTemplateColumns: '600px 1fr',
           gap: '30px',
           marginBottom: '30px',
           alignItems: 'start'
         }}>
           {/* Upcoming Tasks Section */}
           <div style={{
-            width: '600px',
+            width: '95%',
             minHeight: 275,
             background: 'white',
             boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
@@ -358,40 +367,40 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img style={{ width: 28, height: 28 }} src="/images/icons/task.png" alt="Task" />
+                  <img style={{ width: 28, height: 28 }} src="/images/images/progress.png" alt="Task" />
                   <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Send Campaign debrief</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img style={{ width: 30, height: 30 }} src="/images/icons/calendar.png" alt="Calendar" />
+                  <img style={{ width: 30, height: 30 }} src="/images/images/calendar.png" alt="Calendar" />
                   <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Oct 3</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img style={{ width: 28, height: 28 }} src="/images/icons/task.png" alt="Task" />
+                  <img style={{ width: 28, height: 28 }} src="/images/images/progress.png" alt="Task" />
                   <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Review Design Draft</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img style={{ width: 30, height: 30 }} src="/images/icons/calendar.png" alt="Calendar" />
+                  <img style={{ width: 30, height: 30 }} src="/images/images/calendar.png" alt="Calendar" />
                   <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Oct 3</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img style={{ width: 28, height: 28 }} src="/images/icons/task.png" alt="Task" />
+                  <img style={{ width: 28, height: 28 }} src="/images/images/progress.png" alt="Task" />
                   <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Approve Invoice #</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <img style={{ width: 30, height: 30 }} src="/images/icons/calendar.png" alt="Calendar" />
+                  <img style={{ width: 30, height: 30 }} src="/images/images/calendar.png" alt="Calendar" />
                   <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Oct 3</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Statistics Section */}
+          {/* Statistics Section - REPLACE THIS ENTIRE SECTION */}
           <div style={{
             minHeight: 275,
             background: 'white',
@@ -401,51 +410,56 @@ export default function DashboardPage() {
             position: 'relative'
           }}>
             {/* Chart Title */}
-            <div style={{ fontSize: 20, fontFamily: 'Inter', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: '20px', textAlign: 'center' }}>Statistics</div>
-
-            {/* Chart Legend */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: '#537FF1', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>10% blah</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: '#FF928A', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>20% blah blah</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: '#8979FF', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>40% blahf dfdf</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: '#FFAE4C', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>12% blah dfdfdf</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: '#3CC3DF', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>18% blah dfdssa</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: 'white', border: '1px solid #ddd', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Medium</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: '#FFE4E1', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>High</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 20, height: 20, background: '#F0F8FF', borderRadius: '50%' }} />
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Low</div>
-                </div>
-              </div>
+            <div style={{ fontSize: 20, fontFamily: 'Inter', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: '20px', textAlign: 'center' }}>
+              Statistics
             </div>
-          </div>
-        </div>
 
+            {/* Interactive Pie Chart */}
+            <ResponsiveContainer width="90%" height={200}>
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={70}
+                  innerRadius={30}
+                  dataKey="value"
+                  startAngle={90}
+                  endAngle={450}
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Legend
+                  verticalAlign="middle"
+                  align="right"
+                  layout="vertical"
+                  iconType="circle"
+                  iconSize={10}
+                  wrapperStyle={{ right: 200, top: 50 }}
+                  formatter={(value) => {
+                    // Find the corresponding data item to get the percentage
+                    const dataItem = chartData.find(item => item.name === value);
+                    const percentage = dataItem ? dataItem.value : 0;
+
+                    return (
+                      <span style={{
+                        fontSize: 10,
+                        fontFamily: 'Inter',
+                        fontWeight: '600',
+                        color: 'black'
+                      }}>
+                        {percentage}% {value}
+                      </span>
+                    );
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          {/* End Main Content Area */}
+        </div>
         {/* Weekly Performance Section - Full Width Below */}
         <div style={{
           width: '100%',
@@ -453,7 +467,7 @@ export default function DashboardPage() {
         }}>
           {/* Weekly Chart */}
           <div style={{
-            width: '100%',
+            width: '98%',
             minHeight: 248,
             background: 'white',
             boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
@@ -480,8 +494,6 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
-        {/* End Main Content Area */}
       </div>
     </div>
   );
