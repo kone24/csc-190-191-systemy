@@ -17,13 +17,19 @@ export function PhoneNumberInput({ value, onChange, error }: PhoneNumberInputPro
         defaultCountry="US"
         value={value}
         onChange={(value: E164Number | undefined) => onChange(value?.toString())}
-        className={`mt-1 block w-full rounded-md border p-2 shadow-sm ${
-          error
-            ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-            : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-        }`}
+        style={{
+          marginTop: '4px',
+          display: 'block',
+          width: '100%',
+          borderRadius: '6px',
+          border: error ? '1px solid #fca5a5' : '1px solid #d1d5db',
+          padding: '8px',
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+          outline: 'none',
+          fontFamily: 'Inter'
+        }}
       />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Inter' }}>{error}</p>}
     </div>
   );
 }

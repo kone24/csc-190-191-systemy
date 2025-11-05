@@ -4,20 +4,33 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-8 dark:bg-gray-900">
-      <main className="mx-auto max-w-7xl px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '32px 0' }}>
+      <main style={{ margin: '0 auto', maxWidth: '1280px', padding: '0 16px' }}>
+        <div style={{ marginBottom: '32px' }}>
+          <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#000', fontFamily: 'Inter' }}>Dashboard</h1>
         </div>
 
-        <div className="rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
+        <div style={{ borderRadius: '8px', background: '#ffffff', padding: '24px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
           {/* Actions */}
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h2>
-            <div className="flex gap-4">
+          <div style={{ marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', color: '#000', fontFamily: 'Inter' }}>Quick Actions</h2>
+            <div style={{ display: 'flex', gap: '16px' }}>
               <Link
                 href="/dashboard/add-client"
-                className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '6px',
+                  background: '#2563eb',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  color: '#ffffff',
+                  textDecoration: 'none',
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  fontFamily: 'Inter'
+                }}
               >
                 + Add Client
               </Link>
@@ -26,8 +39,8 @@ export default function DashboardPage() {
 
           {/* Future: Client List will go here */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Recent Clients</h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px', fontFamily: 'Inter' }}>Recent Clients</h2>
+            <p style={{ color: '#6b7280', fontFamily: 'Inter' }}>
               Client list will be displayed here
             </p>
           </div>
