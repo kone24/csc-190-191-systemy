@@ -42,12 +42,14 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, borderRadius: 20, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
-            <div style={{ width: 20, height: 20, position: 'relative' }}>
-              <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/analytics.png" alt="Analytics" />
+          <Link href="/dashboard/analytics" style={{ textDecoration: 'none', alignSelf: 'stretch' }}>
+            <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, borderRadius: 20, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
+              <div style={{ width: 20, height: 20, position: 'relative' }}>
+                <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/analytics.png" alt="Analytics" />
+              </div>
+              <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Analytics</div>
             </div>
-            <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Analytics</div>
-          </div>
+          </Link>
 
           <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
             <div style={{ width: 20, height: 20, position: 'relative' }}>
@@ -93,22 +95,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content Area */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'rgba(217, 217, 217, 0.15)',
-        padding: '20px 20px 20px 30px',
-        gap: '20px'
-      }}>
-
-        {/* Top Bar with Search and Menu */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px'
-        }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
+        {/* Top Bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          {/* Search Container */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -116,26 +106,97 @@ export default function DashboardPage() {
             borderRadius: 25,
             padding: '10px 20px',
             boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-            minWidth: '300px'
+            minWidth: '300px',
+            border: '1px solid #e0e0e0'
           }}>
-            <img style={{ width: 20, height: 20, marginRight: '10px' }} src="/images/icons/search.png" alt="Search" />
+            {/* Search Icon */}
+            <div style={{
+              width: 20,
+              height: 20,
+              marginRight: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#666'
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+                <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Search Input */}
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search analytics..."
               style={{
                 border: 'none',
                 outline: 'none',
                 background: 'transparent',
-                fontSize: 16,
-                flex: 1
+                fontSize: 14,
+                flex: 1,
+                color: '#333',
+                fontFamily: 'Inter',
+                fontWeight: '400',
+                letterSpacing: 0
               }}
             />
+
+            {/* Clear/X Icon */}
+            <div style={{
+              width: 20,
+              height: 20,
+              marginLeft: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#666',
+              borderRadius: '50%',
+              transition: 'all 0.2s ease'
+            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f0f0f0';
+                e.currentTarget.style.color = '#333';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#666';
+              }}
+              onClick={() => {
+                const input = document.querySelector('input[placeholder="Search analytics..."]') as HTMLInputElement;
+                if (input) input.value = '';
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
           </div>
 
-          <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 5, display: 'flex' }}>
-            <div style={{ width: 15, height: 15, background: '#D9D9D9', borderRadius: '50%' }} />
-            <div style={{ width: 15, height: 15, background: '#D9D9D9', borderRadius: '50%' }} />
-            <div style={{ width: 15, height: 15, background: '#D9D9D9', borderRadius: '50%' }} />
+          {/* Menu Dots */}
+          <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
+            <div style={{
+              width: 8,
+              height: 8,
+              background: '#666',
+              borderRadius: '50%',
+              cursor: 'pointer'
+            }} />
+            <div style={{
+              width: 8,
+              height: 8,
+              background: '#666',
+              borderRadius: '50%',
+              cursor: 'pointer'
+            }} />
+            <div style={{
+              width: 8,
+              height: 8,
+              background: '#666',
+              borderRadius: '50%',
+              cursor: 'pointer'
+            }} />
           </div>
         </div>
 
