@@ -10,16 +10,16 @@ import { Client } from './auth/clients/entities/client.entity';
   imports: [
     AuthModule,
     ClientsModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '8400',
-      database: 'headword_db',
-      entities: [Client],
-      synchronize: false, // adjust if needed
-    }),
+    // TypeOrmModule.forRoot({
+    //   type: 'postgres',
+    //   host: 'localhost',
+    //   port: 5432,
+    //   username: 'postgres',
+    //   password: '8400',
+    //   database: 'headword_db',
+    //   entities: [Client],
+    //   synchronize: false, // adjust if needed
+    // }),
   ],
   controllers: [AppController],
   providers: [AppService],
