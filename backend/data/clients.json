@@ -1,70 +1,80 @@
 [
   {
     "id": 1,
-    "name": "John Doe",
+    "firstName": "John",
+    "lastName": "Doe",
     "email": "johndoe@gmail.com",
     "notes": "Met at conference. Prefers email.",
     "tags": ["vip", "overdue"]
   },
   {
     "id": 2,
-    "name": "Jane Smith",
+    "firstName": "Jane",
+    "lastName": "Smith",
     "email": "janes@yahoo.com",
     "notes": "Important client - high volume",
     "tags": ["vip"]
   },
   {
     "id": 3,
-    "name": "Alice Jones",
+    "firstName": "Alice",
+    "lastName": "Jones",
     "email": "alicejones@hotmail.com",
     "notes": "No special notes",
     "tags": []
   },
   {
     "id": 4,
-    "name": "George Washington",
+    "firstName": "George",
+    "lastName": "Washington",
     "email": "gwashington@gmail.com",
     "notes": "First president client",
     "tags": ["vip"]
   },
   {
     "id": 5,
-    "name": "Abraham Lincoln",
+    "firstName": "Abraham",
+    "lastName": "Lincoln",
     "email": "alincoln@history.com",
     "notes": "Honest client",
     "tags": ["overdue"]
   },
   {
     "id": 6,
-    "name": "Thomas Jefferson",
+    "firstName": "Thomas",
+    "lastName": "Jefferson",
     "email": "tjefferson@monticello.com",
     "notes": "Loves email",
     "tags": []
   },
   {
     "id": 7,
-    "name": "Theodore Roosevelt",
+    "firstName": "Theodore",
+    "lastName": "Roosevelt",
     "email": "troosevelt@us.gov",
     "notes": "Active outdoors",
     "tags": ["vip"]
   },
   {
     "id": 8,
-    "name": "John Adams",
+    "firstName": "John",
+    "lastName": "Adams",
     "email": "jadams@history.com",
     "notes": "Notes about law",
     "tags": []
   },
   {
     "id": 9,
-    "name": "James Madison",
+    "firstName": "James",
+    "lastName": "Madison",
     "email": "jmadison@history.com",
     "notes": "Constitutional expert",
     "tags": ["vip", "overdue"]
   },
   {
     "id": 10,
-    "name": "Benjamin Franklin",
+    "firstName": "Benjamin",
+    "lastName": "Franklin",
     "email": "bfranklin@philly.com",
     "notes": "Inventor and diplomat",
     "tags": []
