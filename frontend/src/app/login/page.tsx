@@ -172,7 +172,7 @@ export default function LoginPage() {
           {/* reCAPTCHA */}
           <div style={{
             alignSelf: 'center',
-            marginTop: 150,
+            marginTop: 280,
             marginBottom: 10,
             display: 'flex',
             justifyContent: 'center',
@@ -229,6 +229,26 @@ export default function LoginPage() {
           </div>
         </button>
 
+        {/* Registration Link - ADD THIS */}
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <span style={{ color: '#666', fontSize: 14 }}>Don't have an account? </span>
+          <a href="/register" style={{ color: '#FF5900', textDecoration: 'none', fontSize: 14, fontWeight: '600' }}>
+            Create Account
+          </a>
+        </div>
+
+        {/* 🔥 ADD FORGOT PASSWORD LINK */}
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <a href="/forgot-password" style={{
+            color: '#FF5900',
+            textDecoration: 'none',
+            fontSize: 14,
+            fontWeight: '500'
+          }}>
+            Forgot your password?
+          </a>
+        </div>
+
         {/* Message Display - enhanced with reset hint */}
         <div style={{
           minHeight: 40,
@@ -236,7 +256,7 @@ export default function LoginPage() {
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          marginTop: 5,
+          marginTop: 40,
           marginBottom: 5
         }}>
           {message && (
