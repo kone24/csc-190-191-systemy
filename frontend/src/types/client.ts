@@ -24,6 +24,7 @@ export interface Client {
   socialLinks?: SocialMediaLinks; // Optional, JSONB in database
   address: Address;     // Required, JSONB in database
   notes?: string;       // Optional
+  tags?: string[];      // Optional
   createdAt?: string;   // set by database
   updatedAt?: string;   // set by database
 }
