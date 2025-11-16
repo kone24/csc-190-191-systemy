@@ -1,21 +1,34 @@
-import { Controller, Post, Headers, Body, HttpCode } from '@nestjs/common';
+import { Controller, Post, Headers, Body, HttpCode, Req, Logger } from '@nestjs/common';
+import type { IncomingHttpHeaders } from 'http';
+import type { Request } from 'express';
 
 @Controller('webhook')
 export class WebhookController {
-  // Simple webhook endpoint to receive POST requests
+  private readonly logger = new Logger(WebhookController.name);
+
   @Post()
-  @HttpCode(200)
+  @HttpCode(200) // or 204 if prefer no body
   handleWebhook(
-    @Headers() headers: Record<string, string >,
-    @Body() body: unknown
-  ){
-    // Log headers and body for debugging
-    console.log('[Webhook] headers:',{
-        'conbtent-type': headers['content-type'],
-        'user-agent': headers['user-agent'],
-        'x-github-event': headers['x-github-event'],
+    @Headers() headers: IncomingHttpHeaders,
+    @Body() body: unknown,
+    @Req() req: Request & { rawBody?: Buffer }
+  ) {
+    // Typed header reads
+    const contentType = headers['content-type'];
+    const userAgent = headers['user-agent'];
+    const githubEvent = headers['x-github-event'];
+    const deliveryId = headers['x-github-delivery'];
+
+    // Minimal logging (avoid full body in prod)
+    this.logger.log({
+      msg: '[Webhook] received',
+      contentType,
+      userAgent,
+      githubEvent,
+      deliveryId,
+      hasRawBody: Boolean(req.rawBody),
     });
-    console.log('[Webhook] body:', body);
+
 
     /* Insert processing logic here for future use (e.g., PayPal payment, Auth Provider)*/
 
