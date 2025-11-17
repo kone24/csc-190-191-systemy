@@ -24,7 +24,7 @@ export default function SearchPage() {
           <tbody>
             {results.map((client: any) => (
               <tr key={client.id}>
-                <td className="border p-2">{client.name}</td>
+                <td className="border p-2">{client.firstName} {client.lastName}</td>
                 <td className="border p-2">{client.email}</td>
                 <td className="border p-2">{client.notes}</td>
                 <td className="border p-2">{client.tags.join(", ")}</td>

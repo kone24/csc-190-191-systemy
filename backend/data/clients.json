@@ -1,22 +1,27 @@
 [
   {
-    "id": 1,
+    "id": "1",
     "firstName": "John",
     "lastName": "Doe",
     "email": "johndoe@gmail.com",
     "notes": "Met at conference. Prefers email.",
-    "tags": ["vip", "overdue"]
+    "tags": [
+      "vip",
+      "overdue"
+    ]
   },
   {
-    "id": 2,
+    "id": "2",
     "firstName": "Jane",
     "lastName": "Smith",
     "email": "janes@yahoo.com",
     "notes": "Important client - high volume",
-    "tags": ["vip"]
+    "tags": [
+      "vip"
+    ]
   },
   {
-    "id": 3,
+    "id": "3",
     "firstName": "Alice",
     "lastName": "Jones",
     "email": "alicejones@hotmail.com",
@@ -24,23 +29,27 @@
     "tags": []
   },
   {
-    "id": 4,
+    "id": "4",
     "firstName": "George",
     "lastName": "Washington",
     "email": "gwashington@gmail.com",
     "notes": "First president client",
-    "tags": ["vip"]
+    "tags": [
+      "vip"
+    ]
   },
   {
-    "id": 5,
+    "id": "5",
     "firstName": "Abraham",
     "lastName": "Lincoln",
     "email": "alincoln@history.com",
     "notes": "Honest client",
-    "tags": ["overdue"]
+    "tags": [
+      "overdue"
+    ]
   },
   {
-    "id": 6,
+    "id": "6",
     "firstName": "Thomas",
     "lastName": "Jefferson",
     "email": "tjefferson@monticello.com",
@@ -48,15 +57,17 @@
     "tags": []
   },
   {
-    "id": 7,
+    "id": "7",
     "firstName": "Theodore",
     "lastName": "Roosevelt",
     "email": "troosevelt@us.gov",
     "notes": "Active outdoors",
-    "tags": ["vip"]
+    "tags": [
+      "vip"
+    ]
   },
   {
-    "id": 8,
+    "id": "8",
     "firstName": "John",
     "lastName": "Adams",
     "email": "jadams@history.com",
@@ -64,19 +75,44 @@
     "tags": []
   },
   {
-    "id": 9,
+    "id": "9",
     "firstName": "James",
     "lastName": "Madison",
     "email": "jmadison@history.com",
     "notes": "Constitutional expert",
-    "tags": ["vip", "overdue"]
+    "tags": [
+      "vip",
+      "overdue"
+    ]
   },
   {
-    "id": 10,
+    "id": "10",
     "firstName": "Benjamin",
     "lastName": "Franklin",
     "email": "bfranklin@philly.com",
     "notes": "Inventor and diplomat",
     "tags": []
+  },
+  {
+    "id": "f0c3e907-bfe4-405f-b044-c40770605986",
+    "firstName": "John",
+    "lastName": "Smith",
+    "email": "john.smith@example.com",
+    "phone": "555-1111",
+    "company": "Test Inc",
+    "address": {
+      "street": "123 Main St",
+      "city": "Denver",
+      "state": "CO",
+      "postalCode": "80014",
+      "country": "USA"
+    },
+    "notes": "Created with curl",
+    "tags": [
+      "priority",
+      "lead"
+    ],
+    "createdAt": "2025-11-17T03:54:49.011Z",
+    "updatedAt": "2025-11-17T03:54:49.011Z"
   }
 ]
