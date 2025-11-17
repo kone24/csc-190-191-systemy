@@ -7,13 +7,28 @@ interface CreateClientRequest {
   email: string;
   phone: string;
   company: string;
+  address: {
+    street: string;
+    city: string;
+    state: { code: string; name: string };
+    postalCode: string;
+    country: { code: string; name: string };
+    additionalInfo?: string;
+  };
+  socialLinks?: {
+    linkedin?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    other?: { [key: string]: string };
+  };
   notes?: string;
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json() as CreateClientRequest;
-    const { firstName, lastName, email, phone, company, notes } = body;
+    const { firstName, lastName, email, phone, company, address, socialLinks, notes } = body;
 
     // Server-side validation (will move to backend)
 
@@ -61,6 +76,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate address fields if provided
+    if (address?.street && !address.street.trim()) {
+      return NextResponse.json(
+        { ok: false, message: "Street address is required" },
+        { status: 400 }
+      );
+    }
+
+    if (address?.city && !address.city.trim()) {
+      return NextResponse.json(
+        { ok: false, message: "City is required" },
+        { status: 400 }
+      );
+    }
+
     const client: Client = {
       id: crypto.randomUUID(),
       firstName,
@@ -68,19 +98,19 @@ export async function POST(request: Request) {
       email,
       phone: phone || '',  // Required field, shouldn't be null
       company: company || '', // Required field, shouldn't be null
-      address: {
+      address: address || {
         street: "",
         city: "",
         state: { code: "", name: "" },
         postalCode: "",
-        country: { code: "", name: "", flag: "" },
+        country: { code: "", name: "" },
         additionalInfo: ""
       },
       // Optional fields
       title: undefined,
       industry: undefined,
       website: undefined,
-      socialLinks: undefined,
+      socialLinks: socialLinks,
       notes: notes || undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
