@@ -12,16 +12,16 @@ import { WebhookModule } from './webhook/webhook.module';
     AuthModule,
     ClientsModule,
     WebhookModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '8400',
-      database: 'headword_db',
-      entities: [Client],
-      synchronize: false, // adjust if needed
-    }),
+    // TypeOrmModule.forRoot({
+    //   type: 'postgres',
+    //   host: 'localhost',
+    //   port: 5432,
+    //   username: 'postgres',
+    //   password: '8400',
+    //   database: 'headword_db',
+    //   entities: [Client],
+    //   synchronize: false, // adjust if needed
+    // }),
   ],
   controllers: [AppController],
   providers: [AppService],
