@@ -20,14 +20,16 @@ export class WebhookController {
     const deliveryId = headers['x-github-delivery'];
 
     // Minimal logging (avoid full body in prod)
-    this.logger.log({
-      msg: '[Webhook] received',
-      contentType,
-      userAgent,
-      githubEvent,
-      deliveryId,
-      hasRawBody: Boolean(req.rawBody),
-    });
+    this.logger.log(
+      JSON.stringify({
+        msg: '[Webhook] received',
+        contentType,
+        userAgent,
+        githubEvent,
+        deliveryId,
+        hasRawBody: Boolean(req.rawBody),
+      })
+    );
 
 
     /* Insert processing logic here for future use (e.g., PayPal payment, Auth Provider)*/
