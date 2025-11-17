@@ -1,18 +1,42 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LoginPage() {
   const router = useRouter();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
+  const handleRecaptchaChange = (token: string | null) => {
+    setRecaptchaToken(token);
+    // clear any previous error messages
+    if (token) {
+      setMessage(null);
+    }
+  };
+
+  const resetRecaptcha = () => {
+    setRecaptchaToken(null);
+    if (recaptchaRef.current) {
+      recaptchaRef.current.reset();
+    }
+  };
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setMessage(null);
+
+    if (!recaptchaToken) {
+      setMessage("Please complete the reCAPTCHA verification.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -22,7 +46,8 @@ export default function LoginPage() {
         credentials: "include",
         body: JSON.stringify({
           username: username.trim(),
-          password: password.trim()
+          password: password.trim(),
+          recaptchaToken: recaptchaToken // add reCAPTCHA token. 
         }),
       });
 
@@ -33,9 +58,11 @@ export default function LoginPage() {
         router.replace("/dashboard");
       } else {
         setMessage(data?.message || "Invalid credentials");
+        resetRecaptcha(); // reset reCAPTCHA token on failure
       }
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : String(err));
+      resetRecaptcha(); // reset reCAPTCHA token on error
     } finally {
       setLoading(false);
     }
@@ -49,7 +76,29 @@ export default function LoginPage() {
         Go to Search Bar Testing
       </a>
 
-      <div style={{ width: 500, minHeight: 600, maxHeight: '90vh', paddingLeft: 25, paddingRight: 25, paddingTop: 18, paddingBottom: 18, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', background: 'linear-gradient(180deg, rgba(255, 89.25, 0, 0) 0%, rgba(255, 89.25, 0, 0.20) 100%), white', boxShadow: '0px 4px 4px rgba(26, 26, 26, 0.30)', borderRadius: 20, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', gap: 18, display: 'flex', overflow: 'auto' }}>
+      {/* EXPANDED CONTAINER */}
+      <div style={{
+        width: 500,
+        minHeight: 750, // Increased height
+        maxHeight: '95vh',
+        paddingLeft: 25,
+        paddingRight: 25,
+        paddingTop: 20,
+        paddingBottom: 30, // More bottom padding
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        position: 'absolute',
+        background: 'linear-gradient(180deg, rgba(255, 89.25, 0, 0) 0%, rgba(255, 89.25, 0, 0.20) 100%), white',
+        boxShadow: '0px 4px 4px rgba(26, 26, 26, 0.30)',
+        borderRadius: 20,
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        gap: 20, // Increased gap
+        display: 'flex',
+        overflow: 'auto'
+      }}>
 
         {/* Logo */}
         <div style={{ width: 100, height: 100, position: 'relative' }}>
@@ -119,6 +168,24 @@ export default function LoginPage() {
               }}
             />
           </div>
+
+          {/* reCAPTCHA */}
+          <div style={{
+            alignSelf: 'center',
+            marginTop: 280,
+            marginBottom: 10,
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%'
+          }}>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+              onChange={handleRecaptchaChange}
+              size="normal"
+              theme="light"
+            />
+          </div>
         </form>
 
         {/* Login Button */}
@@ -138,7 +205,7 @@ export default function LoginPage() {
             } as any;
             handleSubmit(formEvent);
           }}
-          disabled={loading}
+          disabled={loading || !recaptchaToken} // disable if loading or reCAPTCHA not completed
           style={{
             width: 450,
             height: 75,
@@ -146,7 +213,7 @@ export default function LoginPage() {
             paddingRight: 209,
             paddingTop: 19,
             paddingBottom: 19,
-            background: loading ? 'rgba(255, 158, 77, 0.15)' : 'rgba(255, 158, 77, 0.30)',
+            background: loading || !recaptchaToken ? 'rgba(255, 158, 77, 0.15)' : 'rgba(255, 158, 77, 0.30)',
             boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.40)',
             borderRadius: 20,
             justifyContent: 'center',
@@ -154,7 +221,7 @@ export default function LoginPage() {
             gap: 10,
             display: 'flex',
             border: 'none',
-            cursor: loading ? 'not-allowed' : 'pointer'
+            cursor: loading || !recaptchaToken ? 'not-allowed' : 'pointer'
           }}
         >
           <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>
@@ -162,14 +229,34 @@ export default function LoginPage() {
           </div>
         </button>
 
-        {/* Message Display - Fixed Height Area */}
+        {/* Registration Link - ADD THIS */}
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
+          <span style={{ color: '#666', fontSize: 14 }}>Don't have an account? </span>
+          <a href="/register" style={{ color: '#FF5900', textDecoration: 'none', fontSize: 14, fontWeight: '600' }}>
+            Create Account
+          </a>
+        </div>
+
+        {/* 🔥 ADD FORGOT PASSWORD LINK */}
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <a href="/forgot-password" style={{
+            color: '#FF5900',
+            textDecoration: 'none',
+            fontSize: 14,
+            fontWeight: '500'
+          }}>
+            Forgot your password?
+          </a>
+        </div>
+
+        {/* Message Display - enhanced with reset hint */}
         <div style={{
           minHeight: 40,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
-          marginTop: 5,
+          marginTop: 40,
           marginBottom: 5
         }}>
           {message && (
@@ -183,15 +270,43 @@ export default function LoginPage() {
               maxWidth: '90%'
             }}>
               {message}
+              {message !== "Please complete the reCAPTCHA verification." && (
+                <div style={{ marginTop: 5, fontSize: 12, color: 'rgba(0, 0, 0, 0.60)' }}>
+                  Please try again.
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Alternative Sign In Text */}
-        <div style={{ textAlign: 'center', color: 'rgba(255, 158, 77, 0.50)', fontSize: 15, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>or sign in with</div>
-
+        <div style={{
+          textAlign: 'center',
+          paddingTop: 100,
+          color: 'rgba(255, 158, 77, 0.50)',
+          fontSize: 15,
+          fontFamily: 'Inter',
+          fontWeight: '600',
+          wordWrap: 'break-word',
+          marginTop: 10
+        }}>
+          or sign in with
+        </div>
         {/* Google Sign In Button */}
-        <div style={{ width: 75, height: 75, padding: 15, background: 'rgba(255, 102, 0, 0.20)', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.50)', borderRadius: 20, justifyContent: 'center', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
+        <div style={{
+          width: 75,
+          height: 75,
+          padding: 15,
+          background: 'rgba(255, 102, 0, 0.20)',
+          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.50)',
+          borderRadius: 20,
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: 10,
+          display: 'flex',
+          cursor: 'pointer',
+          marginBottom: 10
+        }}>
           <img style={{ width: 45, height: 45 }} src="/images/logos/google.png" />
         </div>
       </div>
