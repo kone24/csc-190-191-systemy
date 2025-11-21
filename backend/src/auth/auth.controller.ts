@@ -2,6 +2,7 @@ import { Controller, Post, Body, Res, Get, UseGuards, Req } from '@nestjs/common
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
+import { LOGIN_ERRORS } from './loginErrors';
 
 @Controller('auth')
 export class AuthController {
@@ -12,24 +13,26 @@ export class AuthController {
     @Body() body: { username: string; password: string },
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log('login body:', body); // TEMP: see what we receive
     const { username, password } = body ?? {};
-
     const result = await this.authService.login(username, password);
 
-    if (result?.token) {
+    if (result.ok) {
       res.cookie('access_token', result.token, {
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 20, // 20 minutes
+        maxAge: 1000 * 60 * 20,
         path: '/',
       });
       return { ok: true, user: result.user };
     }
 
-    // return { ok: false, message: result.message };
-    return { ok: false, message: result?.message ?? 'Invalid credentials' };
+    // Safely map failure code to LOGIN_ERRORS
+    const message = 'code' in result && result.code
+      ? LOGIN_ERRORS[result.code] ?? LOGIN_ERRORS.DEFAULT
+      : LOGIN_ERRORS.DEFAULT;
+
+    return { ok: false, message };
   }
 
   @Post('logout')
