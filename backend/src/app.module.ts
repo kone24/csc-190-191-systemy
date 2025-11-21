@@ -5,11 +5,13 @@ import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Client } from './auth/clients/entities/client.entity';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
     AuthModule,
     ClientsModule,
+    WebhookModule,
     // TypeOrmModule.forRoot({
     //   type: 'postgres',
     //   host: 'localhost',
