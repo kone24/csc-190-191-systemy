@@ -48,8 +48,22 @@ Headword CRM is a full-stack client management platform with its purpose being t
 their clients. Providing a beautiful and functional dashboard page, including necessary and greatly beneficial analytics to efficiently 
 track clients, interactions, deliverables, tagging, tasks, and internal workflow. 
 
-# Testing
-<<testing docs link>>
+# Testing Documents
+<p>
+  <a href="docs/Sys-112-114-115-116 Testing.pdf">📄 Sys 112/114/115/116 Testing</a>
+</p>
+
+<p>
+  <a href="docs/Testing For Sprint03- Search Bar and Filtered Search Results.pdf">
+    📄 Sprint 03 – Search Bar & Filter Tests
+  </a>
+</p>
+
+<p>
+  <a href="docs/Testing for Sprint2_Authentication and Verification_CSC190.pdf">
+    📄 Sprint 2 – Auth & Verification Tests
+  </a>
+</p>
 
 # Include software logo, creative images, ERD, prototype images, or actual images
 
