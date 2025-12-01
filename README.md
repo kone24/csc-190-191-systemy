@@ -86,7 +86,14 @@ This sprint introduces AI-driven recommendations based on client behavior, tags,
 ### Create AI-Based Scoring
 Our team will implement an algorithmic scoring system to evaluate client engagement, risk, and opportunity levels. This feature will use multiple weighted attributes to generate a clear, data-backed client score. The scoring model will help HeadWord! prioritize their workflows and guide strategic planning.
 
-# Include creative images, ERD, prototype images, or actual images
+# Login and Dashboard Pictures!
+<p align="center">
+  <img src="docs/AnalyticsDashPic.jpg" alt="Analytics Dashboard" width="500">
+</p>
+
+<p align="center">
+  <img src="docs/LoginPic.jpg" alt="Login Page" width="300">
+</p>
 
 
 
