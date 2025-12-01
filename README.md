@@ -1,3 +1,8 @@
+# Team BuzzWare
+<p align="center">
+  <img src="docs/BuzzWareLogo.png" alt="BuzzWare Logo" width="300">
+</p>
+
 # csc-190-191-systemy
 CSUS Senior Project by: Thomas Kone, Xavier Umeda, Tuan Ton, Rachel Shindelus, Shing Trinh, Isaac Sclafani, Serjeoh Nakata, Tyrice Woods 
 
