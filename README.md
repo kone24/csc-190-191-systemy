@@ -65,8 +65,6 @@ track clients, interactions, deliverables, tagging, tasks, and internal workflow
   </a>
 </p>
 
-# Include software logo, creative images, ERD, prototype images, or actual images
-
 # Jira Timeline + Milestones
 ## Sprint 5 (Feb 8th -> Feb 21st, 2025)
 ### Creating the Client Profiles. 
@@ -87,3 +85,8 @@ This sprint introduces AI-driven recommendations based on client behavior, tags,
 ## Sprint 9 (Apr 6th -> Apr 18th, 2026)
 ### Create AI-Based Scoring
 Our team will implement an algorithmic scoring system to evaluate client engagement, risk, and opportunity levels. This feature will use multiple weighted attributes to generate a clear, data-backed client score. The scoring model will help HeadWord! prioritize their workflows and guide strategic planning.
+
+# Include creative images, ERD, prototype images, or actual images
+
+
+
