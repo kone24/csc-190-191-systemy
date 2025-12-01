@@ -14,4 +14,25 @@ The pull request must then be reviewed and approved by another developer if ever
 This process ensures that developers can get more comfortable with all parts of the codebase as well and as operating as a basic QA proccess.
 
 # Instructions to Run Project Locally
-TODO
+## FRONTEND
+Navigate to the local backend directory. Example: "\Users\student\Downloads\CSC 190\frontend"
+- cd frontend
+
+(Only need once to download necessary packages for React)
+- npm install
+
+Start running the frontend at http://localhost:3001/
+- npm run dev
+
+Can view the frontend in browser by navigating to:
+- http://localhost:3001/
+
+## BACKEND
+Navigate to the local backend directory. Example: "\Users\student\Downloads\CSC 190\backend"
+- cd backend
+
+(Only need once to download necessary packages for React)
+- npm install
+
+Begin running the backend at http://localhost:3000/	
+- npm run start OR npm run start:dev
