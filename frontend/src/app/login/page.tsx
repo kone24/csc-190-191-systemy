@@ -61,7 +61,7 @@ export default function LoginPage() {
         resetRecaptcha(); // reset reCAPTCHA token on failure
       }
     } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : String(err));
+      setMessage('Invalid credentials. Please try again.');
       resetRecaptcha(); // reset reCAPTCHA token on error
     } finally {
       setLoading(false);
