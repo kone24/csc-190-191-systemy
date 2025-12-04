@@ -71,11 +71,6 @@ export default function LoginPage() {
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative', background: 'linear-gradient(180deg, rgba(255, 89.25, 0, 0) 0%, rgba(255, 89.25, 0, 0.30) 100%), white', overflow: 'hidden' }}>
 
-      {/* TEMP SEARCH BAR LOCATION FOR TESTING */}
-      <a href="/search" style={{ position: 'absolute', top: '20px', right: '20px', color: '#3b82f6', textDecoration: 'underline', fontSize: '14px', zIndex: 10 }}>
-        Go to Search Bar Testing
-      </a>
-
       {/* EXPANDED CONTAINER */}
       <div style={{
         width: 500,
