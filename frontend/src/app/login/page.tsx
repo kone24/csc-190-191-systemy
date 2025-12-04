@@ -40,7 +40,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
+      const res = await fetch("http://localhost:3001/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -61,7 +61,7 @@ export default function LoginPage() {
         resetRecaptcha(); // reset reCAPTCHA token on failure
       }
     } catch (err: unknown) {
-      setMessage('Invalid credentials. Please try again.');
+      setMessage("Invalid credentials");
       resetRecaptcha(); // reset reCAPTCHA token on error
     } finally {
       setLoading(false);

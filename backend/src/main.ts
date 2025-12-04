@@ -7,12 +7,12 @@ async function bootstrap() {
 
   app.use(cookieParser());
   app.enableCors({
-    origin: 'http://localhost:3001', // frontend URL
+    origin: 'http://localhost:3000', // frontend URL
     credentials: true,
   });
 
-  await app.listen(3000);
-  console.log('Backend running on http://localhost:3000');
+  await app.listen(3001);
+  console.log('Backend running on http://localhost:3001');
 }
 
 bootstrap();
