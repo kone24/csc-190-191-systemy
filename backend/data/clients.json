@@ -94,25 +94,22 @@
     "tags": []
   },
   {
-    "id": "f0c3e907-bfe4-405f-b044-c40770605986",
+    "id": "9a92ed9b-d712-434c-ad15-7c06eece2715",
     "firstName": "John",
     "lastName": "Smith",
     "email": "john.smith@example.com",
     "phone": "555-1111",
-    "company": "Test Inc",
+    "company": "Acme Inc",
     "address": {
       "street": "123 Main St",
-      "city": "Denver",
-      "state": "CO",
-      "postalCode": "80014",
-      "country": "USA"
+      "city": "Denver"
     },
-    "notes": "Created with curl",
+    "notes": "Added with curl",
     "tags": [
-      "priority",
-      "lead"
+      "lead",
+      "priority"
     ],
-    "createdAt": "2025-11-17T03:54:49.011Z",
-    "updatedAt": "2025-11-17T03:54:49.011Z"
+    "createdAt": "2026-02-05T04:10:52.770Z",
+    "updatedAt": "2026-02-05T04:10:52.770Z"
   }
 ]
