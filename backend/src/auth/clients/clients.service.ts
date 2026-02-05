@@ -1,5 +1,4 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-// import clientsData from '../../../data/clients.json';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
@@ -44,8 +43,6 @@ async function writeAll(items: ClientRecord[]) {
 
 @Injectable()
 export class ClientsService {
-  // private clients = clientsData;
-
   async searchClients(query: string) {
     const items = await readAll();
 
@@ -101,7 +98,6 @@ export class ClientsService {
       ? body.tags.map((t: any) => String(t).trim()).filter(Boolean)
       : undefined;
 
-    // Light validation; awaiting SYS-130 changes
     if (!firstName || !lastName || !email || !phone || !company || !address) {
       throw new ConflictException('Missing required fields');
     }
