@@ -40,7 +40,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
+      const res = await fetch("http://localhost:3001/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -61,7 +61,7 @@ export default function LoginPage() {
         resetRecaptcha(); // reset reCAPTCHA token on failure
       }
     } catch (err: unknown) {
-      setMessage(err instanceof Error ? err.message : String(err));
+      setMessage("Invalid credentials");
       resetRecaptcha(); // reset reCAPTCHA token on error
     } finally {
       setLoading(false);
@@ -70,11 +70,6 @@ export default function LoginPage() {
 
   return (
     <div style={{ width: '100%', height: '100vh', position: 'relative', background: 'linear-gradient(180deg, rgba(255, 89.25, 0, 0) 0%, rgba(255, 89.25, 0, 0.30) 100%), white', overflow: 'hidden' }}>
-
-      {/* TEMP SEARCH BAR LOCATION FOR TESTING */}
-      <a href="/search" style={{ position: 'absolute', top: '20px', right: '20px', color: '#3b82f6', textDecoration: 'underline', fontSize: '14px', zIndex: 10 }}>
-        Go to Search Bar Testing
-      </a>
 
       {/* EXPANDED CONTAINER */}
       <div style={{
@@ -109,6 +104,39 @@ export default function LoginPage() {
         <div style={{ width: 275, padding: 10, justifyContent: 'center', alignItems: 'center', gap: 10, display: 'flex' }}>
           <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>Sign in with email</div>
         </div>
+
+        {/* Message Display - moved here to avoid overlap */}
+        {message && (
+          <div style={{
+            minHeight: 40,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '90%',
+            marginBottom: 10
+          }}>
+            <div style={{
+              textAlign: 'center',
+              color: message.includes('Welcome') ? '#10b981' : '#ef4444',
+              fontSize: 15,
+              fontFamily: 'Inter',
+              fontWeight: '600',
+              wordWrap: 'break-word',
+              maxWidth: '100%',
+              padding: '10px 15px',
+              backgroundColor: message.includes('Welcome') ? '#f0fdf4' : '#fef2f2',
+              borderRadius: 10,
+              border: message.includes('Welcome') ? '1px solid #10b981' : '1px solid #ef4444'
+            }}>
+              {message}
+              {message !== "Please complete the reCAPTCHA verification." && (
+                <div style={{ marginTop: 5, fontSize: 12, color: 'rgba(0, 0, 0, 0.60)' }}>
+                  Please try again.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Form Container */}
         <form onSubmit={handleSubmit} style={{ width: 401, height: 145, position: 'relative', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.10)', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 25, display: 'flex' }}>
@@ -168,25 +196,25 @@ export default function LoginPage() {
               }}
             />
           </div>
-
-          {/* reCAPTCHA */}
-          <div style={{
-            alignSelf: 'center',
-            marginTop: 280,
-            marginBottom: 10,
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%'
-          }}>
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
-              onChange={handleRecaptchaChange}
-              size="normal"
-              theme="light"
-            />
-          </div>
         </form>
+
+        {/* reCAPTCHA */}
+        <div style={{
+          alignSelf: 'center',
+          marginTop: 30,
+          marginBottom: 30,
+          display: 'flex',
+          justifyContent: 'center',
+          width: '100%'
+        }}>
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
+            onChange={handleRecaptchaChange}
+            size="normal"
+            theme="light"
+          />
+        </div>
 
         {/* Login Button */}
         <button
@@ -249,46 +277,16 @@ export default function LoginPage() {
           </a>
         </div>
 
-        {/* Message Display - enhanced with reset hint */}
-        <div style={{
-          minHeight: 40,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: '100%',
-          marginTop: 40,
-          marginBottom: 5
-        }}>
-          {message && (
-            <div style={{
-              textAlign: 'center',
-              color: message.includes('Welcome') ? '#10b981' : '#ef4444',
-              fontSize: 15,
-              fontFamily: 'Inter',
-              fontWeight: '600',
-              wordWrap: 'break-word',
-              maxWidth: '90%'
-            }}>
-              {message}
-              {message !== "Please complete the reCAPTCHA verification." && (
-                <div style={{ marginTop: 5, fontSize: 12, color: 'rgba(0, 0, 0, 0.60)' }}>
-                  Please try again.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
         {/* Alternative Sign In Text */}
         <div style={{
           textAlign: 'center',
-          paddingTop: 100,
+          paddingTop: 40,
           color: 'rgba(255, 158, 77, 0.50)',
           fontSize: 15,
           fontFamily: 'Inter',
           fontWeight: '600',
           wordWrap: 'break-word',
-          marginTop: 10
+          marginTop: 20
         }}>
           or sign in with
         </div>
