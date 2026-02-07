@@ -40,6 +40,7 @@ export default function LoginPage() {
     // simulate a successful login
     setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
     router.replace("/dashboard");
+    resetRecaptcha();
     return; 
   }
 
