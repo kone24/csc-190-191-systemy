@@ -1,72 +1,115 @@
 [
   {
-    "id": 1,
-    "name": "John Doe",
+    "id": "1",
+    "firstName": "John",
+    "lastName": "Doe",
     "email": "johndoe@gmail.com",
     "notes": "Met at conference. Prefers email.",
-    "tags": ["vip", "overdue"]
+    "tags": [
+      "vip",
+      "overdue"
+    ]
   },
   {
-    "id": 2,
-    "name": "Jane Smith",
+    "id": "2",
+    "firstName": "Jane",
+    "lastName": "Smith",
     "email": "janes@yahoo.com",
     "notes": "Important client - high volume",
-    "tags": ["vip"]
+    "tags": [
+      "vip"
+    ]
   },
   {
-    "id": 3,
-    "name": "Alice Jones",
+    "id": "3",
+    "firstName": "Alice",
+    "lastName": "Jones",
     "email": "alicejones@hotmail.com",
     "notes": "No special notes",
     "tags": []
   },
   {
-    "id": 4,
-    "name": "George Washington",
+    "id": "4",
+    "firstName": "George",
+    "lastName": "Washington",
     "email": "gwashington@gmail.com",
     "notes": "First president client",
-    "tags": ["vip"]
+    "tags": [
+      "vip"
+    ]
   },
   {
-    "id": 5,
-    "name": "Abraham Lincoln",
+    "id": "5",
+    "firstName": "Abraham",
+    "lastName": "Lincoln",
     "email": "alincoln@history.com",
     "notes": "Honest client",
-    "tags": ["overdue"]
+    "tags": [
+      "overdue"
+    ]
   },
   {
-    "id": 6,
-    "name": "Thomas Jefferson",
+    "id": "6",
+    "firstName": "Thomas",
+    "lastName": "Jefferson",
     "email": "tjefferson@monticello.com",
     "notes": "Loves email",
     "tags": []
   },
   {
-    "id": 7,
-    "name": "Theodore Roosevelt",
+    "id": "7",
+    "firstName": "Theodore",
+    "lastName": "Roosevelt",
     "email": "troosevelt@us.gov",
     "notes": "Active outdoors",
-    "tags": ["vip"]
+    "tags": [
+      "vip"
+    ]
   },
   {
-    "id": 8,
-    "name": "John Adams",
+    "id": "8",
+    "firstName": "John",
+    "lastName": "Adams",
     "email": "jadams@history.com",
     "notes": "Notes about law",
     "tags": []
   },
   {
-    "id": 9,
-    "name": "James Madison",
+    "id": "9",
+    "firstName": "James",
+    "lastName": "Madison",
     "email": "jmadison@history.com",
     "notes": "Constitutional expert",
-    "tags": ["vip", "overdue"]
+    "tags": [
+      "vip",
+      "overdue"
+    ]
   },
   {
-    "id": 10,
-    "name": "Benjamin Franklin",
+    "id": "10",
+    "firstName": "Benjamin",
+    "lastName": "Franklin",
     "email": "bfranklin@philly.com",
     "notes": "Inventor and diplomat",
     "tags": []
+  },
+  {
+    "id": "9a92ed9b-d712-434c-ad15-7c06eece2715",
+    "firstName": "John",
+    "lastName": "Smith",
+    "email": "john.smith@example.com",
+    "phone": "555-1111",
+    "company": "Acme Inc",
+    "address": {
+      "street": "123 Main St",
+      "city": "Denver"
+    },
+    "notes": "Added with curl",
+    "tags": [
+      "lead",
+      "priority"
+    ],
+    "createdAt": "2026-02-05T04:10:52.770Z",
+    "updatedAt": "2026-02-05T04:10:52.770Z"
   }
 ]

@@ -162,7 +162,7 @@ export default function SearchPage() {
                       fontSize: 14,
                       color: 'rgba(26, 26, 26, 0.80)'
                     }}>
-                      {client.name}
+                      {client.firstName} {client.lastName}
                     </td>
                     <td style={{
                       border: '1px solid rgba(217, 217, 217, 0.30)',
