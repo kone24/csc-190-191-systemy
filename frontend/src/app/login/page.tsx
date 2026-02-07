@@ -110,7 +110,7 @@ export default function LoginPage() {
       } else if (res.status >= 500) {
         errorMessage = "Server error. Please try again later.";
       }
-        setMessage(data?.message || "Invalid credentials");
+        setMessage(errorMessage);
         setPassword(""); 
         resetRecaptcha(); // reset reCAPTCHA token on failure
       }
