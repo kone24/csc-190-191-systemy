@@ -345,11 +345,15 @@ export default function RegisterPage() {
                     type="submit"
                     onClick={(e) => {
                         e.preventDefault();
+                        if (!recaptchaToken) {
+                            setMessage("Please complete the reCAPTCHA verification.");
+                            return;
+                        }
                         handleSubmit(e);
                     }}
-                    disabled={loading || !recaptchaToken}
+                    disabled={loading}
                     style={{
-                        width: 450,
+                        width: 401,
                         height: 75,
                         background: loading || !recaptchaToken ? 'rgba(255, 158, 77, 0.15)' : 'rgba(255, 158, 77, 0.30)',
                         boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.40)',

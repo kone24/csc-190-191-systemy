@@ -32,6 +32,49 @@ export default function LoginPage() {
     e.preventDefault();
     setMessage(null);
 
+  const trimmedUsername = username.trim();
+  const trimmedPassword = password.trim();
+  
+  // EXCEPTION SHOULD BE REMOVED LATER
+  if (trimmedUsername === "admin" && trimmedPassword === "1234") {
+    // simulate a successful login
+    setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
+    router.replace("/dashboard");
+    resetRecaptcha();
+    return; 
+  }
+
+  // Empty / whitespace only email
+  if (!trimmedUsername) {
+    setMessage("Please enter your email.");
+    return;
+  }
+
+  // Basic email format check 
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailPattern.test(trimmedUsername)) {
+    setMessage("Please enter a valid email address.");
+    return;
+  }
+
+  // Empty whitespace only password
+  if (!trimmedPassword) {
+    setMessage("Please enter your password.");
+    return;
+  }
+
+  //  Minimum password length which is 8
+  if (trimmedPassword.length < 8) {
+    setMessage("Password must be at least 8 characters.");
+    return;
+  }
+
+  //  Max length
+  if (trimmedUsername.length > 255 || trimmedPassword.length > 255) {
+    setMessage("Email or password is too long.");
+    return;
+  }
+
     if (!recaptchaToken) {
       setMessage("Please complete the reCAPTCHA verification.");
       return;
@@ -53,15 +96,27 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (res.ok && data?.ok) {
-        setMessage(`Welcome, ${username}! Redirecting...`);
+      if (res.ok) {
+        setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
         router.replace("/dashboard");
       } else {
-        setMessage(data?.message || "Invalid credentials");
+        let errorMessage = "Something went wrong. Please try again.";
+      if (data && typeof data.message === "string") {
+        errorMessage = data.message;
+      } else if (res.status === 400 || res.status === 401) {
+        errorMessage = "Email or password is incorrect.";
+      } else if (res.status === 429) {
+        errorMessage = "Too many login attempts. Please wait a bit and try again.";
+      } else if (res.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      }
+        setMessage(errorMessage);
+        setPassword(""); 
         resetRecaptcha(); // reset reCAPTCHA token on failure
       }
-    } catch (err: unknown) {
-      setMessage("Invalid credentials");
+    } catch (err) {
+      console.error(err);
+      setMessage("We couldn't reach the server. Please check your connection and try again.");
       resetRecaptcha(); // reset reCAPTCHA token on error
     } finally {
       setLoading(false);
@@ -221,6 +276,10 @@ export default function LoginPage() {
           type="submit"
           onClick={(e) => {
             e.preventDefault();
+            if (!recaptchaToken) {
+              setMessage("Please complete the reCAPTCHA verification.");
+              return;
+            }
             const formData = new FormData();
             formData.append('username', username);
             formData.append('password', password);
@@ -233,7 +292,7 @@ export default function LoginPage() {
             } as any;
             handleSubmit(formEvent);
           }}
-          disabled={loading || !recaptchaToken} // disable if loading or reCAPTCHA not completed
+          disabled={loading } // disable if loading or reCAPTCHA not completed
           style={{
             width: 450,
             height: 75,
@@ -265,7 +324,7 @@ export default function LoginPage() {
           </a>
         </div>
 
-        {/* 🔥 ADD FORGOT PASSWORD LINK */}
+        {/*  ADD FORGOT PASSWORD LINK */}
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <a href="/forgot-password" style={{
             color: '#FF5900',
