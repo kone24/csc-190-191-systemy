@@ -99,80 +99,62 @@ export default function DashboardPage() {
         {/* Top Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           {/* Search Container */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'white',
-            borderRadius: 25,
-            padding: '10px 20px',
-            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-            minWidth: '300px',
-            border: '1px solid #e0e0e0'
-          }}>
-            {/* Search Icon */}
+          <Link href="/search" style={{ textDecoration: 'none' }}>
             <div style={{
-              width: 20,
-              height: 20,
-              marginRight: '12px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              color: '#666'
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-                <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-
-            {/* Search Input */}
-            <input
-              type="text"
-              placeholder="Search analytics..."
-              style={{
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                fontSize: 14,
-                flex: 1,
-                color: '#333',
-                fontFamily: 'Inter',
-                fontWeight: '400',
-                letterSpacing: 0
-              }}
-            />
-
-            {/* Clear/X Icon */}
-            <div style={{
-              width: 20,
-              height: 20,
-              marginLeft: '12px',
+              background: 'white',
+              borderRadius: 25,
+              padding: '10px 20px',
+              boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+              minWidth: '300px',
+              border: '1px solid #e0e0e0',
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#666',
-              borderRadius: '50%',
               transition: 'all 0.2s ease'
             }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f0f0f0';
-                e.currentTarget.style.color = '#333';
+                e.currentTarget.style.boxShadow = '0px 4px 8px rgba(255, 89, 0, 0.2)';
+                e.currentTarget.style.borderColor = '#FF5900';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#666';
-              }}
-              onClick={() => {
-                const input = document.querySelector('input[placeholder="Search analytics..."]') as HTMLInputElement;
-                if (input) input.value = '';
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+                e.currentTarget.style.boxShadow = '0px 2px 4px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.borderColor = '#e0e0e0';
+              }}>
+              {/* Search Icon */}
+              <div style={{
+                width: 20,
+                height: 20,
+                marginRight: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#666'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+                  <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+
+              {/* Search Input */}
+              <div
+                style={{
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  fontSize: 14,
+                  flex: 1,
+                  color: '#999',
+                  fontFamily: 'Inter',
+                  fontWeight: '400',
+                  letterSpacing: 0
+                }}
+              >
+                Search clients..
+              </div>
+
             </div>
-          </div>
+          </Link>
 
           {/* Menu Dots */}
           <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>

@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt'; // needed for JSON tokens
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {} 
+  constructor(private readonly jwtService: JwtService) { }
 
   async login(username: string, password: string) {
     // Temporary fake logic
@@ -11,8 +11,8 @@ export class AuthService {
       const user = { username };
       const payload = { username };
 
-      const token = this.jwtService.sign(payload, { expiresIn: '20m' }); 
-      
+      const token = this.jwtService.sign(payload, { expiresIn: '20m' });
+
       return { message: 'Login successful', user, token };
     } else {
       return { message: 'Invalid credentials' };
