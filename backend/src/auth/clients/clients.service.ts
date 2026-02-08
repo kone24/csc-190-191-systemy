@@ -79,6 +79,48 @@ export class ClientsService {
     });
   }
 
+  // Create Record from "Contact Us" Forms
+  async createContactClient(body: any) {
+    const firstName = String(body?.firstName ?? '').trim();
+    const lastName = String(body?.lastName ?? '').trim();
+    const email = String(body?.email ?? '').trim().toLowerCase();
+    const message = String(body?.message ?? '').trim();
+    const origin = String(body?.origin ?? '').trim();
+
+    if (!firstName || !email) {
+      throw new ConflictException('Missing required fields for contact client');
+    }
+
+    const all = await readAll();
+
+    if (all.some((c) => (c.email ?? '').toLowerCase() === email)) {
+      throw new ConflictException('A client with this email already exists.');
+    }
+
+    const now = new Date().toISOString();
+    const saved: ClientRecord = {
+      id: randomUUID(),
+      firstName,
+      lastName: lastName || '',
+      email,
+      phone: '',
+      company: '',
+      address: null as any,
+      title: undefined,
+      industry: undefined,
+      website: origin || undefined,
+      socialLinks: undefined,
+      notes: message ? `Contact form message: ${message}` : `Contact form from ${origin || 'external'}`,
+      tags: ['contact-form'],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    all.push(saved);
+    await writeAll(all);
+    return saved;
+  }
+
   async createClient(body: any) {
     // Required fields
     const firstName = String(body?.firstName ?? '').trim();
