@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Query, Post, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { ClientsService } from './clients.service';
+import { ClientProfileDto } from './dto/client-profile.dto';
 
 @Controller('clients')
 export class ClientsController {
@@ -22,17 +23,6 @@ export class ClientsController {
   }
 
   @Get()
-  // async list(
-  //   @Query('query') q?: string,
-  //   @Query('page') page?: string,
-  //   @Query('limit') limit?: string,
-  // ) {
-  //   const p = Math.max(parseInt(page ?? '1', 10) || 1, 1);
-  //   const l = Math.max(parseInt(limit ?? '20', 10) || 20, 1);
-  //   const offset = (p - 1) * l;
-  //   const items = await this.clientsService.searchClients(q);
-  //   return { ok: true, items, page: p, limit: l };
-  // }
   async list(@Query('query') q?: string) {
     const items = await this.clientsService.searchClients(q ?? '');
     return { ok: true, items };
@@ -42,5 +32,10 @@ export class ClientsController {
   async get(@Param('id') id: string) {
     const client = await this.clientsService.getClientById(id);
     return { ok: true, client };
+  }
+
+  @Get(':id/profile')
+  getProfile(@Param('id') id: string) {
+    return this.clientsService.getClientProfile(id);
   }
 }

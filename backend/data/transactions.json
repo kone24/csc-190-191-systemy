@@ -1,0 +1,13 @@
+[
+  {
+    "id": "tx-1",
+    "clientId": "9a92ed9b-d712-434c-ad15-7c06eece2715",
+    "status": "OPEN",
+    "amount": 500,
+    "currency": "USD",
+    "issuedAt": "2026-02-01T00:00:00.000Z",
+    "dueAt": "2026-03-01T00:00:00.000Z",
+    "description": "Monthly retainer",
+    "reference": "INV-1001"
+  }
+]

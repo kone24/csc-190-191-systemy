@@ -3,6 +3,30 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
+type InteractionRecord = {
+  id: string;
+  clientId: string;
+  type: string; // 'CALL' | 'EMAIL' etc.
+  title?: string;
+  body?: string;
+  occurredAt?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+type TransactionRecord = {
+  id: string;
+  clientId: string;
+  status: string;
+  amount: number;
+  currency?: string;
+  issuedAt?: string;
+  dueAt?: string;
+  description?: string;
+  reference?: string;
+};
+
 type ClientRecord = {
   id: string;
   firstName: string;
@@ -21,7 +45,45 @@ type ClientRecord = {
   updatedAt: string;
 };
 
+type ClientProfileDto = {
+  client: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    company: string;
+    address: any;
+    title?: string;
+    industry?: string;
+    website?: string;
+    socialLinks?: any;
+    notes?: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  timeline: {
+    items: InteractionRecord[];
+    summary: { total: number; byType: Record<string, number> };
+  };
+  billing: {
+    transactions: TransactionRecord[];
+    summary: { totalBilled: number; openBalance: number };
+  };
+  tags: string[];
+};
+
 const DATA_PATH = path.resolve(process.cwd(), 'data', 'clients.json');
+const INTERACTIONS_PATH = path.resolve(
+  process.cwd(),
+  'data',
+  'interactions.json',
+);
+const TRANSACTIONS_PATH = path.resolve(
+  process.cwd(),
+  'data',
+  'transactions.json',
+);
 
 // helper to read JSON
 async function readAll(): Promise<ClientRecord[]> {
@@ -39,6 +101,30 @@ async function readAll(): Promise<ClientRecord[]> {
 async function writeAll(items: ClientRecord[]) {
   await fs.mkdir(path.dirname(DATA_PATH), { recursive: true });
   await fs.writeFile(DATA_PATH, JSON.stringify(items, null, 2), 'utf-8');
+}
+
+// helper to read interactions JSON
+async function readInteractions(): Promise<InteractionRecord[]> {
+  try {
+    const raw = await fs.readFile(INTERACTIONS_PATH, 'utf-8');
+    const arr = JSON.parse(raw) as InteractionRecord[];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return [];
+    throw e;
+  }
+}
+
+// helper to read transactions JSON
+async function readTransactions(): Promise<TransactionRecord[]> {
+  try {
+    const raw = await fs.readFile(TRANSACTIONS_PATH, 'utf-8');
+    const arr = JSON.parse(raw) as TransactionRecord[];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e: any) {
+    if (e?.code === 'ENOENT') return [];
+    throw e;
+  }
 }
 
 @Injectable()
@@ -80,15 +166,12 @@ export class ClientsService {
   }
 
   async createClient(body: any) {
-    // Required fields
     const firstName = String(body?.firstName ?? '').trim();
     const lastName = String(body?.lastName ?? '').trim();
     const email = String(body?.email ?? '').trim().toLowerCase();
     const phone = String(body?.phone ?? '').trim();
     const company = String(body?.company ?? '').trim();
     const address = body?.address ?? undefined;
-
-    // Optional fields
     const title = body?.title ?? undefined;
     const industry = body?.industry ?? undefined;
     const website = body?.website ?? undefined;
@@ -138,5 +221,74 @@ export class ClientsService {
     const found = all.find((c) => c.id === id);
     if (!found) throw new NotFoundException('Client not found');
     return found;
+  }
+
+  async getClientProfile(id: string): Promise<ClientProfileDto> {
+    const client = await this.getClientById(id);
+
+    const allInteractions = await readInteractions();
+    const allTransactions = await readTransactions();
+
+    const timelineItems = allInteractions
+      .filter((i) => i.clientId === id)
+      .sort((a, b) =>
+        (b.occurredAt ?? b.createdAt).localeCompare(a.occurredAt ?? a.createdAt),
+      );
+
+    const transactions = allTransactions
+      .filter((t) => t.clientId === id)
+      .sort((a, b) => (b.issuedAt ?? '').localeCompare(a.issuedAt ?? ''));
+
+    // Timeline summary
+    const byType: Record<string, number> = {};
+    for (const item of timelineItems) {
+      const t = String(item?.type ?? 'UNKNOWN');
+      byType[t] = (byType[t] ?? 0) + 1;
+    }
+
+    // Billing summary
+    let totalBilled = 0;
+    let openBalance = 0;
+    for (const tx of transactions) {
+      const amount = Number(tx?.amount ?? 0);
+      totalBilled += amount;
+
+      const status = String(tx?.status ?? '').toUpperCase();
+      if (status === 'OPEN' || status === 'OVERDUE') openBalance += amount;
+    }
+
+    return {
+      client: {
+        id: client.id,
+        firstName: client.firstName,
+        lastName: client.lastName,
+        email: client.email,
+        phone: client.phone,
+        company: client.company,
+        address: client.address,
+        title: client.title,
+        industry: client.industry,
+        website: client.website,
+        socialLinks: client.socialLinks,
+        notes: client.notes,
+        createdAt: client.createdAt,
+        updatedAt: client.updatedAt,
+      },
+      timeline: {
+        items: timelineItems,
+        summary: {
+          total: timelineItems.length,
+          byType,
+        },
+      },
+      billing: {
+        transactions,
+        summary: {
+          totalBilled,
+          openBalance,
+        },
+      },
+      tags: Array.isArray(client.tags) ? client.tags : [],
+    };
   }
 }
