@@ -23,7 +23,13 @@ export default function DashboardPage() {
         {/* Top Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           {/* Search Container */}
-          <SearchBar href="/search" placeholder="Search clients, projects, and more..." />
+          <SearchBar placeholder="Search clients, projects, and more..." onSearch={(value) => {
+            // You can implement dashboard-wide search logic here
+            // For now, we'll redirect to clients page with search functionality
+            if (value.trim()) {
+              window.location.href = `/dashboard/clients?search=${encodeURIComponent(value)}`;
+            }
+          }} />
 
           {/* Menu Dots */}
           <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>

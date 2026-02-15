@@ -189,7 +189,7 @@ export default function AddClientPage() {
       if (res.ok && data.ok) {
         setMessage("Client created successfully!");
         // Brief delay to show success message
-        setTimeout(() => router.push("/dashboard"), 1000);
+        setTimeout(() => router.push("/dashboard/clients"), 1000);
       } else {
         setMessage(data.ok === false ? data.message : "Failed to create client");
       }
@@ -674,7 +674,7 @@ export default function AddClientPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <button
                 type="button"
-                onClick={() => router.push("/dashboard")}
+                onClick={() => router.push("/dashboard/clients")}
                 disabled={loading}
                 style={{
                   borderRadius: '6px',
