@@ -140,7 +140,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 />
 
                 <NavItem
-                    href=""
+                    href="/dashboard/invoices"
                     icon="/images/icons/invoices.png"
                     label="Invoices"
                     isActive={activePage === 'invoices'}
