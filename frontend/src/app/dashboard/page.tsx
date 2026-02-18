@@ -2,6 +2,7 @@
 
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
+import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 export default function DashboardPage() {
@@ -15,6 +16,9 @@ export default function DashboardPage() {
   ];
   return (
     <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
+      {/* Development Role Switcher */}
+      <DevRoleSwitcher />
+      
       {/* Sidebar */}
       <Sidebar activePage="dashboard" />
 
