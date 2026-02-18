@@ -1,52 +1,54 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-
-interface UserProfile {
-    firstName: string;
-    lastName: string;
-    email: string;
-    company: string;
-    phone: string;
-    role: string;
-    avatar?: string;
-}
+import { useUser, User } from '@/contexts/UserContext';
 
 export default function AccountPage() {
-    const [profile, setProfile] = useState<UserProfile>({
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        company: 'Headword Inc.',
-        phone: '+1 (555) 123-4567',
-        role: 'Administrator'
-    });
+    const { user, setUser } = useUser();
     const [isEditing, setIsEditing] = useState(false);
-    const [tempProfile, setTempProfile] = useState<UserProfile>(profile);
+    const [tempProfile, setTempProfile] = useState<User | null>(user);
+
+    useEffect(() => {
+        if (user) {
+            setTempProfile(user);
+        }
+    }, [user]);
 
     const handleEdit = () => {
-        setTempProfile(profile);
+        setTempProfile(user);
         setIsEditing(true);
     };
 
     const handleSave = () => {
-        setProfile(tempProfile);
-        setIsEditing(false);
-        // TODO: Send update to backend
-        console.log('Profile updated:', tempProfile);
+        if (tempProfile) {
+            setUser(tempProfile);
+            setIsEditing(false);
+            // TODO: Send update to backend
+            console.log('Profile updated:', tempProfile);
+        }
     };
 
     const handleCancel = () => {
-        setTempProfile(profile);
+        setTempProfile(user);
         setIsEditing(false);
     };
 
-    const handleInputChange = (field: keyof UserProfile, value: string) => {
-        setTempProfile(prev => ({
-            ...prev,
-            [field]: value
-        }));
+    const handleInputChange = (field: keyof User, value: string) => {
+        if (tempProfile) {
+            setTempProfile(prev => prev ? ({
+                ...prev,
+                [field]: value
+            }) : prev);
+        }
     };
+
+    if (!user || !tempProfile) {
+        return (
+            <div style={{ width: '100%', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div>Loading...</div>
+            </div>
+        );
+    }
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -54,13 +56,13 @@ export default function AccountPage() {
             <Sidebar activePage="account" />
 
             {/* Main Content Area */}
-            <div style={{ 
-                flex: 1, 
-                display: 'flex', 
-                flexDirection: 'column', 
-                background: 'rgba(217, 217, 217, 0.15)', 
-                padding: '20px 20px 20px 30px', 
-                gap: '20px' 
+            <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                background: 'rgba(217, 217, 217, 0.15)',
+                padding: '20px 20px 20px 30px',
+                gap: '20px'
             }}>
                 {/* Top Bar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -132,7 +134,7 @@ export default function AccountPage() {
                             fontFamily: 'Poppins',
                             fontWeight: '600'
                         }}>
-                            {profile.firstName.charAt(0)}{profile.lastName.charAt(0)}
+                            {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                         </div>
 
                         {/* Profile Info */}
@@ -144,7 +146,7 @@ export default function AccountPage() {
                                 color: 'black',
                                 marginBottom: '5px'
                             }}>
-                                {profile.firstName} {profile.lastName}
+                                {user.firstName} {user.lastName}
                             </div>
                             <div style={{
                                 fontSize: 16,
@@ -152,7 +154,7 @@ export default function AccountPage() {
                                 color: 'rgba(0, 0, 0, 0.6)',
                                 marginBottom: '5px'
                             }}>
-                                {profile.email}
+                                {user.email}
                             </div>
                             <div style={{
                                 fontSize: 14,
@@ -160,7 +162,7 @@ export default function AccountPage() {
                                 color: '#FF5900',
                                 fontWeight: '500'
                             }}>
-                                {profile.role}
+                                {user.role}
                             </div>
                         </div>
 
@@ -243,7 +245,7 @@ export default function AccountPage() {
                             </label>
                             <input
                                 type="text"
-                                value={isEditing ? tempProfile.firstName : profile.firstName}
+                                value={isEditing ? tempProfile.firstName : user.firstName}
                                 onChange={(e) => handleInputChange('firstName', e.target.value)}
                                 disabled={!isEditing}
                                 style={{
@@ -273,7 +275,7 @@ export default function AccountPage() {
                             </label>
                             <input
                                 type="text"
-                                value={isEditing ? tempProfile.lastName : profile.lastName}
+                                value={isEditing ? tempProfile.lastName : user.lastName}
                                 onChange={(e) => handleInputChange('lastName', e.target.value)}
                                 disabled={!isEditing}
                                 style={{
@@ -303,7 +305,7 @@ export default function AccountPage() {
                             </label>
                             <input
                                 type="email"
-                                value={isEditing ? tempProfile.email : profile.email}
+                                value={isEditing ? tempProfile.email : user.email}
                                 onChange={(e) => handleInputChange('email', e.target.value)}
                                 disabled={!isEditing}
                                 style={{
@@ -333,7 +335,7 @@ export default function AccountPage() {
                             </label>
                             <input
                                 type="tel"
-                                value={isEditing ? tempProfile.phone : profile.phone}
+                                value={isEditing ? tempProfile.phone : user.phone}
                                 onChange={(e) => handleInputChange('phone', e.target.value)}
                                 disabled={!isEditing}
                                 style={{
@@ -363,7 +365,7 @@ export default function AccountPage() {
                             </label>
                             <input
                                 type="text"
-                                value={isEditing ? tempProfile.company : profile.company}
+                                value={isEditing ? tempProfile.company : user.company}
                                 onChange={(e) => handleInputChange('company', e.target.value)}
                                 disabled={!isEditing}
                                 style={{
@@ -392,7 +394,7 @@ export default function AccountPage() {
                                 Role
                             </label>
                             <select
-                                value={isEditing ? tempProfile.role : profile.role}
+                                value={isEditing ? tempProfile.role : user.role}
                                 onChange={(e) => handleInputChange('role', e.target.value)}
                                 disabled={!isEditing}
                                 style={{

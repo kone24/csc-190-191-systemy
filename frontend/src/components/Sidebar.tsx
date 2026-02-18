@@ -1,8 +1,9 @@
 'use client';
 import Link from 'next/link';
+import { useUser } from '@/contexts/UserContext';
 
 interface SidebarProps {
-    activePage: 'dashboard' | 'analytics' | 'projects' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings';
+    activePage: 'dashboard' | 'analytics' | 'projects' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management';
 }
 
 interface NavItemProps {
@@ -53,6 +54,8 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
 };
 
 export default function Sidebar({ activePage }: SidebarProps) {
+    const { isAdmin } = useUser();
+    
     return (
         <div style={{
             width: 230,
@@ -145,6 +148,16 @@ export default function Sidebar({ activePage }: SidebarProps) {
                     label="Invoices"
                     isActive={activePage === 'invoices'}
                 />
+
+                {/* Admin Only - Management */}
+                {isAdmin && (
+                    <NavItem
+                        href="/dashboard/management"
+                        icon="/images/icons/settings.png"
+                        label="Management"
+                        isActive={activePage === 'management'}
+                    />
+                )}
 
                 {/* Spacer */}
                 <div style={{ flex: 1 }} />
