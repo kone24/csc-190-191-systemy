@@ -151,7 +151,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
                 {/* Bottom Navigation */}
                 <NavItem
-                    href=""
+                    href="/dashboard/account"
                     icon="/images/images/account.png"
                     label="Account"
                     isActive={activePage === 'account'}
