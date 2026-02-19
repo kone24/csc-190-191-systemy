@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { promises as fs } from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import type { CreateClientDto } from './dto/create-client.dto';
 
 type InteractionRecord = {
   id: string;
@@ -165,7 +166,7 @@ export class ClientsService {
     });
   }
 
-  async createClient(body: any) {
+  async createClient(body: CreateClientDto) {
     const firstName = String(body?.firstName ?? '').trim();
     const lastName = String(body?.lastName ?? '').trim();
     const email = String(body?.email ?? '').trim().toLowerCase();

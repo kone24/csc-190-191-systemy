@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Query, Post, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { ClientsService } from './clients.service';
 import { ClientProfileDto } from './dto/client-profile.dto';
+import { CreateClientDto } from './dto/create-client.dto';
 
 @Controller('clients')
 export class ClientsController {
@@ -13,7 +14,7 @@ export class ClientsController {
 
   @Post()
   @HttpCode(201)
-  async create(@Body() body: any) {
+  async create(@Body() body: CreateClientDto) {
     const saved = await this.clientsService.createClient(body);
     return {
       ok: true,
