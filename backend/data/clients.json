@@ -111,5 +111,16 @@
     ],
     "createdAt": "2026-02-05T04:10:52.770Z",
     "updatedAt": "2026-02-05T04:10:52.770Z"
+  },
+  {
+    "id": "231e43e2-2fcc-4bb6-8185-2f444252a66b",
+    "firstName": "John",
+    "lastName": "Smith",
+    "email": "john.smith@test.com",
+    "phone": "555",
+    "company": "Acme",
+    "address": {},
+    "createdAt": "2026-02-19T01:37:02.643Z",
+    "updatedAt": "2026-02-19T01:37:02.643Z"
   }
 ]
