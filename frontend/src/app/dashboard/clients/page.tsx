@@ -38,7 +38,7 @@ export default function ClientsPage() {
                 });
                 if (!res.ok) throw new Error(`Error: ${res.status}`);
                 const data = await res.json();
-                setAllClients(data);
+                setAllClients(data.items);
             } catch (err: any) {
                 setError(err.message);
             } finally {

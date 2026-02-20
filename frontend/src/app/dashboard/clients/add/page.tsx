@@ -178,9 +178,10 @@ export default function AddClientPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/clients", {
+      const res = await fetch("http://localhost:3001/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(form),
       });
 

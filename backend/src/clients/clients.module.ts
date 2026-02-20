@@ -6,7 +6,7 @@ import { Client } from './entities/client.entity';
 
 @Module({
   imports: [
-    // TypeOrmModule.forFeature([Client])  // Commented out - using JSON file instead
+    TypeOrmModule.forFeature([Client]),
   ],
   providers: [ClientsService],
   controllers: [ClientsController],
