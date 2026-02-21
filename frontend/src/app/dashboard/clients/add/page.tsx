@@ -178,24 +178,60 @@ export default function AddClientPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/clients", {
+      // Transform frontend form data to match backend API format (snake_case for Supabase)
+      const clientData = {
+        first_name: form.firstName,
+        last_name: form.lastName,
+        business_name: form.company,
+        email: form.email,
+        phone_number: form.phone || "",
+        address: {
+          street: form.address.street,
+          city: form.address.city,
+          state: form.address.state.name,
+          zip_code: form.address.postalCode,
+          country: form.address.country.name,
+          additional_info: form.address.additionalInfo || ""
+        },
+        // Default values for required backend fields
+        services_needed: ["General Services"],
+        project_timeline: "To be determined",
+        budget_range: "To be determined",
+        preferred_contact_method: "email",
+        additional_info: form.notes || "",
+        // Optional: Include social media
+        social_links: form.socialLinks || {}
+      };
+
+      // Call your NestJS backend (correct port: 3001)
+      const res = await fetch("http://localhost:3001/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(clientData),
       });
 
-      const data = (await res.json()) as CreateClientResponse;
+      // Add better error handling for non-JSON responses
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonError) {
+        const errorText = await res.text();
+        console.error("Response was not JSON:", errorText);
+        console.error("Response status:", res.status);
+        setMessage(`❌ Server error: ${res.status} - Invalid response format`);
+        return;
+      }
 
       if (res.ok && data.ok) {
-        setMessage("Client created successfully!");
-        // Brief delay to show success message
-        setTimeout(() => router.push("/dashboard/clients"), 1000);
+        setMessage(`✅ Client created successfully! ID: ${data.client.id}`);
+        // Brief delay to show success message, then redirect
+        setTimeout(() => router.push("/dashboard/clients"), 2000);
       } else {
-        setMessage(data.ok === false ? data.message : "Failed to create client");
+        setMessage(`❌ ${data.message || "Failed to create client"}`);
       }
     } catch (err) {
       console.error("Error creating client:", err);
-      setMessage("An error occurred while creating the client");
+      setMessage("❌ Network error: Could not connect to server. Make sure your backend is running.");
     } finally {
       setLoading(false);
     }
@@ -396,10 +432,11 @@ export default function AddClientPage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Country <span style={{ color: '#ef4444' }}>*</span></label>
-                  <Select
+                  <Select<Country>
+                    instanceId="country-select"
                     options={COUNTRIES}
                     value={selectedCountry}
-                    onChange={(selected: Country | null) => {
+                    onChange={(selected) => {
                       setSelectedCountry(selected);
                       if (selected) {
                         setForm(prev => ({
@@ -413,8 +450,8 @@ export default function AddClientPage() {
                         }));
                       }
                     }}
-                    getOptionLabel={(option: Country) => option.name}
-                    getOptionValue={(option: Country) => option.code}
+                    getOptionLabel={(option) => option.name}
+                    getOptionValue={(option) => option.code}
                     placeholder="Select a country"
                     styles={{
                       control: (base: any, state: any) => ({
@@ -457,10 +494,11 @@ export default function AddClientPage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>State/Province <span style={{ color: '#ef4444' }}>*</span></label>
-                  <Select
+                  <Select<State>
+                    instanceId="state-select"
                     options={availableStates}
                     value={availableStates.find(s => s.code === form.address.state.code)}
-                    onChange={(selected: State | null) => {
+                    onChange={(selected) => {
                       if (selected) {
                         setForm(prev => ({
                           ...prev,
@@ -471,8 +509,8 @@ export default function AddClientPage() {
                         }));
                       }
                     }}
-                    getOptionLabel={(option: State) => option.name}
-                    getOptionValue={(option: State) => option.code}
+                    getOptionLabel={(option) => option.name}
+                    getOptionValue={(option) => option.code}
                     placeholder="Select a state/province"
                     isDisabled={!selectedCountry}
                     styles={{
