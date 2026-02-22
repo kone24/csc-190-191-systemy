@@ -5,7 +5,17 @@ export class SearchQueryDto {
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  query?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
   searchTerm?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  tags?: string; // seperated by commas
 
   @IsOptional()
   @IsString()
@@ -21,11 +31,6 @@ export class SearchQueryDto {
   @IsString()
   @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
   zipCode?: string;
-
-  @IsOptional()
-  @IsString()
-  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
-  tags?: string; // seperated by commas
 
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10) || 1)
