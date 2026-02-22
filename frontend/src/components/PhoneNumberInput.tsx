@@ -26,10 +26,10 @@ export function PhoneNumberInput({ value, onChange, error }: PhoneNumberInputPro
           padding: '8px',
           boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
           outline: 'none',
-          fontFamily: 'Inter'
+          fontFamily: 'Poppins'
         }}
       />
-      {error && <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Inter' }}>{error}</p>}
+      {error && <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Poppins' }}>{error}</p>}
     </div>
   );
 }

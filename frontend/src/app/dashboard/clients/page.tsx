@@ -139,7 +139,7 @@ export default function ClientsPage() {
                         <p style={{
                             color: '#FF5900',
                             fontSize: 14,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             margin: 0
                         }}>
                             {isSearching ? 'Searching...' : 'Loading clients...'}
@@ -157,7 +157,7 @@ export default function ClientsPage() {
                         <p style={{
                             color: '#ef4444',
                             fontSize: 14,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             margin: 0,
                             padding: 10,
                             backgroundColor: '#fef2f2',
@@ -186,7 +186,7 @@ export default function ClientsPage() {
                         <h3 style={{
                             color: 'black',
                             fontSize: 18,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: '600',
                             margin: 0
                         }}>
@@ -207,7 +207,7 @@ export default function ClientsPage() {
                                         padding: '6px 12px',
                                         color: '#FF5900',
                                         fontSize: 14,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Poppins',
                                         cursor: 'pointer'
                                     }}
                                 >
@@ -249,7 +249,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -260,7 +260,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -271,7 +271,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -282,7 +282,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -293,7 +293,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -304,7 +304,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -328,7 +328,7 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)',
                                                 fontWeight: '500'
@@ -338,7 +338,7 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
@@ -347,7 +347,7 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
@@ -356,7 +356,7 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
@@ -365,7 +365,7 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)',
                                                 maxWidth: 200,
@@ -378,7 +378,7 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
@@ -403,7 +403,7 @@ export default function ClientsPage() {
                                     <p style={{
                                         color: 'rgba(26, 26, 26, 0.50)',
                                         fontSize: 16,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Poppins',
                                         margin: 0
                                     }}>
                                         No clients found for "{searchQuery}"
@@ -418,7 +418,7 @@ export default function ClientsPage() {
                                     <p style={{
                                         color: 'rgba(26, 26, 26, 0.50)',
                                         fontSize: 16,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Poppins',
                                         marginBottom: '20px'
                                     }}>
                                         No clients yet. Add your first client to get started!
@@ -431,7 +431,7 @@ export default function ClientsPage() {
                                             padding: '10px 20px',
                                             color: 'white',
                                             fontSize: 14,
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '500',
                                             cursor: 'pointer'
                                         }}>

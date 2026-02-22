@@ -90,9 +90,9 @@ export default function DashboardPage() {
               alignItems: 'center',
               gap: 15
             }}>
-              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>Active Clients</div>
-              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>26</div>
-              <div style={{ color: '#00F5A0', fontSize: 12, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>↑ 5% vs last week</div>
+              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Active Clients</div>
+              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>26</div>
+              <div style={{ color: '#00F5A0', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>↑ 5% vs last week</div>
             </div>
 
             {/* Pending Invoices Card */}
@@ -108,9 +108,9 @@ export default function DashboardPage() {
               alignItems: 'center',
               gap: 15
             }}>
-              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>Pending Invoices</div>
-              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>67,670</div>
-              <div style={{ color: '#FF928A', fontSize: 12, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>↓ 5% vs last week</div>
+              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Pending Invoices</div>
+              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>67,670</div>
+              <div style={{ color: '#FF928A', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>↓ 5% vs last week</div>
             </div>
 
             {/* Active Projects Card */}
@@ -126,8 +126,8 @@ export default function DashboardPage() {
               alignItems: 'center',
               gap: 15
             }}>
-              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>Active Projects</div>
-              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>67</div>
+              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Active Projects</div>
+              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>67</div>
               <div></div>
             </div>
 
@@ -144,9 +144,9 @@ export default function DashboardPage() {
               alignItems: 'center',
               gap: 15
             }}>
-              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>Productivity</div>
-              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>?</div>
-              <div style={{ color: '#00F5A0', fontSize: 12, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>↑ 25% vs last week</div>
+              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Productivity</div>
+              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>?</div>
+              <div style={{ color: '#00F5A0', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>↑ 25% vs last week</div>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ export default function DashboardPage() {
             padding: '20px',
             position: 'relative'
           }}>
-            <div style={{ textAlign: 'left', color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Inter', fontWeight: '600', marginBottom: '20px' }}>Manage Projects</div>
+            <div style={{ textAlign: 'left', color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', marginBottom: '20px' }}>Manage Projects</div>
 
             {/* Table Headers */}
             <div style={{
@@ -172,11 +172,11 @@ export default function DashboardPage() {
               borderBottom: '1px solid #eee',
               marginBottom: '15px'
             }}>
-              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>Name</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>Task</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>Due on</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>Price</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>Status</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Name</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Task</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Due on</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Price</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Status</div>
             </div>
 
             {/* Project Items */}
@@ -191,10 +191,10 @@ export default function DashboardPage() {
                 borderBottom: '1px solid #f0f0f0'
               }}>
                 <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Client" />
-                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Client #22</div>
-                <div style={{ color: 'black', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>blah blah #1</div>
-                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Dec 31</div>
-                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>$67</div>
+                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Client #22</div>
+                <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>blah blah #1</div>
+                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Dec 31</div>
+                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>$67</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                     <div style={{ width: 3, height: 16, background: '#FF5900', borderRadius: 2 }} />
@@ -204,7 +204,7 @@ export default function DashboardPage() {
                     <div style={{ width: 3, height: 16, background: '#FF5900', borderRadius: 2 }} />
                     <div style={{ width: 3, height: 16, background: 'linear-gradient(180deg, #FF5900 0%, white 100%)', borderRadius: 2 }} />
                   </div>
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>High</div>
+                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>High</div>
                 </div>
               </div>
 
@@ -218,10 +218,10 @@ export default function DashboardPage() {
                 borderBottom: '1px solid #f0f0f0'
               }}>
                 <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-2.png" alt="Client" />
-                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Client #21</div>
-                <div style={{ color: 'black', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>blah blah #2</div>
-                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Nov 3</div>
-                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>$512</div>
+                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Client #21</div>
+                <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>blah blah #2</div>
+                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Nov 3</div>
+                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>$512</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                     <div style={{ width: 3, height: 16, background: 'linear-gradient(180deg, #FF5900 0%, white 100%)', borderRadius: 2 }} />
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                     <div style={{ width: 3, height: 16, background: '#D9D9D9', borderRadius: 2 }} />
                     <div style={{ width: 3, height: 16, background: '#D9D9D9', borderRadius: 2 }} />
                   </div>
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Medium</div>
+                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Medium</div>
                 </div>
               </div>
 
@@ -245,10 +245,10 @@ export default function DashboardPage() {
                 borderBottom: '1px solid #f0f0f0'
               }}>
                 <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Client" />
-                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Client #3</div>
-                <div style={{ color: 'black', fontSize: 12, fontFamily: 'Inter', fontWeight: '600' }}>blah blah #3</div>
-                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Dec 31</div>
-                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>$283</div>
+                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Client #3</div>
+                <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>blah blah #3</div>
+                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Dec 31</div>
+                <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>$283</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                     <div style={{ width: 3, height: 16, background: 'linear-gradient(180deg, #FF5900 0%, white 100%)', borderRadius: 2 }} />
@@ -258,7 +258,7 @@ export default function DashboardPage() {
                     <div style={{ width: 3, height: 16, background: '#D9D9D9', borderRadius: 2 }} />
                     <div style={{ width: 3, height: 16, background: '#D9D9D9', borderRadius: 2 }} />
                   </div>
-                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Inter', fontWeight: '600' }}>Low</div>
+                  <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Low</div>
                 </div>
               </div>
             </div>
@@ -283,40 +283,40 @@ export default function DashboardPage() {
             padding: '20px'
           }}>
             {/* Tasks Header */}
-            <div style={{ textAlign: 'center', color: 'rgba(255, 89, 0, 0.80)', fontSize: 25, fontFamily: 'Inter', fontWeight: '600', marginBottom: '20px' }}>Upcoming Tasks</div>
+            <div style={{ textAlign: 'center', color: 'rgba(255, 89, 0, 0.80)', fontSize: 25, fontFamily: 'Poppins', fontWeight: '600', marginBottom: '20px' }}>Upcoming Tasks</div>
 
             {/* Task Items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img style={{ width: 28, height: 28 }} src="/images/images/progress.png" alt="Task" />
-                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Send Campaign debrief</div>
+                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Send Campaign debrief</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img style={{ width: 30, height: 30 }} src="/images/images/calendar.png" alt="Calendar" />
-                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Oct 3</div>
+                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Oct 3</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img style={{ width: 28, height: 28 }} src="/images/images/progress.png" alt="Task" />
-                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Review Design Draft</div>
+                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Review Design Draft</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img style={{ width: 30, height: 30 }} src="/images/images/calendar.png" alt="Calendar" />
-                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Oct 3</div>
+                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Oct 3</div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #f0f0f0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img style={{ width: 28, height: 28 }} src="/images/images/progress.png" alt="Task" />
-                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Approve Invoice #</div>
+                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Approve Invoice #</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img style={{ width: 30, height: 30 }} src="/images/images/calendar.png" alt="Calendar" />
-                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Inter', fontWeight: '600' }}>Oct 3</div>
+                  <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Oct 3</div>
                 </div>
               </div>
             </div>
@@ -332,7 +332,7 @@ export default function DashboardPage() {
             position: 'relative'
           }}>
             {/* Chart Title */}
-            <div style={{ fontSize: 20, fontFamily: 'Inter', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: '20px', textAlign: 'center' }}>
+            <div style={{ fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: '20px', textAlign: 'center' }}>
               Statistics
             </div>
 
@@ -368,7 +368,7 @@ export default function DashboardPage() {
                     return (
                       <span style={{
                         fontSize: 10,
-                        fontFamily: 'Inter',
+                        fontFamily: 'Poppins',
                         fontWeight: '600',
                         color: 'black'
                       }}>
@@ -399,7 +399,7 @@ export default function DashboardPage() {
             marginBottom: '20px'
           }}>
             {/* Chart Title */}
-            <div style={{ fontSize: 20, fontFamily: 'Inter', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: '20px', textAlign: 'center' }}>Weekly Performance</div>
+            <div style={{ fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: '20px', textAlign: 'center' }}>Weekly Performance</div>
 
             {/* Chart Placeholder */}
             <div style={{
@@ -412,7 +412,7 @@ export default function DashboardPage() {
               justifyContent: 'center',
               border: '2px dashed #ddd'
             }}>
-              <div style={{ color: '#999', fontSize: 16, fontFamily: 'Inter' }}>Chart Coming Soon</div>
+              <div style={{ color: '#999', fontSize: 16, fontFamily: 'Poppins' }}>Chart Coming Soon</div>
             </div>
           </div>
         </div>

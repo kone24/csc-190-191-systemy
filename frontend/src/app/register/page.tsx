@@ -209,7 +209,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Title */}
-                <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>
+                <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>
                     Create Your Account
                 </div>
 
@@ -238,7 +238,7 @@ export default function RegisterPage() {
                                 outline: 'none',
                                 color: 'rgba(26, 26, 26, 0.80)',
                                 fontSize: 15,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 fontWeight: '600'
                             }}
                         />
@@ -266,7 +266,7 @@ export default function RegisterPage() {
                                 outline: 'none',
                                 color: 'rgba(26, 26, 26, 0.80)',
                                 fontSize: 15,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 fontWeight: '600'
                             }}
                         />
@@ -294,7 +294,7 @@ export default function RegisterPage() {
                                 outline: 'none',
                                 color: 'rgba(26, 26, 26, 0.80)',
                                 fontSize: 15,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 fontWeight: '600'
                             }}
                         />
@@ -322,7 +322,7 @@ export default function RegisterPage() {
                                 outline: 'none',
                                 color: 'rgba(26, 26, 26, 0.80)',
                                 fontSize: 15,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 fontWeight: '600'
                             }}
                         />
@@ -365,7 +365,7 @@ export default function RegisterPage() {
                         cursor: loading || !recaptchaToken ? 'not-allowed' : 'pointer'
                     }}
                 >
-                    <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Inter', fontWeight: '600' }}>
+                    <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Poppins', fontWeight: '600' }}>
                         {loading ? "Creating Account..." : "Create Account"}
                     </div>
                 </button>
@@ -377,7 +377,7 @@ export default function RegisterPage() {
                             textAlign: 'center',
                             color: message.includes('successful') ? '#10b981' : '#ef4444',
                             fontSize: 15,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: '600',
                             maxWidth: '90%'
                         }}>

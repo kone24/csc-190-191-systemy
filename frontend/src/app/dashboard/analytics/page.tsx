@@ -113,51 +113,51 @@ export default function AnalyticsPage() {
                     {/* Total Revenue Card 1 */}
                     <div style={{ minWidth: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
                         <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Inter', fontWeight: '500' }}>#</div>
+                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>#</div>
                         </div>
                         <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <div>
-                                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}>Total Revenue </span>
-                                <span style={{ color: '#00F5A0', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}>+20%</span>
+                                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>Total Revenue </span>
+                                <span style={{ color: '#00F5A0', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>+20%</span>
                             </div>
                         </div>
                         <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <div style={{ color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '500' }}>$28,431</div>
-                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}># orders</div>
+                            <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>$28,431</div>
+                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}># orders</div>
                         </div>  
                     </div>
 
                     {/* Total Revenue Card 2 */}
                     <div style={{ minWidth: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
                         <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Inter', fontWeight: '500' }}>#</div>
+                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>#</div>
                         </div>
                         <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <div>
-                                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}>Total Revenue </span>
-                                <span style={{ color: '#FF0022', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}>-20%</span>
+                                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>Total Revenue </span>
+                                <span style={{ color: '#FF0022', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>-20%</span>
                             </div>
                         </div>
                         <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <div style={{ color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '500' }}>$28,431</div>
-                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}># orders</div>
+                            <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>$28,431</div>
+                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}># orders</div>
                         </div>
                     </div>
 
                     {/* Total Revenue Card 3 */}
                     <div style={{ width: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
                         <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Inter', fontWeight: '500' }}>#</div>
+                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>#</div>
                         </div>
                         <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <div>
-                                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}>Total Revenue </span>
-                                <span style={{ color: '#00F5A0', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}>+20%</span>
+                                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>Total Revenue </span>
+                                <span style={{ color: '#00F5A0', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>+20%</span>
                             </div>
                         </div>
                         <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <div style={{ color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '500' }}>$28,431</div>
-                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}># orders</div>
+                            <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>$28,431</div>
+                            <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}># orders</div>
                         </div>
                     </div>
                 </div>
@@ -167,7 +167,7 @@ export default function AnalyticsPage() {
                     {/* Bar Chart */}
                     <div style={{ background: 'white', borderRadius: 20, padding: '20px', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', height: '400px' }}>
                         <div style={{ marginBottom: '15px' }}>
-                            <h3 style={{ fontSize: 18, fontFamily: 'Inter', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', margin: 0, textAlign: 'center' }}>
+                            <h3 style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', margin: 0, textAlign: 'center' }}>
                                 Revenue by Month
                             </h3>
                         </div>
@@ -208,7 +208,7 @@ export default function AnalyticsPage() {
                     {/* Line Chart */}
                     <div style={{ background: 'white', borderRadius: 20, padding: '20px', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', height: '400px' }}>
                         <div style={{ marginBottom: '15px' }}>
-                            <h3 style={{ fontSize: 18, fontFamily: 'Inter', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', margin: 0, textAlign: 'center' }}>
+                            <h3 style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', margin: 0, textAlign: 'center' }}>
                                 User Growth
                             </h3>
                         </div>
@@ -262,7 +262,7 @@ export default function AnalyticsPage() {
 
                 {/* Bottom Chart */}
                 <div style={{ width: '100%', height: 237, background: '#D9D9D9', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ color: '#666', fontSize: 18, fontFamily: 'Inter' }}>Additional Chart Coming Soon</div>
+                    <div style={{ color: '#666', fontSize: 18, fontFamily: 'Poppins' }}>Additional Chart Coming Soon</div>
                 </div>
             </div>
         </div>
