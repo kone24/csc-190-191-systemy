@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Query, Post, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { ClientsSupabaseService } from './clients.supabase.service';
 import { ClientProfileDto } from './dto/client-profile.dto';
+import { CreateClientDto } from './dto/create-client.dto';
 
 @Controller('clients')
 export class ClientsController {
