@@ -1,11 +1,44 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 export default function DashboardPage() {
+  const [clientCount, setClientCount] = useState<number | null>(null);
+  const [hoveredTile, setHoveredTile] = useState<number | null>(null);
+
+  const tileStyle = (index: number): React.CSSProperties => ({
+    minHeight: 150,
+    padding: '25px',
+    background: 'white',
+    boxShadow: hoveredTile === index
+      ? '0px 4px 10px 0px rgba(255, 172, 128, 1.00)'
+      : '0px 4px 4px rgba(0, 0, 0, 0.25)',
+    borderRadius: 20,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 15,
+    transition: 'box-shadow 300ms ease',
+  });
+
+  useEffect(() => {
+    fetch('http://localhost:3001/clients', { credentials: 'include' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`Error: ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data.items;
+        setClientCount(Array.isArray(list) ? list.length : 0);
+      })
+      .catch(() => setClientCount(null));
+  }, []);
+
   // Add chart data
   const chartData = [
     { name: 'Task Type A', value: 10, color: '#537FF1' },
@@ -78,72 +111,44 @@ export default function DashboardPage() {
             width: '600px'
           }}>
             {/* Active Clients Card */}
-            <div style={{
-              minHeight: 150,
-              padding: '25px',
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 15
-            }}>
+            <div
+              style={tileStyle(0)}
+              onMouseEnter={() => setHoveredTile(0)}
+              onMouseLeave={() => setHoveredTile(null)}
+            >
               <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Active Clients</div>
-              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>26</div>
+              <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>{clientCount ?? '—'}</div>
               <div style={{ color: '#00F5A0', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>↑ 5% vs last week</div>
             </div>
 
             {/* Pending Invoices Card */}
-            <div style={{
-              minHeight: 150,
-              padding: '25px',
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 15
-            }}>
+            <div
+              style={tileStyle(1)}
+              onMouseEnter={() => setHoveredTile(1)}
+              onMouseLeave={() => setHoveredTile(null)}
+            >
               <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Pending Invoices</div>
               <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>67,670</div>
               <div style={{ color: '#FF928A', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>↓ 5% vs last week</div>
             </div>
 
             {/* Active Projects Card */}
-            <div style={{
-              minHeight: 150,
-              padding: '25px',
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 15
-            }}>
+            <div
+              style={tileStyle(2)}
+              onMouseEnter={() => setHoveredTile(2)}
+              onMouseLeave={() => setHoveredTile(null)}
+            >
               <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Active Projects</div>
               <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>67</div>
               <div></div>
             </div>
 
             {/* Productivity Card */}
-            <div style={{
-              minHeight: 150,
-              padding: '25px',
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 15
-            }}>
+            <div
+              style={tileStyle(3)}
+              onMouseEnter={() => setHoveredTile(3)}
+              onMouseLeave={() => setHoveredTile(null)}
+            >
               <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Productivity</div>
               <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>?</div>
               <div style={{ color: '#00F5A0', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>↑ 25% vs last week</div>
