@@ -33,10 +33,10 @@ export default function DashboardPage() {
         return res.json();
       })
       .then((data) => {
-        const list = Array.isArray(data) ? data : data.items;
-        setClientCount(Array.isArray(list) ? list.length : 0);
+        if (!Array.isArray(data?.items)) throw new Error('Unexpected response shape');
+        setClientCount(data.items.length);
       })
-      .catch(() => setClientCount(null));
+      .catch((err) => { console.error('Failed to fetch client count:', err); setClientCount(null); });
   }, []);
 
   // Add chart data

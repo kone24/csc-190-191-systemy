@@ -8,13 +8,20 @@ import SearchBar from '@/components/SearchBar';
 
 interface Client {
     id: string;
-    firstName: string;
-    lastName: string;
+    first_name: string;
+    last_name: string;
     email: string;
-    company: string;
-    phone: string;
-    notes: string;
+    business_name: string;
+    phone_number: string;
+    additional_info: string;
     tags: string[];
+}
+
+// Tags stored as "label|#color"; plain strings fall back to default purple.
+function parseTag(raw: string): { name: string; color: string } {
+    const sep = raw.lastIndexOf('|#');
+    if (sep !== -1) return { name: raw.slice(0, sep), color: raw.slice(sep + 1) };
+    return { name: raw, color: '#8A38F5' };
 }
 
 export default function ClientsPage() {
@@ -33,13 +40,14 @@ export default function ClientsPage() {
         const fetchAllClients = async () => {
             try {
                 setLoading(true);
-                const res = await fetch('http://localhost:3001/clients', {
+                const res = await fetch(`http://localhost:3001/clients`, {
                     credentials: 'include',
                 });
                 if (!res.ok) throw new Error(`Error: ${res.status}`);
                 const data = await res.json();
-                setAllClients(data);
+                setAllClients(data.items ?? []);
             } catch (err: any) {
+                console.error('Failed to fetch clients:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -70,7 +78,7 @@ export default function ClientsPage() {
                     return res.json();
                 })
                 .then((data) => setSearchResults(data))
-                .catch((err) => setError(err.message))
+                .catch((err) => { console.error('Search failed:', err); setError(err.message); })
                 .finally(() => setLoading(false));
         }, 300);
 
@@ -333,7 +341,9 @@ export default function ClientsPage() {
                                                 color: 'rgba(26, 26, 26, 0.80)',
                                                 fontWeight: '500'
                                             }}>
-                                                {client.firstName} {client.lastName}
+                                                <Link href={`/dashboard/clients/${client.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                                                    {client.first_name} {client.last_name}
+                                                </Link>
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -351,7 +361,7 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.company}
+                                                {client.business_name}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -360,7 +370,7 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.phone}
+                                                {client.phone_number}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -373,16 +383,41 @@ export default function ClientsPage() {
                                                 textOverflow: 'ellipsis',
                                                 whiteSpace: 'nowrap'
                                             }}>
-                                                {client.notes}
+                                                {client.additional_info}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Poppins',
-                                                fontSize: 14,
-                                                color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.tags?.join(', ') || '—'}
+                                                <Link href={`/dashboard/clients/${client.id}`} style={{ textDecoration: 'none' }}>
+                                                    {client.tags?.length ? (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                            {client.tags.map((raw, i) => {
+                                                                const { name, color } = parseTag(raw);
+                                                                return (
+                                                                    <span key={i} style={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        height: 35,
+                                                                        paddingLeft: 29,
+                                                                        paddingRight: 29,
+                                                                        borderRadius: 20,
+                                                                        background: color,
+                                                                        color: 'white',
+                                                                        fontSize: 12,
+                                                                        fontFamily: 'Poppins',
+                                                                        fontWeight: '600',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}>
+                                                                        {name}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(26, 26, 26, 0.80)' }}>—</span>
+                                                    )}
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))}
