@@ -1,21 +1,22 @@
 import { Body, Controller, Get, Query, Post, Param, UseGuards, HttpCode } from '@nestjs/common';
-import { ClientsService } from './clients.service';
+import { ClientsSupabaseService } from './clients.supabase.service';
 import { ClientProfileDto } from './dto/client-profile.dto';
 import { CreateClientDto } from './dto/create-client.dto';
 
 @Controller('clients')
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) {}
+  constructor(private readonly clientsService: ClientsSupabaseService) { }
 
   @Get('search')
   async search(@Query('q') query: string) {
-    return this.clientsService.searchClients(query);
+    const searchQuery = { searchTerm: query };
+    return this.clientsService.searchClients(searchQuery);
   }
 
   @Post()
   @HttpCode(201)
-  async create(@Body() body: CreateClientDto) {
-    const saved = await this.clientsService.createClient(body);
+  async create(@Body() body: any) {
+    const saved = await this.clientsService.create(body);
     return {
       ok: true,
       message: 'Client Info Saved Successfully',
@@ -25,18 +26,23 @@ export class ClientsController {
 
   @Get()
   async list(@Query('query') q?: string) {
-    const items = await this.clientsService.searchClients(q ?? '');
+    if (q) {
+      const searchQuery = { searchTerm: q };
+      const items = await this.clientsService.searchClients(searchQuery);
+      return { ok: true, items };
+    }
+    const items = await this.clientsService.findAll();
     return { ok: true, items };
   }
 
   @Get(':id')
   async get(@Param('id') id: string) {
-    const client = await this.clientsService.getClientById(id);
+    const client = await this.clientsService.findOne(id);
     return { ok: true, client };
   }
 
   @Get(':id/profile')
   getProfile(@Param('id') id: string) {
-    return this.clientsService.getClientProfile(id);
+    return this.clientsService.findOne(id);
   }
 }

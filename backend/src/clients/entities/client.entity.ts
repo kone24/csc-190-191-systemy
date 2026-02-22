@@ -1,19 +1,49 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Client {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  name: string;
+  firstName: string;
+
+  @Column()
+  lastName: string;
 
   @Column()
   email: string;
 
   @Column()
-  notes: string;
+  phone: string;
 
-  @Column("text", { array: true, default: '{}' })
+  @Column()
+  company: string;
+
+  @Column('jsonb', { nullable: true })
+  address: any;
+
+  @Column({ nullable: true })
+  title?: string;
+
+  @Column({ nullable: true })
+  industry?: string;
+
+  @Column({ nullable: true })
+  website?: string;
+
+  @Column('jsonb', { nullable: true })
+  socialLinks?: any;
+
+  @Column('text', { nullable: true })
+  notes?: string;
+
+  @Column('text', { array: true, default: '{}' })
   tags: string[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
