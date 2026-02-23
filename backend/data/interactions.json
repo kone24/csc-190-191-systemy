@@ -1,0 +1,13 @@
+[
+  {
+    "id": "test-1",
+    "clientId": "9a92ed9b-d712-434c-ad15-7c06eece2715",
+    "type": "CALL",
+    "title": "Intro call",
+    "body": "Discussed next steps",
+    "occurredAt": "2026-02-11T04:00:00.000Z",
+    "tags": ["follow-up"],
+    "createdAt": "2026-02-11T04:00:00.000Z",
+    "updatedAt": "2026-02-11T04:00:00.000Z"
+  }
+]

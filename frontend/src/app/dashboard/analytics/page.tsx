@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Sidebar from '@/components/Sidebar';
+import SearchBar from '@/components/SearchBar';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 interface AnalyticsData {
@@ -72,154 +73,14 @@ export default function AnalyticsPage() {
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
             {/* Sidebar */}
-            <div style={{ width: 230, minHeight: '100vh', background: 'linear-gradient(180deg, rgba(255, 172, 128, 0) 1%, rgba(255, 172, 128, 0.30) 100%), white', boxShadow: '0px 4px 5px black', flexShrink: 0 }}>
-                <div style={{ padding: 10, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 10, display: 'flex', height: '100%' }}>
-                    {/* Logo */}
-                    <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex' }}>
-                        <div style={{ width: 20, height: 20, position: 'relative' }}>
-                            <img style={{ width: 19.73, height: 19.73, left: 0, top: 0.28, position: 'absolute', transform: 'rotate(-1deg)', transformOrigin: 'top left' }} src="/images/logos/headword.png" alt="Logo" />
-                        </div>
-                        <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Headword!</div>
-                    </div>
-
-                    {/* Navigation Items */}
-                    <Link href="/dashboard" style={{ textDecoration: 'none', alignSelf: 'stretch' }}>
-                        <div style={{ height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
-                            <div style={{ width: 20, height: 20, position: 'relative' }}>
-                                <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/dashboard.png" alt="Dashboard" />
-                            </div>
-                            <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Dashboard</div>
-                        </div>
-                    </Link>
-
-                    {/* Analytics - Current Page (Highlighted) */}
-                    <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, background: 'linear-gradient(90deg, rgba(255, 89, 0, 0.40) 0%, rgba(255, 255, 255, 0.40) 50%, rgba(255, 89, 0, 0.40) 100%), white', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', borderRadius: 20, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex' }}>
-                        <div style={{ width: 20, height: 20, position: 'relative' }}>
-                            <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/analytics.png" alt="Analytics" />
-                        </div>
-                        <div style={{ color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Analytics</div>
-                    </div>
-
-                    <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
-                        <div style={{ width: 20, height: 20, position: 'relative' }}>
-                            <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/projects.png" alt="Projects" />
-                        </div>
-                        <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Projects</div>
-                    </div>
-
-                    <Link href="/dashboard/add-client" style={{ textDecoration: 'none', alignSelf: 'stretch' }}>
-                        <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
-                            <div style={{ width: 20, height: 20, position: 'relative' }}>
-                                <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/clients.png" alt="Clients" />
-                            </div>
-                            <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Clients</div>
-                        </div>
-                    </Link>
-
-                    <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
-                        <div style={{ width: 20, height: 20, position: 'relative' }}>
-                            <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/invoices.png" alt="Invoices" />
-                        </div>
-                        <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Invoices</div>
-                    </div>
-
-                    <div style={{ flex: 1 }} />
-
-                    <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
-                        <div style={{ width: 20, height: 23.60, position: 'relative', borderRadius: 10 }}>
-                            <img style={{ width: 20, height: 23.60, left: 0, top: 0, position: 'absolute', borderRadius: 5 }} src="/images/images/account.png" alt="Account" />
-                        </div>
-                        <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Account</div>
-                    </div>
-
-                    <div style={{ alignSelf: 'stretch', height: 61.10, padding: 10, justifyContent: 'flex-start', alignItems: 'center', gap: 10, display: 'flex', cursor: 'pointer' }}>
-                        <div style={{ width: 20, height: 20, position: 'relative' }}>
-                            <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src="/images/icons/settings.png" alt="Settings" />
-                        </div>
-                        <div style={{ opacity: 0.75, color: 'black', fontSize: 18, fontFamily: 'Poppins', fontWeight: '500', wordWrap: 'break-word' }}>Settings</div>
-                    </div>
-                </div>
-            </div>
+            <Sidebar activePage="analytics" />
 
             {/* Main Content Area */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
                 {/* Top Bar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     {/* Search Container */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        background: 'white',
-                        borderRadius: 25,
-                        padding: '10px 20px',
-                        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-                        minWidth: '300px',
-                        border: '1px solid #e0e0e0'
-                    }}>
-                        {/* Search Icon */}
-                        <div style={{
-                            width: 20,
-                            height: 20,
-                            marginRight: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#666'
-                        }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
-                                <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </div>
-
-                        {/* Search Input */}
-                        <input
-                            type="text"
-                            placeholder="Search analytics..."
-                            style={{
-                                border: 'none',
-                                outline: 'none',
-                                background: 'transparent',
-                                fontSize: 14,
-                                flex: 1,
-                                color: '#333',
-                                fontFamily: 'Inter',
-                                fontWeight: '400',
-                                letterSpacing: 0
-                            }}
-                        />
-
-                        {/* Clear/X Icon */}
-                        <div style={{
-                            width: 20,
-                            height: 20,
-                            marginLeft: '12px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#666',
-                            borderRadius: '50%',
-                            transition: 'all 0.2s ease'
-                        }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#f0f0f0';
-                                e.currentTarget.style.color = '#333';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                e.currentTarget.style.color = '#666';
-                            }}
-                            onClick={() => {
-                                const input = document.querySelector('input[placeholder="Search analytics..."]') as HTMLInputElement;
-                                if (input) input.value = '';
-                            }}
-                        >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </div>
-                    </div>
+                    <SearchBar placeholder="Search analytics..." onSearch={(value) => console.log('Search:', value)} />
 
                     {/* Menu Dots */}
                     <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
@@ -263,7 +124,7 @@ export default function AnalyticsPage() {
                         <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
                             <div style={{ color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '500' }}>$28,431</div>
                             <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Inter', fontWeight: '500' }}># orders</div>
-                        </div>
+                        </div>  
                     </div>
 
                     {/* Total Revenue Card 2 */}
