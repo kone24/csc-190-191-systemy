@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "postgres": "^3.4.8"
+  }
+}

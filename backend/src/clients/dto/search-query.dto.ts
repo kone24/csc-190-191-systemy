@@ -10,7 +10,27 @@ export class SearchQueryDto {
   @IsOptional()
   @IsString()
   @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  searchTerm?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
   tags?: string; // seperated by commas
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  state?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  zipCode?: string;
 
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10) || 1)
