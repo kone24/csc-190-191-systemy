@@ -350,7 +350,9 @@ export default function LoginPage() {
           or sign in with
         </div>
         {/* Google Sign In Button */}
-        <div style={{
+        <div
+        onClick={() => (window.location.href = "http://localhost:3001/auth/google/")}
+        style={{
           width: 75,
           height: 75,
           padding: 15,
