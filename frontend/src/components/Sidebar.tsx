@@ -58,7 +58,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
     
     return (
         <div style={{
-            width: 230,
+            width: 320,
             minHeight: '100vh',
             background: 'linear-gradient(180deg, rgba(255, 172, 128, 0) 1%, rgba(255, 172, 128, 0.30) 100%), white',
             boxShadow: '0px 4px 5px black',

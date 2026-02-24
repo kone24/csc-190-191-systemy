@@ -12,21 +12,21 @@ export interface SocialMediaLinks {
 export type Address = StandardizedAddress;
 
 export interface Client {
-  id?: string;           // UUID
-  firstName: string;     // Required
-  lastName: string;      // Required
-  email: string;        // Required
-  phone: string;        // Required
-  title?: string;       // Optional
-  company: string;      // Required
-  industry?: string;    // Optional
-  website?: string;     // Optional
-  socialLinks?: SocialMediaLinks; // Optional, JSONB in database
-  address: Address;     // Required, JSONB in database
-  notes?: string;       // Optional
-  tags?: string[];      // Optional
-  createdAt?: string;   // set by database
-  updatedAt?: string;   // set by database
+  id?: string;                 // UUID
+  first_name: string;          // Required
+  last_name: string;           // Required
+  email: string;               // Required
+  phone_number: string;        // Required
+  title?: string;              // Optional
+  business_name: string;       // Required
+  industry?: string;           // Optional
+  website?: string;            // Optional
+  social_links?: SocialMediaLinks; // Optional, JSONB in database
+  address: Address;            // Required, JSONB in database
+  additional_info?: string;    // Optional
+  tags?: string[];             // Optional
+  created_at?: string;         // set by database
+  updated_at?: string;         // set by database
 }
 
 export type CreateClientRequest = Omit<Client, 'id' | 'createdAt' | 'updatedAt'>;

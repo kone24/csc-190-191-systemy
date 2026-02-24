@@ -70,7 +70,7 @@ export default function SearchInput({ onResults }: SearchInputProps) {
             outline: 'none',
             color: 'rgba(26, 26, 26, 0.80)',
             fontSize: 15,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontWeight: '600'
           }}
         />
@@ -82,7 +82,7 @@ export default function SearchInput({ onResults }: SearchInputProps) {
           textAlign: 'center',
           color: 'rgba(255, 158, 77, 0.80)',
           fontSize: 14,
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           marginTop: 10
         }}>
           Searching...
@@ -93,7 +93,7 @@ export default function SearchInput({ onResults }: SearchInputProps) {
           textAlign: 'center',
           color: '#ef4444',
           fontSize: 14,
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           marginTop: 10,
           padding: 10,
           backgroundColor: '#fef2f2',

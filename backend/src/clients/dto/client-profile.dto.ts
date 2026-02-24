@@ -3,19 +3,19 @@ export type InteractionType = 'CALL' | 'EMAIL' | 'MEETING' | 'NOTE' | 'TASK';
 
 export interface ClientContactDto {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone: string;
-  company: string;
+  phone_number: string;
+  business_name: string;
   address: any;
   title?: string;
   industry?: string;
   website?: string;
-  socialLinks?: any;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  social_links?: any;
+  additional_info?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TimelineItemDto {

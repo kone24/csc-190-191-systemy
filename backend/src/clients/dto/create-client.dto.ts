@@ -11,11 +11,11 @@ import {
 export class CreateClientDto {
     @IsString()
     @IsNotEmpty()
-    firstName!: string;
+    first_name!: string;
 
     @IsString()
     @IsNotEmpty()
-    lastName!: string;
+    last_name!: string;
 
     @IsEmail()
     @IsNotEmpty()
@@ -23,15 +23,15 @@ export class CreateClientDto {
 
     @IsString()
     @IsNotEmpty()
-    phone!: string;
+    phone_number!: string;
 
     @IsString()
     @IsNotEmpty()
-    company!: string;
+    business_name!: string;
 
     @IsObject()
-    @IsNotEmpty()
-    address!: Record<string, unknown>;
+    @IsOptional()
+    address?: Record<string, unknown>;
 
     @IsOptional()
     @IsString()
@@ -47,11 +47,11 @@ export class CreateClientDto {
 
     @IsOptional()
     @IsObject()
-    socialLinks?: Record<string, unknown>;
+    social_links?: Record<string, unknown>;
 
     @IsOptional()
     @IsString()
-    notes?: string;
+    additional_info?: string;
 
     @IsOptional()
     @IsArray()
