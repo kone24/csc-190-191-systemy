@@ -63,7 +63,7 @@ export default function SearchPage() {
             textAlign: 'center',
             color: 'black',
             fontSize: 28,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             fontWeight: '600',
             wordWrap: 'break-word',
             textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)'
@@ -102,7 +102,7 @@ export default function SearchPage() {
                     border: '1px solid rgba(217, 217, 217, 0.30)',
                     padding: 12,
                     textAlign: 'left',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Poppins',
                     fontWeight: '600',
                     fontSize: 15,
                     color: '#FF5900'
@@ -113,7 +113,7 @@ export default function SearchPage() {
                     border: '1px solid rgba(217, 217, 217, 0.30)',
                     padding: 12,
                     textAlign: 'left',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Poppins',
                     fontWeight: '600',
                     fontSize: 15,
                     color: '#FF5900'
@@ -124,7 +124,7 @@ export default function SearchPage() {
                     border: '1px solid rgba(217, 217, 217, 0.30)',
                     padding: 12,
                     textAlign: 'left',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Poppins',
                     fontWeight: '600',
                     fontSize: 15,
                     color: '#FF5900'
@@ -135,7 +135,7 @@ export default function SearchPage() {
                     border: '1px solid rgba(217, 217, 217, 0.30)',
                     padding: 12,
                     textAlign: 'left',
-                    fontFamily: 'Inter',
+                    fontFamily: 'Poppins',
                     fontWeight: '600',
                     fontSize: 15,
                     color: '#FF5900'
@@ -158,16 +158,16 @@ export default function SearchPage() {
                     <td style={{
                       border: '1px solid rgba(217, 217, 217, 0.30)',
                       padding: 12,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Poppins',
                       fontSize: 14,
                       color: 'rgba(26, 26, 26, 0.80)'
                     }}>
-                      {client.firstName} {client.lastName}
+                      {client.first_name} {client.last_name}
                     </td>
                     <td style={{
                       border: '1px solid rgba(217, 217, 217, 0.30)',
                       padding: 12,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Poppins',
                       fontSize: 14,
                       color: 'rgba(26, 26, 26, 0.80)'
                     }}>
@@ -176,16 +176,16 @@ export default function SearchPage() {
                     <td style={{
                       border: '1px solid rgba(217, 217, 217, 0.30)',
                       padding: 12,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Poppins',
                       fontSize: 14,
                       color: 'rgba(26, 26, 26, 0.80)'
                     }}>
-                      {client.notes}
+                      {client.additional_info}
                     </td>
                     <td style={{
                       border: '1px solid rgba(217, 217, 217, 0.30)',
                       padding: 12,
-                      fontFamily: 'Inter',
+                      fontFamily: 'Poppins',
                       fontSize: 14,
                       color: 'rgba(26, 26, 26, 0.80)'
                     }}>
@@ -201,7 +201,7 @@ export default function SearchPage() {
             textAlign: 'center',
             color: 'rgba(26, 26, 26, 0.50)',
             fontSize: 16,
-            fontFamily: 'Inter',
+            fontFamily: 'Poppins',
             marginTop: 20
           }}>
             No results found.

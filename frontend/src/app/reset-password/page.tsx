@@ -121,7 +121,7 @@ function ResetPasswordContent() {
                     textAlign: 'center'
                 }}>
                     <div style={{ fontSize: 60, marginBottom: 20 }}>⏳</div>
-                    <div style={{ fontSize: 24, fontWeight: '600', color: '#666', fontFamily: 'Inter' }}>
+                    <div style={{ fontSize: 24, fontWeight: '600', color: '#666', fontFamily: 'Poppins' }}>
                         Verifying reset link...
                     </div>
                 </div>
@@ -150,10 +150,10 @@ function ResetPasswordContent() {
                     <div style={{ fontSize: 60, marginBottom: 20 }}>
                         {status === 'expired' ? '⏰' : '❌'}
                     </div>
-                    <div style={{ fontSize: 28, fontWeight: '600', color: status === 'expired' ? '#f59e0b' : '#ef4444', marginBottom: 20, fontFamily: 'Inter' }}>
+                    <div style={{ fontSize: 28, fontWeight: '600', color: status === 'expired' ? '#f59e0b' : '#ef4444', marginBottom: 20, fontFamily: 'Poppins' }}>
                         {status === 'expired' ? 'Link Expired' : 'Invalid Link'}
                     </div>
-                    <div style={{ fontSize: 16, color: '#666', marginBottom: 30, lineHeight: '1.5', fontFamily: 'Inter' }}>
+                    <div style={{ fontSize: 16, color: '#666', marginBottom: 30, lineHeight: '1.5', fontFamily: 'Poppins' }}>
                         {message}
                     </div>
 
@@ -168,7 +168,7 @@ function ResetPasswordContent() {
                             fontSize: '16px',
                             cursor: 'pointer',
                             marginRight: '10px',
-                            fontFamily: 'Inter'
+                            fontFamily: 'Poppins'
                         }}
                     >
                         Request New Link
@@ -184,7 +184,7 @@ function ResetPasswordContent() {
                             borderRadius: '10px',
                             fontSize: '16px',
                             cursor: 'pointer',
-                            fontFamily: 'Inter'
+                            fontFamily: 'Poppins'
                         }}
                     >
                         Back to Login
@@ -225,12 +225,12 @@ function ResetPasswordContent() {
                 </div>
 
                 {/* Title */}
-                <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>
+                <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>
                     Set New Password
                 </div>
 
                 {email && (
-                    <div style={{ textAlign: 'center', color: '#666', fontSize: 16, fontFamily: 'Inter', fontWeight: '400', wordWrap: 'break-word', marginBottom: 10 }}>
+                    <div style={{ textAlign: 'center', color: '#666', fontSize: 16, fontFamily: 'Poppins', fontWeight: '400', wordWrap: 'break-word', marginBottom: 10 }}>
                         for {email}
                     </div>
                 )}
@@ -282,7 +282,7 @@ function ResetPasswordContent() {
                                 outline: 'none',
                                 color: 'rgba(26, 26, 26, 0.80)',
                                 fontSize: 15,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 fontWeight: '600'
                             }}
                         />
@@ -310,7 +310,7 @@ function ResetPasswordContent() {
                                 outline: 'none',
                                 color: 'rgba(26, 26, 26, 0.80)',
                                 fontSize: 15,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 fontWeight: '600'
                             }}
                         />
@@ -338,7 +338,7 @@ function ResetPasswordContent() {
                         cursor: submitting ? 'not-allowed' : 'pointer'
                     }}
                 >
-                    <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Inter', fontWeight: '600' }}>
+                    <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Poppins', fontWeight: '600' }}>
                         {submitting ? "Updating..." : "Update Password"}
                     </div>
                 </button>
@@ -350,7 +350,7 @@ function ResetPasswordContent() {
                             textAlign: 'center',
                             color: message.includes('successfully') ? '#10b981' : '#ef4444',
                             fontSize: 15,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: '600',
                             maxWidth: '90%'
                         }}>
@@ -382,7 +382,7 @@ export default function ResetPasswordPage() {
                 justifyContent: 'center',
                 background: 'linear-gradient(180deg, rgba(255, 89.25, 0, 0) 0%, rgba(255, 89.25, 0, 0.30) 100%), white',
                 fontSize: 20,
-                fontFamily: 'Inter'
+                fontFamily: 'Poppins'
             }}>
                 Loading reset form...
             </div>

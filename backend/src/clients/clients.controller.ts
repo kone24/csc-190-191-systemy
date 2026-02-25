@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Query, Post, Param, UseGuards, HttpCode, Req, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Get, Query, Post, Patch, Param, UseGuards, HttpCode, Req, ForbiddenException } from '@nestjs/common';
 import type { Request } from 'express';
 import { ClientsSupabaseService } from './clients.supabase.service';
 import { ClientProfileDto } from './dto/client-profile.dto';
 import { CreateClientDto } from './dto/create-client.dto';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 
 @Controller('clients')
 export class ClientsController {
@@ -72,6 +73,13 @@ export class ClientsController {
     }
     const items = await this.clientsService.findAll();
     return { ok: true, items };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() body: any) {
+    const updated = await this.clientsService.update(id, body);
+    return { ok: true, client: updated };
   }
 
   @Get(':id')

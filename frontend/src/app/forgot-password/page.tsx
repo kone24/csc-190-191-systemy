@@ -205,11 +205,11 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 {/* Title */}
-                <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>
+                <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>
                     Reset Your Password
                 </div>
 
-                <div style={{ textAlign: 'center', color: '#666', fontSize: 16, fontFamily: 'Inter', fontWeight: '400', wordWrap: 'break-word', marginBottom: 10 }}>
+                <div style={{ textAlign: 'center', color: '#666', fontSize: 16, fontFamily: 'Poppins', fontWeight: '400', wordWrap: 'break-word', marginBottom: 10 }}>
                     Enter your email address and we'll send you a link to reset your password.
                 </div>
 
@@ -238,7 +238,7 @@ export default function ForgotPasswordPage() {
                                 outline: 'none',
                                 color: 'rgba(26, 26, 26, 0.80)',
                                 fontSize: 15,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 fontWeight: '600'
                             }}
                         />
@@ -277,7 +277,7 @@ export default function ForgotPasswordPage() {
                         cursor: loading || !recaptchaToken ? 'not-allowed' : 'pointer'
                     }}
                 >
-                    <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Inter', fontWeight: '600' }}>
+                    <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Poppins', fontWeight: '600' }}>
                         {loading ? "Sending..." : "Send Reset Link"}
                     </div>
                 </button>
@@ -289,7 +289,7 @@ export default function ForgotPasswordPage() {
                             textAlign: 'center',
                             color: message.includes('sent') ? '#10b981' : '#ef4444',
                             fontSize: 15,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: '600',
                             maxWidth: '90%'
                         }}>

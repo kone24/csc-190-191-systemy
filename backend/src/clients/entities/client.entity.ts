@@ -5,20 +5,20 @@ export class Client {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
-  firstName: string;
+  @Column({ name: 'first_name' })
+  first_name: string;
 
-  @Column()
-  lastName: string;
+  @Column({ name: 'last_name' })
+  last_name: string;
 
   @Column()
   email: string;
 
-  @Column()
-  phone: string;
+  @Column({ name: 'phone_number' })
+  phone_number: string;
 
-  @Column()
-  company: string;
+  @Column({ name: 'business_name' })
+  business_name: string;
 
   @Column('jsonb', { nullable: true })
   address: any;
@@ -32,18 +32,18 @@ export class Client {
   @Column({ nullable: true })
   website?: string;
 
-  @Column('jsonb', { nullable: true })
-  socialLinks?: any;
+  @Column('jsonb', { nullable: true, name: 'social_links' })
+  social_links?: any;
 
-  @Column('text', { nullable: true })
-  notes?: string;
+  @Column('text', { nullable: true, name: 'additional_info' })
+  additional_info?: string;
 
   @Column('text', { array: true, default: '{}' })
   tags: string[];
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  created_at: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updated_at: Date;
 }
