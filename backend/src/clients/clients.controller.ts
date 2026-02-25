@@ -27,40 +27,32 @@ export class ClientsController {
   }
 
   // Endpoint for external "Contact Us" forms to create client record.
+  // Auth: shared secret via X-Api-Secret header (stored in CONTACT_FORM_SECRET env var).
+  // Used by Google Apps Script bridging Squarespace/WordPress contact forms to the CRM.
   @Post('contact')
   @HttpCode(201)
   async createFromContact(@Body() body: any, @Req() req: Request) {
-    const originHeader = (req.headers.origin as string) || (req.headers.referer as string) || '';
-    if (!originHeader) throw new ForbiddenException('Missing origin');
+    const secret = process.env.CONTACT_FORM_SECRET;
+    const provided = req.headers['x-api-secret'] as string | undefined;
 
-    let hostname = '';
-    try {
-      const url = new URL(originHeader);
-      hostname = url.hostname;
-    } catch (e) {
-      // try with https:// prefix
-      try {
-        const url = new URL(originHeader, 'https://' + originHeader);
-        hostname = url.hostname;
-      } catch (e) {
-        throw new ForbiddenException('Invalid origin');
-      }
+    if (!secret || !provided || provided !== secret) {
+      throw new ForbiddenException('Invalid or missing API secret');
     }
 
-    const allowed = ['lightfold.tv', 'headword.co'];
-    const ok = allowed.some((a) => hostname === a || hostname.endsWith('.' + a));
-    if (!ok) throw new ForbiddenException('Forbidden origin');
+    // Record which site the submission came from (passed in body by the Apps Script)
+    const source = String(body?.source ?? 'external').trim();
 
     const firstName = String(body?.firstName ?? '').trim();
     const email = String(body?.email ?? '').trim().toLowerCase();
     const lastName = String(body?.lastName ?? '').trim() || undefined;
     const message = String(body?.message ?? '').trim() || undefined;
+    const newsletter = body?.newsletter === true || body?.newsletter === 'true' || body?.newsletter === 'yes';
 
     if (!firstName || !email) {
       throw new ForbiddenException('Missing required fields');
     }
 
-    const saved = await this.clientsService.createContactClient({ firstName, lastName, email, message, origin: hostname });
+    const saved = await this.clientsService.createContactClient({ firstName, lastName, email, message, origin: source, newsletter });
     return { ok: true, message: 'Contact client saved', client: saved };
   }
 

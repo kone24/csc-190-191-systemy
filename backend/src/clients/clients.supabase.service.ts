@@ -185,6 +185,7 @@ export class ClientsSupabaseService {
             const email = String(body?.email ?? '').trim().toLowerCase();
             const message = String(body?.message ?? '').trim();
             const origin = String(body?.origin ?? '').trim();
+            const newsletter = body?.newsletter === true;
 
             if (!firstName || !email) {
                 throw new Error('Missing required fields for contact client');
@@ -205,14 +206,18 @@ export class ClientsSupabaseService {
                 throw new Error('A client with this email already exists.');
             }
 
+            const noteParts: string[] = [];
+            noteParts.push(`Source: Contact form (${origin || 'external'})`);
+            if (message) noteParts.push(`Message: ${message}`);
+            if (newsletter) noteParts.push('Opted in to newsletter');
+            const additional_info = noteParts.join('\n');
+
             const clientData = {
                 first_name: firstName,
                 last_name: lastName || null,
                 email,
-                website: origin || null,
-                notes: message ? `Contact form message: ${message}` : `Contact form from ${origin || 'external'}`,
+                additional_info,
                 tags: ['contact-form'],
-                source: 'contact_form',
             };
 
             const { data, error } = await this.supabase
