@@ -1,6 +1,6 @@
 /**
- * Squarespace → Headword CRM Bridge
- * -----------------------------------
+ * Lightfold → CRM Bridge
+ * ------------------------------------
  * Watches the Google Sheet connected to the Lightfold contact form.
  * When Squarespace inserts a new row, this script POSTs the data to
  * the CRM API (POST /clients/contact) to create a client record.
@@ -73,7 +73,7 @@ function sendToCRM(e) {
     }
   }
 
-  // Map remaining fields (email, message, newsletter).
+  // Map remaining fields (email, message).
   for (var header in FIELD_MAP) {
     if (raw[header] !== undefined && raw[header] !== '') {
       var apiField = FIELD_MAP[header];
