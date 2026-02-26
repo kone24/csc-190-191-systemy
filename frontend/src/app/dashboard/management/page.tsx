@@ -127,7 +127,7 @@ export default function ManagementPage() {
                 fontSize: '14px',
                 color: 'rgba(0, 0, 0, 0.6)',
                 marginBottom: '8px',
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontWeight: '600'
             }}>
                 {title}
@@ -137,7 +137,7 @@ export default function ManagementPage() {
                 fontWeight: '600',
                 color: '#FF5900',
                 marginBottom: '5px',
-                fontFamily: 'Inter'
+                fontFamily: 'Poppins'
             }}>
                 {value}
             </div>
@@ -145,7 +145,7 @@ export default function ManagementPage() {
                 <div style={{
                     fontSize: '12px',
                     color: 'rgba(0, 0, 0, 0.5)',
-                    fontFamily: 'Inter'
+                    fontFamily: 'Poppins'
                 }}>
                     {subtitle}
                 </div>
@@ -182,7 +182,7 @@ export default function ManagementPage() {
                             <div style={{
                                 fontSize: '14px',
                                 color: 'rgba(0, 0, 0, 0.7)',
-                                fontFamily: 'Inter'
+                                fontFamily: 'Poppins'
                             }}>
                                 Welcome, {user?.firstName} {user?.lastName}
                             </div>
@@ -295,21 +295,21 @@ export default function ManagementPage() {
                                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                         <thead>
                                             <tr style={{ background: 'rgba(217, 217, 217, 0.3)' }}>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Inter', fontWeight: '600' }}>Name</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Inter', fontWeight: '600' }}>Email</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Inter', fontWeight: '600' }}>Role</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Inter', fontWeight: '600' }}>Status</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Inter', fontWeight: '600' }}>Last Login</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Inter', fontWeight: '600' }}>Actions</th>
+                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Name</th>
+                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Email</th>
+                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Role</th>
+                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Status</th>
+                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Last Login</th>
+                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {users.map(userData => (
                                                 <tr key={userData.id} style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.1)' }}>
-                                                    <td style={{ padding: '15px', fontFamily: 'Inter' }}>
+                                                    <td style={{ padding: '15px', fontFamily: 'Poppins' }}>
                                                         {userData.firstName} {userData.lastName}
                                                     </td>
-                                                    <td style={{ padding: '15px', fontFamily: 'Inter', color: 'rgba(0, 0, 0, 0.7)' }}>
+                                                    <td style={{ padding: '15px', fontFamily: 'Poppins', color: 'rgba(0, 0, 0, 0.7)' }}>
                                                         {userData.email}
                                                     </td>
                                                     <td style={{ padding: '15px' }}>
@@ -320,7 +320,7 @@ export default function ManagementPage() {
                                                                 padding: '5px 10px',
                                                                 border: '1px solid rgba(0, 0, 0, 0.2)',
                                                                 borderRadius: 5,
-                                                                fontFamily: 'Inter'
+                                                                fontFamily: 'Poppins'
                                                             }}
                                                         >
                                                             <option value="Administrator">Administrator</option>
@@ -340,7 +340,7 @@ export default function ManagementPage() {
                                                             {userData.status}
                                                         </span>
                                                     </td>
-                                                    <td style={{ padding: '15px', fontFamily: 'Inter', fontSize: '14px', color: 'rgba(0, 0, 0, 0.7)' }}>
+                                                    <td style={{ padding: '15px', fontFamily: 'Poppins', fontSize: '14px', color: 'rgba(0, 0, 0, 0.7)' }}>
                                                         {formatDate(userData.lastLogin)}
                                                     </td>
                                                     <td style={{ padding: '15px' }}>

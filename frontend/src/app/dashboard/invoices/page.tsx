@@ -172,7 +172,7 @@ export default function InvoicesPage() {
                         <div style={{ fontSize: 24, fontWeight: 'bold', color: '#FF5900', marginBottom: '8px' }}>
                             {formatCurrency(totalAmount)}
                         </div>
-                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Inter' }}>Total Amount</div>
+                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins' }}>Total Amount</div>
                     </div>
 
                     <div style={{
@@ -185,7 +185,7 @@ export default function InvoicesPage() {
                         <div style={{ fontSize: 24, fontWeight: 'bold', color: '#4CAF50', marginBottom: '8px' }}>
                             {formatCurrency(paidAmount)}
                         </div>
-                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Inter' }}>Paid</div>
+                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins' }}>Paid</div>
                     </div>
 
                     <div style={{
@@ -198,7 +198,7 @@ export default function InvoicesPage() {
                         <div style={{ fontSize: 24, fontWeight: 'bold', color: '#FFC107', marginBottom: '8px' }}>
                             {formatCurrency(pendingAmount)}
                         </div>
-                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Inter' }}>Pending</div>
+                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins' }}>Pending</div>
                     </div>
 
                     <div style={{
@@ -211,7 +211,7 @@ export default function InvoicesPage() {
                         <div style={{ fontSize: 24, fontWeight: 'bold', color: '#F44336', marginBottom: '8px' }}>
                             {formatCurrency(overdueAmount)}
                         </div>
-                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Inter' }}>Overdue</div>
+                        <div style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins' }}>Overdue</div>
                     </div>
                 </div>
 
@@ -238,7 +238,7 @@ export default function InvoicesPage() {
                                 borderRadius: '20px',
                                 padding: '8px 16px',
                                 fontSize: 14,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -277,7 +277,7 @@ export default function InvoicesPage() {
                         fontSize: 14,
                         fontWeight: '600',
                         color: '#333',
-                        fontFamily: 'Inter',
+                        fontFamily: 'Poppins',
                         borderBottom: '1px solid #e0e0e0'
                     }}>
                         <div>Invoice #</div>
@@ -300,7 +300,7 @@ export default function InvoicesPage() {
                                 padding: '15px 20px',
                                 borderBottom: '1px solid #f0f0f0',
                                 fontSize: 14,
-                                fontFamily: 'Inter',
+                                fontFamily: 'Poppins',
                                 alignItems: 'center'
                             }}>
                                 <div style={{ fontWeight: '600', color: '#FF5900' }}>

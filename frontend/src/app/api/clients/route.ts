@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import type { CreateClientResponse, Client } from "@/types/client";
 
 interface CreateClientRequest {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone: string;
-  company: string;
+  phone_number: string;
+  business_name: string;
   address: {
     street: string;
     city: string;
@@ -28,7 +28,7 @@ interface CreateClientRequest {
 export async function POST(request: Request) {
   try {
     const body = await request.json() as CreateClientRequest;
-    const { firstName, lastName, email, phone, company, address, socialLinks, notes } = body;
+    const { first_name, last_name, email, phone_number, business_name, address, social_links, additional_info } = body;
 
     // Server-side validation (will move to backend)
 
@@ -39,28 +39,28 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!firstName?.trim()) {
+    if (!first_name?.trim()) {
       return NextResponse.json(
         { ok: false, message: "First name is required" },
         { status: 400 }
       );
     }
 
-    if (!lastName?.trim()) {
+    if (!last_name?.trim()) {
       return NextResponse.json(
         { ok: false, message: "Last name is required" },
         { status: 400 }
       );
     }
 
-    if (!phone?.trim()) {
+    if (!phone_number?.trim()) {
       return NextResponse.json(
         { ok: false, message: "Phone number is required" },
         { status: 400 }
       );
     }
 
-    if (!company?.trim()) {
+    if (!business_name?.trim()) {
       return NextResponse.json(
         { ok: false, message: "Company is required" },
         { status: 400 }
@@ -93,11 +93,11 @@ export async function POST(request: Request) {
 
     const client: Client = {
       id: crypto.randomUUID(),
-      firstName,
-      lastName,
+      first_name,
+      last_name,
       email,
-      phone: phone || '',  // Required field, shouldn't be null
-      company: company || '', // Required field, shouldn't be null
+      phone_number: phone_number || '',
+      business_name: business_name || '',
       address: address || {
         street: "",
         city: "",
@@ -110,10 +110,10 @@ export async function POST(request: Request) {
       title: undefined,
       industry: undefined,
       website: undefined,
-      socialLinks: socialLinks,
-      notes: notes || undefined,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      social_links: social_links,
+      additional_info: additional_info || undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     // Simulate network latency for better UX testing
