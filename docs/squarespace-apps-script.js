@@ -4,8 +4,11 @@
  * Watches the Google Sheet connected to the Lightfold contact form.
  * When Squarespace inserts a new row, this script POSTs the data to
  * the CRM API (POST /clients/contact) to create a client record.
- *
- * SETUP (one-time):
+ * 
+ * DONE LOCALLY REQUIRES AN HTTP TUNNEL IN PLACE OF API URL
+ * WILL NEED TO SETUP IN CLIENTS GOOGLE DRIVE UPON DEPLOYMENT
+ * 
+ * SETUP:
  * 1. In the Apps Script editor, go to Project Settings (gear icon)
  *    → Script Properties → Add property:
  *      Name:  CRM_API_SECRET
@@ -17,17 +20,11 @@
  *             (or http://localhost:3001/clients/contact for local testing)
  *
  * 3. Set up the trigger:
- *    - Triggers (alarm clock icon) → Add Trigger
+ *    - Triggers → Add Trigger
  *    - Function: sendToCRM
  *    - Event source: From spreadsheet
  *    - Event type: On change
  *    - Save and grant permissions
- *
- * EXPECTED SQUARESPACE COLUMN HEADERS (row 1 of the sheet):
- *   "Date", "Name", "Email", "Sign up for news and updates", "Message"
- *   Squarespace concatenates First Name + Last Name into a single "Name" column.
- *   This script splits on the first space: "John Smith" → firstName=John, lastName=Smith.
- *   Since both fields are required on the form, there will always be two names.
  */
 
 // Maps Squarespace sheet column headers → CRM API field names.
@@ -35,9 +32,7 @@
 // Note: "Name" is handled separately below via NAME_COLUMN splitting.
 var FIELD_MAP = {
   'Email': 'email',
-  'Email Address': 'email',       // Squarespace sometimes uses this label instead
   'Message': 'message',
-  'Sign up for news and updates': 'newsletter',
 };
 
 // The column header Squarespace uses for the combined name field.
@@ -66,7 +61,6 @@ function sendToCRM(e) {
   }
 
   // Split the combined "Name" column into firstName / lastName.
-  // Both are required on the Squarespace form so there will always be two parts.
   var payload = { source: SITE_SOURCE };
   var fullName = String(raw[NAME_COLUMN] || '').trim();
   if (fullName) {
@@ -75,7 +69,6 @@ function sendToCRM(e) {
       payload.firstName = fullName.substring(0, spaceIndex).trim();
       payload.lastName  = fullName.substring(spaceIndex + 1).trim();
     } else {
-      // Only one name present (shouldn't happen since form requires both).
       payload.firstName = fullName;
     }
   }
@@ -84,16 +77,11 @@ function sendToCRM(e) {
   for (var header in FIELD_MAP) {
     if (raw[header] !== undefined && raw[header] !== '') {
       var apiField = FIELD_MAP[header];
-      if (apiField === 'newsletter') {
-        // Checkbox comes through as TRUE/FALSE boolean or 'true'/'false' string.
-        payload[apiField] = (raw[header] === true || String(raw[header]).toLowerCase() === 'true');
-      } else {
-        payload[apiField] = String(raw[header]).trim();
-      }
+      payload[apiField] = String(raw[header]).trim();
     }
   }
 
-  // Bail out if the minimum required fields aren't present.
+  // exit out if the minimum required fields aren't present.
   if (!payload.firstName || !payload.email) {
     Logger.log('Skipping row — missing firstName or email. Row data: ' + JSON.stringify(raw));
     return;
