@@ -8,18 +8,25 @@ import SearchBar from '@/components/SearchBar';
 
 interface Client {
     id: string;
-    firstName: string;
-    lastName: string;
+    first_name: string;
+    last_name: string;
     email: string;
-    company: string;
-    phone: string;
-    notes: string;
+    business_name: string;
+    phone_number: string;
+    additional_info: string;
     tags: string[];
     createdAt?: string;
     updatedAt?: string;
 }
 
-type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'date-created' | 'date-updated';
+// Tags stored as "label|#color"; plain strings fall back to default purple.
+function parseTag(raw: string): { name: string; color: string } {
+    const sep = raw.lastIndexOf('|#');
+    if (sep !== -1) return { name: raw.slice(0, sep), color: raw.slice(sep + 1) };
+    return { name: raw, color: '#8A38F5' };
+}
+
+type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated';
 
 export default function ClientsPage() {
     const searchParams = useSearchParams();
@@ -38,7 +45,7 @@ export default function ClientsPage() {
         const fetchAllClients = async () => {
             try {
                 setLoading(true);
-                const res = await fetch('http://localhost:3001/clients', {
+                const res = await fetch(`http://localhost:3001/clients`, {
                     credentials: 'include',
                 });
                 if (!res.ok) throw new Error(`Error: ${res.status}`);
@@ -46,6 +53,7 @@ export default function ClientsPage() {
                 const items = Array.isArray(data) ? data : data?.items ?? [];
                 setAllClients(items);
             } catch (err: any) {
+                console.error('Failed to fetch clients:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -76,7 +84,7 @@ export default function ClientsPage() {
                     return res.json();
                 })
                 .then((data) => setSearchResults(data))
-                .catch((err) => setError(err.message))
+                .catch((err) => { console.error('Search failed:', err); setError(err.message); })
                 .finally(() => setLoading(false));
         }, 300);
 
@@ -91,13 +99,16 @@ export default function ClientsPage() {
         const sorted = [...result];
         switch (sortBy) {
             case 'name-asc':
-                sorted.sort((a, b) => `${a.firstName ?? ''} ${a.lastName ?? ''}`.localeCompare(`${b.firstName ?? ''} ${b.lastName ?? ''}`));
+                sorted.sort((a, b) => `${a.first_name ?? ''} ${a.last_name ?? ''}`.localeCompare(`${b.first_name ?? ''} ${b.last_name ?? ''}`));
                 break;
             case 'name-desc':
-                sorted.sort((a, b) => `${b.firstName ?? ''} ${b.lastName ?? ''}`.localeCompare(`${a.firstName ?? ''} ${a.lastName ?? ''}`));
+                sorted.sort((a, b) => `${b.first_name ?? ''} ${b.last_name ?? ''}`.localeCompare(`${a.first_name ?? ''} ${a.last_name ?? ''}`));
                 break;
             case 'company-asc':
-                sorted.sort((a, b) => (a.company ?? '').localeCompare(b.company ?? ''));
+                sorted.sort((a, b) => (a.business_name ?? '').localeCompare(b.business_name ?? ''));
+                break;
+            case 'company-desc':
+                sorted.sort((a, b) => (b.business_name ?? '').localeCompare(a.business_name ?? ''));
                 break;
             case 'date-created':
                 sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
@@ -170,7 +181,7 @@ export default function ClientsPage() {
                         <p style={{
                             color: '#FF5900',
                             fontSize: 14,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             margin: 0
                         }}>
                             {isSearching ? 'Searching...' : 'Loading clients...'}
@@ -188,7 +199,7 @@ export default function ClientsPage() {
                         <p style={{
                             color: '#ef4444',
                             fontSize: 14,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             margin: 0,
                             padding: 10,
                             backgroundColor: '#fef2f2',
@@ -217,7 +228,7 @@ export default function ClientsPage() {
                         <h3 style={{
                             color: 'black',
                             fontSize: 18,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: '600',
                             margin: 0
                         }}>
@@ -238,7 +249,7 @@ export default function ClientsPage() {
                                         padding: '6px 12px',
                                         color: '#FF5900',
                                         fontSize: 14,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Poppins',
                                         cursor: 'pointer'
                                     }}
                                 >
@@ -255,7 +266,7 @@ export default function ClientsPage() {
                                     border: '1px solid #ddd',
                                     background: 'white',
                                     fontSize: '14px',
-                                    fontFamily: 'Inter',
+                                    fontFamily: 'Poppins',
                                     cursor: 'pointer',
                                     color: '#666'
                                 }}
@@ -263,6 +274,7 @@ export default function ClientsPage() {
                                 <option value="name-asc">Sort: Name (A-Z)</option>
                                 <option value="name-desc">Sort: Name (Z-A)</option>
                                 <option value="company-asc">Sort: Company (A-Z)</option>
+                                <option value="company-desc">Sort: Company (Z-A)</option>
                                 <option value="date-created">Sort: Date Created (Newest)</option>
                                 <option value="date-updated">Sort: Date Updated (Newest)</option>
                             </select>
@@ -302,7 +314,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -313,7 +325,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -324,7 +336,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -335,7 +347,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -346,7 +358,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -357,7 +369,7 @@ export default function ClientsPage() {
                                             border: '1px solid rgba(217, 217, 217, 0.30)',
                                             padding: 15,
                                             textAlign: 'left',
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '600',
                                             fontSize: 14,
                                             color: '#FF5900'
@@ -381,17 +393,19 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)',
                                                 fontWeight: '500'
                                             }}>
-                                                {client.firstName} {client.lastName}
+                                                <Link href={`/dashboard/clients/${client.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                                                    {client.first_name} {client.last_name}
+                                                </Link>
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
@@ -400,25 +414,25 @@ export default function ClientsPage() {
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.company}
+                                                {client.business_name}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.phone}
+                                                {client.phone_number}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
+                                                fontFamily: 'Poppins',
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)',
                                                 maxWidth: 200,
@@ -426,16 +440,41 @@ export default function ClientsPage() {
                                                 textOverflow: 'ellipsis',
                                                 whiteSpace: 'nowrap'
                                             }}>
-                                                {client.notes}
+                                                {client.additional_info}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
-                                                fontFamily: 'Inter',
-                                                fontSize: 14,
-                                                color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.tags?.join(', ') || '—'}
+                                                <Link href={`/dashboard/clients/${client.id}`} style={{ textDecoration: 'none' }}>
+                                                    {client.tags?.length ? (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                            {client.tags.map((raw, i) => {
+                                                                const { name, color } = parseTag(raw);
+                                                                return (
+                                                                    <span key={i} style={{
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        height: 35,
+                                                                        paddingLeft: 29,
+                                                                        paddingRight: 29,
+                                                                        borderRadius: 20,
+                                                                        background: color,
+                                                                        color: 'white',
+                                                                        fontSize: 12,
+                                                                        fontFamily: 'Poppins',
+                                                                        fontWeight: '600',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}>
+                                                                        {name}
+                                                                    </span>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(26, 26, 26, 0.80)' }}>—</span>
+                                                    )}
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))}
@@ -456,7 +495,7 @@ export default function ClientsPage() {
                                     <p style={{
                                         color: 'rgba(26, 26, 26, 0.50)',
                                         fontSize: 16,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Poppins',
                                         margin: 0
                                     }}>
                                         No clients found for "{searchQuery}"
@@ -471,7 +510,7 @@ export default function ClientsPage() {
                                     <p style={{
                                         color: 'rgba(26, 26, 26, 0.50)',
                                         fontSize: 16,
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Poppins',
                                         marginBottom: '20px'
                                     }}>
                                         No clients yet. Add your first client to get started!
@@ -484,7 +523,7 @@ export default function ClientsPage() {
                                             padding: '10px 20px',
                                             color: 'white',
                                             fontSize: 14,
-                                            fontFamily: 'Inter',
+                                            fontFamily: 'Poppins',
                                             fontWeight: '500',
                                             cursor: 'pointer'
                                         }}>
