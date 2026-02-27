@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -15,6 +15,8 @@ interface Client {
     phone_number: string;
     additional_info: string;
     tags: string[];
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 // Tags stored as "label|#color"; plain strings fall back to default purple.
@@ -23,6 +25,8 @@ function parseTag(raw: string): { name: string; color: string } {
     if (sep !== -1) return { name: raw.slice(0, sep), color: raw.slice(sep + 1) };
     return { name: raw, color: '#8A38F5' };
 }
+
+type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated';
 
 export default function ClientsPage() {
     const searchParams = useSearchParams();
@@ -34,6 +38,7 @@ export default function ClientsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSearching, setIsSearching] = useState(!!initialSearch);
+    const [sortBy, setSortBy] = useState<SortOption>('name-asc');
 
     // Fetch all clients on page load
     useEffect(() => {
@@ -45,7 +50,8 @@ export default function ClientsPage() {
                 });
                 if (!res.ok) throw new Error(`Error: ${res.status}`);
                 const data = await res.json();
-                setAllClients(data.items ?? []);
+                const items = Array.isArray(data) ? data : data?.items ?? [];
+                setAllClients(items);
             } catch (err: any) {
                 console.error('Failed to fetch clients:', err);
                 setError(err.message);
@@ -85,7 +91,35 @@ export default function ClientsPage() {
         return () => clearTimeout(timeout);
     }, [searchQuery]);
 
-    const displayedClients = isSearching ? searchResults : allClients;
+    // Apply filters and sorting
+    const displayedClients = useMemo(() => {
+        let result = isSearching ? searchResults : allClients;
+
+        // Apply sorting
+        const sorted = [...result];
+        switch (sortBy) {
+            case 'name-asc':
+                sorted.sort((a, b) => `${a.first_name ?? ''} ${a.last_name ?? ''}`.localeCompare(`${b.first_name ?? ''} ${b.last_name ?? ''}`));
+                break;
+            case 'name-desc':
+                sorted.sort((a, b) => `${b.first_name ?? ''} ${b.last_name ?? ''}`.localeCompare(`${a.first_name ?? ''} ${a.last_name ?? ''}`));
+                break;
+            case 'company-asc':
+                sorted.sort((a, b) => (a.business_name ?? '').localeCompare(b.business_name ?? ''));
+                break;
+            case 'company-desc':
+                sorted.sort((a, b) => (b.business_name ?? '').localeCompare(a.business_name ?? ''));
+                break;
+            case 'date-created':
+                sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                break;
+            case 'date-updated':
+                sorted.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+                break;
+        }
+
+        return sorted;
+    }, [isSearching, searchResults, allClients, sortBy]);
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -198,7 +232,7 @@ export default function ClientsPage() {
                             fontWeight: '600',
                             margin: 0
                         }}>
-                            {isSearching ? `Search Results (${searchResults.length})` : `All Clients (${allClients.length})`}
+                            {isSearching ? `Search Results (${displayedClients.length})` : `All Clients (${displayedClients.length})`}
                         </h3>
 
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -222,6 +256,29 @@ export default function ClientsPage() {
                                     Clear Search
                                 </button>
                             )}
+                            {/* Sort dropdown */}
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                style={{
+                                    padding: '8px 12px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #ddd',
+                                    background: 'white',
+                                    fontSize: '14px',
+                                    fontFamily: 'Poppins',
+                                    cursor: 'pointer',
+                                    color: '#666'
+                                }}
+                            >
+                                <option value="name-asc">Sort: Name (A-Z)</option>
+                                <option value="name-desc">Sort: Name (Z-A)</option>
+                                <option value="company-asc">Sort: Company (A-Z)</option>
+                                <option value="company-desc">Sort: Company (Z-A)</option>
+                                <option value="date-created">Sort: Date Created (Newest)</option>
+                                <option value="date-updated">Sort: Date Updated (Newest)</option>
+                            </select>
+
                             <Link href="/dashboard/clients/add">
                                 <button style={{
                                     background: '#FF5900',
