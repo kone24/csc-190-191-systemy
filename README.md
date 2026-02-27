@@ -27,11 +27,11 @@ Navigate to the local backend directory. Example: "\Users\student\Downloads\CSC 
 (Only need once to download necessary packages for React)
 - npm install
 
-Start running the frontend at http://localhost:3001/
+Start running the frontend at http://localhost:3000/
 - npm run dev
 
 Can view the frontend in browser by navigating to:
-- http://localhost:3001/
+- http://localhost:3000/
 
 ## BACKEND
 Navigate to the local backend directory. Example: "\Users\student\Downloads\CSC 190\backend"
@@ -40,8 +40,22 @@ Navigate to the local backend directory. Example: "\Users\student\Downloads\CSC 
 (Only need once to download necessary packages for React)
 - npm install
 
-Begin running the backend at http://localhost:3000/	
+Copy the env template and fill in your values:
+- cp .env.example .env
+
+Required env variables (see `.env.example` for the full list):
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` — Supabase project credentials
+- `CONTACT_FORM_SECRET` — shared secret for external contact form submissions
+
+Begin running the backend at http://localhost:3001/
 - npm run start OR npm run start:dev
+
+# External Contact Form Integration
+The CRM accepts contact form submissions from external client websites via `POST /clients/contact`, authenticated with a shared secret (`X-Api-Secret` header).
+
+Currently integrated with:
+- **lightfold.tv** (Squarespace) — Google Apps Script bridges form submissions from a Google Sheet to the CRM. See [`docs/squarespace-apps-script.js`](docs/squarespace-apps-script.js).
+- **headword.co** (WordPress / Gravity Forms) — PHP snippet via WPCode plugin sends form data directly to the CRM. See [`docs/headword-gravity-forms-setup.md`](docs/headword-gravity-forms-setup.md).
 
 # Synopsis of Our Project
 Headword CRM is a full-stack client management platform with its purpose being to provide workers ease and efficiency in working with 

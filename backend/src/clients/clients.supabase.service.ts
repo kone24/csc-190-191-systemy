@@ -176,4 +176,66 @@ export class ClientsSupabaseService {
             throw error;
         }
     }
+
+    // Create client record from "Contact Us" forms (lightfold.tv, headword.co)
+    async createContactClient(body: any): Promise<Client> {
+        try {
+            const firstName = String(body?.firstName ?? '').trim();
+            const lastName = String(body?.lastName ?? '').trim();
+            const email = String(body?.email ?? '').trim().toLowerCase();
+            const message = String(body?.message ?? '').trim();
+            const origin = String(body?.origin ?? '').trim();
+            const newsletter = body?.newsletter === true;
+
+            if (!firstName || !email) {
+                throw new Error('Missing required fields for contact client');
+            }
+
+            // Check for duplicate email
+            const { data: existing, error: checkError } = await this.supabase
+                .from('clients')
+                .select('id')
+                .eq('email', email)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') {
+                throw new Error(`Duplicate email check failed: ${checkError.message}`);
+            }
+
+            if (existing) {
+                throw new Error('A client with this email already exists.');
+            }
+
+            const noteParts: string[] = [];
+            noteParts.push(`Source: Contact form (${origin || 'external'})`);
+            if (message) noteParts.push(`Message: ${message}`);
+            if (newsletter) noteParts.push('Opted in to newsletter');
+            const additional_info = noteParts.join('\n');
+
+            const clientData = {
+                first_name: firstName,
+                last_name: lastName || null,
+                email,
+                additional_info,
+                tags: ['contact-form'],
+            };
+
+            const { data, error } = await this.supabase
+                .from('clients')
+                .insert([clientData])
+                .select()
+                .single();
+
+            if (error) {
+                this.logger.error('Error creating contact client:', error);
+                throw new Error(`Failed to create contact client: ${error.message}`);
+            }
+
+            this.logger.log(`Contact client created with ID: ${data.id} from ${origin}`);
+            return data;
+        } catch (error) {
+            this.logger.error('Error in createContactClient method:', error);
+            throw error;
+        }
+    }
 }
