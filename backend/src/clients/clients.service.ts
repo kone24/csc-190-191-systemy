@@ -30,38 +30,38 @@ type TransactionRecord = {
 
 type ClientRecord = {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone: string;
-  company: string;
+  phone_number: string;
+  business_name: string;
   address: any;
   title?: string;
   industry?: string;
   website?: string;
-  socialLinks?: any;
-  notes?: string;
+  social_links?: any;
+  additional_info?: string;
   tags?: string[];
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 };
 
 type ClientProfileDto = {
   client: {
     id: string;
-    firstName: string;
-    lastName: string;
+    first_name: string;
+    last_name: string;
     email: string;
-    phone: string;
-    company: string;
+    phone_number: string;
+    business_name: string;
     address: any;
     title?: string;
     industry?: string;
     website?: string;
-    socialLinks?: any;
-    notes?: string;
-    createdAt: string;
-    updatedAt: string;
+    social_links?: any;
+    additional_info?: string;
+    created_at: string;
+    updated_at: string;
   };
   timeline: {
     items: InteractionRecord[];
@@ -135,20 +135,20 @@ export class ClientsService {
 
     if (!query) {
       return items.sort((a, b) =>
-        (b.createdAt ?? '').localeCompare(a.createdAt ?? ''),
+        (b.created_at ?? '').localeCompare(a.created_at ?? ''),
       );
     }
 
     const q = query.toLowerCase();
 
     return items.filter((c) => {
-      const first = (c.firstName ?? '').toLowerCase();
-      const last = (c.lastName ?? '').toLowerCase();
+      const first = (c.first_name ?? '').toLowerCase();
+      const last = (c.last_name ?? '').toLowerCase();
       const email = (c.email ?? '').toLowerCase();
-      const phone = (c.phone ?? '').toLowerCase();
-      const company = (c.company ?? '').toLowerCase();
+      const phone = (c.phone_number ?? '').toLowerCase();
+      const company = (c.business_name ?? '').toLowerCase();
       const website = (c.website ?? '').toLowerCase();
-      const notes = (c.notes ?? '').toLowerCase();
+      const notes = (c.additional_info ?? '').toLowerCase();
       const tags = Array.isArray(c.tags)
         ? c.tags.map((t) => String(t).toLowerCase())
         : [];
@@ -167,22 +167,22 @@ export class ClientsService {
   }
 
   async createClient(body: CreateClientDto) {
-    const firstName = String(body?.firstName ?? '').trim();
-    const lastName = String(body?.lastName ?? '').trim();
+    const first_name = String(body?.first_name ?? '').trim();
+    const last_name = String(body?.last_name ?? '').trim();
     const email = String(body?.email ?? '').trim().toLowerCase();
-    const phone = String(body?.phone ?? '').trim();
-    const company = String(body?.company ?? '').trim();
+    const phone_number = String(body?.phone_number ?? '').trim();
+    const business_name = String(body?.business_name ?? '').trim();
     const address = body?.address ?? undefined;
     const title = body?.title ?? undefined;
     const industry = body?.industry ?? undefined;
     const website = body?.website ?? undefined;
-    const socialLinks = body?.socialLinks ?? undefined;
-    const notes = body?.notes ?? undefined;
+    const social_links = body?.social_links ?? undefined;
+    const additional_info = body?.additional_info ?? undefined;
     const tags = Array.isArray(body?.tags)
       ? body.tags.map((t: any) => String(t).trim()).filter(Boolean)
       : undefined;
 
-    if (!firstName || !lastName || !email || !phone || !company || !address) {
+    if (!first_name || !last_name || !email || !phone_number || !business_name) {
       throw new ConflictException('Missing required fields');
     }
 
@@ -196,20 +196,20 @@ export class ClientsService {
     const now = new Date().toISOString();
     const saved: ClientRecord = {
       id: randomUUID(),
-      firstName,
-      lastName,
+      first_name,
+      last_name,
       email,
-      phone,
-      company,
+      phone_number,
+      business_name,
       address,
       title,
       industry,
       website,
-      socialLinks,
-      notes,
+      social_links,
+      additional_info,
       tags,
-      createdAt: now,
-      updatedAt: now,
+      created_at: now,
+      updated_at: now,
     };
 
     all.push(saved);
@@ -261,19 +261,19 @@ export class ClientsService {
     return {
       client: {
         id: client.id,
-        firstName: client.firstName,
-        lastName: client.lastName,
+        first_name: client.first_name,
+        last_name: client.last_name,
         email: client.email,
-        phone: client.phone,
-        company: client.company,
+        phone_number: client.phone_number,
+        business_name: client.business_name,
         address: client.address,
         title: client.title,
         industry: client.industry,
         website: client.website,
-        socialLinks: client.socialLinks,
-        notes: client.notes,
-        createdAt: client.createdAt,
-        updatedAt: client.updatedAt,
+        social_links: client.social_links,
+        additional_info: client.additional_info,
+        created_at: client.created_at,
+        updated_at: client.updated_at,
       },
       timeline: {
         items: timelineItems,

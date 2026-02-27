@@ -157,7 +157,7 @@ export default function LoginPage() {
 
         {/* Title */}
         <div style={{ width: 275, padding: 10, justifyContent: 'center', alignItems: 'center', gap: 10, display: 'flex' }}>
-          <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>Sign in with email</div>
+          <div style={{ textAlign: 'center', color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word', textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)' }}>Sign in with email</div>
         </div>
 
         {/* Message Display - moved here to avoid overlap */}
@@ -174,7 +174,7 @@ export default function LoginPage() {
               textAlign: 'center',
               color: message.includes('Welcome') ? '#10b981' : '#ef4444',
               fontSize: 15,
-              fontFamily: 'Inter',
+              fontFamily: 'Poppins',
               fontWeight: '600',
               wordWrap: 'break-word',
               maxWidth: '100%',
@@ -218,7 +218,7 @@ export default function LoginPage() {
                 outline: 'none',
                 color: 'rgba(26, 26, 26, 0.80)',
                 fontSize: 15,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontWeight: '600'
               }}
             />
@@ -246,7 +246,7 @@ export default function LoginPage() {
                 outline: 'none',
                 color: 'rgba(26, 26, 26, 0.80)',
                 fontSize: 15,
-                fontFamily: 'Inter',
+                fontFamily: 'Poppins',
                 fontWeight: '600'
               }}
             />
@@ -311,7 +311,7 @@ export default function LoginPage() {
             cursor: loading || !recaptchaToken ? 'not-allowed' : 'pointer'
           }}
         >
-          <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Inter', fontWeight: '600', wordWrap: 'break-word' }}>
+          <div style={{ textAlign: 'center', color: 'white', fontSize: 30, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>
             {loading ? "Signing in..." : "Login"}
           </div>
         </button>
@@ -342,7 +342,7 @@ export default function LoginPage() {
           paddingTop: 40,
           color: 'rgba(255, 158, 77, 0.50)',
           fontSize: 15,
-          fontFamily: 'Inter',
+          fontFamily: 'Poppins',
           fontWeight: '600',
           wordWrap: 'break-word',
           marginTop: 20
@@ -350,7 +350,9 @@ export default function LoginPage() {
           or sign in with
         </div>
         {/* Google Sign In Button */}
-        <div style={{
+        <div
+        onClick={() => (window.location.href = "http://localhost:3001/auth/google/")}
+        style={{
           width: 75,
           height: 75,
           padding: 15,

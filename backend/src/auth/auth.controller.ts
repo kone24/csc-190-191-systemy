@@ -45,4 +45,49 @@ export class AuthController {
   me(@Req() req: Request) {
     return req['user']; // payload: { username }
   }
+
+  @Get('google')
+  redirectToGoogle(@Res() res: Response) {
+    const params = new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI!,
+      response_type: 'code',
+      scope: process.env.GOOGLE_SCOPES!,
+      access_type: 'offline',
+      prompt: 'consent',
+    });
+
+    return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+  }
+
+  @Get('google/callback')
+  async googleCallback(
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    const code = req.query.code as string;
+
+    if (!code) {
+      return res.redirect('http://localhost:3000/login?error=oauth');
+    }
+
+    const tokenResponse = await fetch(
+      'https://oauth2.googleapis.com/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          code,
+          grant_type: 'authorization_code',
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        }),
+      },
+    );
+
+    const tokenData = await tokenResponse.json();
+
+    return res.redirect('http://localhost:3000/dashboard');
+  }
 }

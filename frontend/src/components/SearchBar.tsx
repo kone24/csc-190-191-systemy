@@ -55,7 +55,7 @@ export default function SearchBar({
         fontSize: 14,
         flex: 1,
         color: '#333',
-        fontFamily: 'Inter',
+        fontFamily: 'Poppins',
         fontWeight: '400',
         letterSpacing: 0
     };

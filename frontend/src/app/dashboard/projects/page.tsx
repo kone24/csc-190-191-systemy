@@ -222,7 +222,7 @@ export default function ProjectsPage() {
                             gap: '8px',
                             color: 'black',
                             fontSize: 14,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: '500',
                             cursor: 'pointer'
                         }}>
@@ -240,7 +240,7 @@ export default function ProjectsPage() {
                             padding: '8px 16px',
                             color: 'black',
                             fontSize: 14,
-                            fontFamily: 'Inter',
+                            fontFamily: 'Poppins',
                             fontWeight: '400',
                             cursor: 'pointer'
                         }}>
@@ -300,7 +300,7 @@ export default function ProjectsPage() {
                                 fontSize: 12,
                                 fontWeight: '600',
                                 color: 'black',
-                                fontFamily: 'Inter'
+                                fontFamily: 'Poppins'
                             }}>
                                 {phase.name}
                             </div>
@@ -343,7 +343,7 @@ export default function ProjectsPage() {
                                 fontSize: 10,
                                 fontWeight: '600',
                                 color: 'rgba(0,0,0,0.5)',
-                                fontFamily: 'Inter'
+                                fontFamily: 'Poppins'
                             }}>
                                 {phase.details.map((detail, index) => (
                                     <span key={index}>{detail}</span>
@@ -381,7 +381,7 @@ export default function ProjectsPage() {
                                     fontSize: 16,
                                     fontWeight: '600',
                                     color: 'black',
-                                    fontFamily: 'Inter',
+                                    fontFamily: 'Poppins',
                                     margin: 0,
                                     flex: 1
                                 }}>
@@ -410,7 +410,7 @@ export default function ProjectsPage() {
                                     <div key={task.id} style={{
                                         fontSize: 12,
                                         color: '#666',
-                                        fontFamily: 'Inter',
+                                        fontFamily: 'Poppins',
                                         lineHeight: 1.4
                                     }}>
                                         {task.description}
@@ -447,7 +447,7 @@ export default function ProjectsPage() {
                                                 borderRadius: '12px',
                                                 fontSize: 10,
                                                 fontWeight: '500',
-                                                fontFamily: 'Inter'
+                                                fontFamily: 'Poppins'
                                             }}>
                                                 {project.tasks[0].user.dueDate}
                                             </span>
@@ -460,7 +460,7 @@ export default function ProjectsPage() {
                                                 borderRadius: '12px',
                                                 fontSize: 10,
                                                 fontWeight: '500',
-                                                fontFamily: 'Inter'
+                                                fontFamily: 'Poppins'
                                             }}>
                                                 {project.tasks[0].user.tag}
                                             </span>

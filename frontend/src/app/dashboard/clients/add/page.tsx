@@ -178,24 +178,60 @@ export default function AddClientPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/clients", {
+      // Transform frontend form data to match backend API format (snake_case for Supabase)
+      const clientData = {
+        first_name: form.firstName,
+        last_name: form.lastName,
+        business_name: form.company,
+        email: form.email,
+        phone_number: form.phone || "",
+        address: {
+          street: form.address.street,
+          city: form.address.city,
+          state: form.address.state.name,
+          zip_code: form.address.postalCode,
+          country: form.address.country.name,
+          additional_info: form.address.additionalInfo || ""
+        },
+        // Default values for required backend fields
+        services_needed: ["General Services"],
+        project_timeline: "To be determined",
+        budget_range: "To be determined",
+        preferred_contact_method: "email",
+        additional_info: form.notes || "",
+        // Optional: Include social media
+        social_links: form.socialLinks || {}
+      };
+
+      // Call your NestJS backend (correct port: 3001)
+      const res = await fetch("http://localhost:3001/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(clientData),
       });
 
-      const data = (await res.json()) as CreateClientResponse;
+      // Add better error handling for non-JSON responses
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonError) {
+        const errorText = await res.text();
+        console.error("Response was not JSON:", errorText);
+        console.error("Response status:", res.status);
+        setMessage(`❌ Server error: ${res.status} - Invalid response format`);
+        return;
+      }
 
       if (res.ok && data.ok) {
-        setMessage("Client created successfully!");
-        // Brief delay to show success message
-        setTimeout(() => router.push("/dashboard/clients"), 1000);
+        setMessage(`✅ Client created successfully! ID: ${data.client.id}`);
+        // Brief delay to show success message, then redirect
+        setTimeout(() => router.push("/dashboard/clients"), 2000);
       } else {
-        setMessage(data.ok === false ? data.message : "Failed to create client");
+        setMessage(`❌ ${data.message || "Failed to create client"}`);
       }
     } catch (err) {
       console.error("Error creating client:", err);
-      setMessage("An error occurred while creating the client");
+      setMessage("❌ Network error: Could not connect to server. Make sure your backend is running.");
     } finally {
       setLoading(false);
     }
@@ -210,8 +246,8 @@ export default function AddClientPage() {
       <div style={{ flex: 1, minHeight: '100vh', background: '#f9fafb', padding: '32px 30px' }}>
         <main style={{ margin: '0 auto', maxWidth: '672px', padding: '0 16px' }}>
           <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#000', fontFamily: 'Inter' }}>Add New Client</h1>
-            <p style={{ marginTop: '8px', color: '#6b7280', fontFamily: 'Inter' }}>
+            <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#000', fontFamily: 'Poppins' }}>Add New Client</h1>
+            <p style={{ marginTop: '8px', color: '#6b7280', fontFamily: 'Poppins' }}>
               Enter the client's information below
             </p>
           </div>
@@ -221,7 +257,7 @@ export default function AddClientPage() {
               {/* First Name - Required */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
                     First Name <span style={{ color: '#ef4444' }}>*</span>
                   </span>
                   <input
@@ -237,20 +273,20 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="John"
                   />
                 </label>
                 {errors.firstName && (
-                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Inter' }}>{errors.firstName}</p>
+                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Poppins' }}>{errors.firstName}</p>
                 )}
               </div>
 
               {/* Last Name - Required */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
                     Last Name <span style={{ color: '#ef4444' }}>*</span>
                   </span>
                   <input
@@ -266,20 +302,20 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="Doe"
                   />
                 </label>
                 {errors.lastName && (
-                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Inter' }}>{errors.lastName}</p>
+                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Poppins' }}>{errors.lastName}</p>
                 )}
               </div>
 
               {/* Email - Required */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
                     Email <span style={{ color: '#ef4444' }}>*</span>
                   </span>
                   <input
@@ -295,21 +331,21 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="john@example.com"
                     required
                   />
                 </label>
                 {errors.email && (
-                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Inter' }}>{errors.email}</p>
+                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Poppins' }}>{errors.email}</p>
                 )}
               </div>
 
               {/* Phone - Optional */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Phone</span>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Phone</span>
                   <PhoneNumberInput
                     value={form.phone}
                     onChange={(value) => {
@@ -326,7 +362,7 @@ export default function AddClientPage() {
               {/* Company - Required */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
                     Company <span style={{ color: '#ef4444' }}>*</span>
                   </span>
                   <input
@@ -342,20 +378,20 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="Company Name"
                   />
                 </label>
                 {errors.company && (
-                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Inter' }}>{errors.company}</p>
+                  <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Poppins' }}>{errors.company}</p>
                 )}
               </div>
 
               {/* Address - Required */}
               <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Street <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Street <span style={{ color: '#ef4444' }}>*</span></label>
                   <input
                     type="text"
                     value={form.address.street}
@@ -369,13 +405,13 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="123 Main St"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>City <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>City <span style={{ color: '#ef4444' }}>*</span></label>
                   <input
                     type="text"
                     value={form.address.city}
@@ -389,17 +425,18 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="City"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Country <span style={{ color: '#ef4444' }}>*</span></label>
-                  <Select
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Country <span style={{ color: '#ef4444' }}>*</span></label>
+                  <Select<Country>
+                    instanceId="country-select"
                     options={COUNTRIES}
                     value={selectedCountry}
-                    onChange={(selected: Country | null) => {
+                    onChange={(selected) => {
                       setSelectedCountry(selected);
                       if (selected) {
                         setForm(prev => ({
@@ -413,8 +450,8 @@ export default function AddClientPage() {
                         }));
                       }
                     }}
-                    getOptionLabel={(option: Country) => option.name}
-                    getOptionValue={(option: Country) => option.code}
+                    getOptionLabel={(option) => option.name}
+                    getOptionValue={(option) => option.code}
                     placeholder="Select a country"
                     styles={{
                       control: (base: any, state: any) => ({
@@ -456,11 +493,12 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>State/Province <span style={{ color: '#ef4444' }}>*</span></label>
-                  <Select
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>State/Province <span style={{ color: '#ef4444' }}>*</span></label>
+                  <Select<State>
+                    instanceId="state-select"
                     options={availableStates}
                     value={availableStates.find(s => s.code === form.address.state.code)}
-                    onChange={(selected: State | null) => {
+                    onChange={(selected) => {
                       if (selected) {
                         setForm(prev => ({
                           ...prev,
@@ -471,8 +509,8 @@ export default function AddClientPage() {
                         }));
                       }
                     }}
-                    getOptionLabel={(option: State) => option.name}
-                    getOptionValue={(option: State) => option.code}
+                    getOptionLabel={(option) => option.name}
+                    getOptionValue={(option) => option.code}
                     placeholder="Select a state/province"
                     isDisabled={!selectedCountry}
                     styles={{
@@ -516,7 +554,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Postal Code <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Postal Code <span style={{ color: '#ef4444' }}>*</span></label>
                   <input
                     type="text"
                     value={form.address.postalCode}
@@ -530,13 +568,13 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="Postal Code"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Additional Info</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Additional Info</label>
                   <input
                     type="text"
                     value={form.address.additionalInfo}
@@ -550,20 +588,20 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="Apt, suite, etc."
                   />
                 </div>
               </div>
               {errors.address && (
-                <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Inter' }}>{errors.address}</p>
+                <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Poppins' }}>{errors.address}</p>
               )}
 
               {/* Social Media Links - Optional */}
               <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>LinkedIn</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>LinkedIn</label>
                   <input
                     type="url"
                     value={form.socialLinks?.linkedin || ""}
@@ -577,13 +615,13 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="https://linkedin.com/in/username"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Twitter</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Twitter</label>
                   <input
                     type="url"
                     value={form.socialLinks?.twitter || ""}
@@ -597,13 +635,13 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="https://twitter.com/username"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Facebook</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Facebook</label>
                   <input
                     type="url"
                     value={form.socialLinks?.facebook || ""}
@@ -617,13 +655,13 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="https://facebook.com/username"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Instagram</label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Instagram</label>
                   <input
                     type="url"
                     value={form.socialLinks?.instagram || ""}
@@ -637,7 +675,7 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter'
+                      fontFamily: 'Poppins'
                     }}
                     placeholder="https://instagram.com/username"
                   />
@@ -647,7 +685,7 @@ export default function AddClientPage() {
               {/* Notes - Optional */}
               <div>
                 <label style={{ display: 'block' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Inter' }}>Notes</span>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Notes</span>
                   <textarea
                     value={form.notes}
                     onChange={handleChange("notes")}
@@ -661,7 +699,7 @@ export default function AddClientPage() {
                       padding: '8px',
                       boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
                       outline: 'none',
-                      fontFamily: 'Inter',
+                      fontFamily: 'Poppins',
                       resize: 'vertical'
                     }}
                     placeholder="Additional notes about the client..."
@@ -685,7 +723,7 @@ export default function AddClientPage() {
                   color: '#374151',
                   background: '#ffffff',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  fontFamily: 'Inter'
+                  fontFamily: 'Poppins'
                 }}
               >
                 Cancel
@@ -702,7 +740,7 @@ export default function AddClientPage() {
                   color: '#ffffff',
                   border: 'none',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  fontFamily: 'Inter'
+                  fontFamily: 'Poppins'
                 }}
               >
                 {loading ? "Creating..." : "Create Client"}
@@ -718,7 +756,7 @@ export default function AddClientPage() {
                   padding: '16px',
                   background: message.includes("success") ? '#f0fdf4' : '#fef2f2',
                   color: message.includes("success") ? '#166534' : '#991b1b',
-                  fontFamily: 'Inter'
+                  fontFamily: 'Poppins'
                 }}
               >
                 {message}
