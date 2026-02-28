@@ -59,65 +59,45 @@ export default function AddClientPage() {
     const newErrors: FormErrors = {};
     const MAX_LENGTH = 255;
 
-    // Required fields with length validation
+    // First name is always required
     if (!form.firstName.trim()) {
       newErrors.firstName = "First name is required";
     } else if (form.firstName.length > MAX_LENGTH) {
       newErrors.firstName = `First name must be less than ${MAX_LENGTH} characters`;
     }
 
-    if (!form.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    } else if (form.lastName.length > MAX_LENGTH) {
+    // At least one of email or phone is required
+    if (!form.email.trim() && !form.phone.trim()) {
+      newErrors.email = "Email or phone number is required";
+    }
+
+    // Optional length validations
+    if (form.lastName && form.lastName.length > MAX_LENGTH) {
       newErrors.lastName = `Last name must be less than ${MAX_LENGTH} characters`;
     }
 
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (form.email.length > MAX_LENGTH) {
+    if (form.email && form.email.length > MAX_LENGTH) {
       newErrors.email = `Email must be less than ${MAX_LENGTH} characters`;
     }
 
-    if (!form.company.trim()) {
-      newErrors.company = "Company is required";
-    } else if (form.company.length > MAX_LENGTH) {
+    if (form.company && form.company.length > MAX_LENGTH) {
       newErrors.company = `Company name must be less than ${MAX_LENGTH} characters`;
     }
 
-    // Address validation
+    // Address length validation (all optional)
     const address = form.address;
-    if (!address.street.trim()) {
-      newErrors.address = "Street is required";
-    } else if (address.street.length > MAX_LENGTH) {
+    if (address.street && address.street.length > MAX_LENGTH) {
       newErrors.address = `Street must be less than ${MAX_LENGTH} characters`;
     }
-
-    if (!address.city.trim()) {
-      newErrors.address = "City is required";
-    } else if (address.city.length > MAX_LENGTH) {
+    if (address.city && address.city.length > MAX_LENGTH) {
       newErrors.address = `City must be less than ${MAX_LENGTH} characters`;
     }
-
-    if (!address.state.code) {
-      newErrors.address = "State is required";
-    }
-
-    if (!address.postalCode.trim()) {
-      newErrors.address = "Postal code is required";
-    } else if (address.postalCode.length > 20) { // Postal codes are typically shorter
+    if (address.postalCode && address.postalCode.length > 20) {
       newErrors.address = "Postal code is too long";
     }
-
-    if (!address.country.code) {
-      newErrors.address = "Country is required";
-    }
-
-    // Optional fields validation
     if (address.additionalInfo && address.additionalInfo.length > MAX_LENGTH) {
       newErrors.address = `Additional address info must be less than ${MAX_LENGTH} characters`;
     }
-
-    // Phone validation handled by PhoneNumberInput component
 
     // Social media URL validation (optional)
     if (form.socialLinks) {
@@ -135,7 +115,7 @@ export default function AddClientPage() {
     }
 
     // Notes length validation (optional)
-    if (form.notes && form.notes.length > 1000) { // Allow longer notes
+    if (form.notes && form.notes.length > 1000) {
       newErrors.notes = "Notes must be less than 1000 characters";
     }
 
@@ -302,11 +282,11 @@ export default function AddClientPage() {
                 )}
               </div>
 
-              {/* Last Name - Required */}
+              {/* Last Name - Optional */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
-                    Last Name <span style={{ color: '#ef4444' }}>*</span>
+                    Last Name
                   </span>
                   <input
                     type="text"
@@ -331,11 +311,11 @@ export default function AddClientPage() {
                 )}
               </div>
 
-              {/* Email - Required */}
+              {/* Email - Required if no phone */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
-                    Email <span style={{ color: '#ef4444' }}>*</span>
+                    Email <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '400' }}>(email or phone required)</span>
                   </span>
                   <input
                     type="email"
@@ -353,7 +333,6 @@ export default function AddClientPage() {
                       fontFamily: 'Poppins'
                     }}
                     placeholder="john@example.com"
-                    required
                   />
                 </label>
                 {errors.email && (
@@ -361,7 +340,7 @@ export default function AddClientPage() {
                 )}
               </div>
 
-              {/* Phone - Optional */}
+              {/* Phone - Required if no email */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Phone</span>
@@ -372,17 +351,20 @@ export default function AddClientPage() {
                       if (errors.phone) {
                         setErrors(prev => ({ ...prev, phone: undefined }));
                       }
+                      if (errors.email) {
+                        setErrors(prev => ({ ...prev, email: undefined }));
+                      }
                     }}
                     error={errors.phone}
                   />
                 </label>
               </div>
 
-              {/* Company - Required */}
+              {/* Company - Optional */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
-                    Company <span style={{ color: '#ef4444' }}>*</span>
+                    Company
                   </span>
                   <input
                     type="text"
@@ -628,10 +610,10 @@ export default function AddClientPage() {
                 </label>
               </div>
 
-              {/* Address - Required */}
+              {/* Address - Optional */}
               <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Street <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Street</label>
                   <input
                     type="text"
                     value={form.address.street}
@@ -651,7 +633,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>City <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>City</label>
                   <input
                     type="text"
                     value={form.address.city}
@@ -671,7 +653,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Country <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Country</label>
                   <Select<Country>
                     instanceId="country-select"
                     options={COUNTRIES}
@@ -733,7 +715,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>State/Province <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>State/Province</label>
                   <Select<State>
                     instanceId="state-select"
                     options={availableStates}
@@ -794,7 +776,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Postal Code <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Postal Code</label>
                   <input
                     type="text"
                     value={form.address.postalCode}
