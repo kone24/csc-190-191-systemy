@@ -223,11 +223,11 @@ export default function AddClientPage() {
       }
 
       if (res.ok && data.ok) {
-        setMessage(`✅ Client created successfully! ID: ${data.client.id}`);
+        setMessage(`✅ Contact created successfully! ID: ${data.client.id}`);
         // Brief delay to show success message, then redirect
         setTimeout(() => router.push("/dashboard/clients"), 2000);
       } else {
-        setMessage(`❌ ${data.message || "Failed to create client"}`);
+        setMessage(`❌ ${data.message || "Failed to create contact"}`);
       }
     } catch (err) {
       console.error("Error creating client:", err);
@@ -246,9 +246,9 @@ export default function AddClientPage() {
       <div style={{ flex: 1, minHeight: '100vh', background: '#f9fafb', padding: '32px 30px' }}>
         <main style={{ margin: '0 auto', maxWidth: '672px', padding: '0 16px' }}>
           <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#000', fontFamily: 'Poppins' }}>Add New Client</h1>
+            <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#000', fontFamily: 'Poppins' }}>Add New Contact</h1>
             <p style={{ marginTop: '8px', color: '#6b7280', fontFamily: 'Poppins' }}>
-              Enter the client's information below
+              Enter the contact's information below
             </p>
           </div>
 
@@ -702,7 +702,7 @@ export default function AddClientPage() {
                       fontFamily: 'Poppins',
                       resize: 'vertical'
                     }}
-                    placeholder="Additional notes about the client..."
+                    placeholder="Additional notes about the contact..."
                   />
                 </label>
               </div>
@@ -743,7 +743,7 @@ export default function AddClientPage() {
                   fontFamily: 'Poppins'
                 }}
               >
-                {loading ? "Creating..." : "Create Client"}
+                {loading ? "Creating..." : "Create Contact"}
               </button>
             </div>
 

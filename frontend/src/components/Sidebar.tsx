@@ -131,7 +131,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 <NavItem
                     href="/dashboard/clients"
                     icon="/images/icons/clients.png"
-                    label="Clients"
+                    label="Contacts"
                     isActive={activePage === 'clients'}
                 />
 

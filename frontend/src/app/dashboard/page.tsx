@@ -60,7 +60,7 @@ export default function DashboardPage() {
         {/* Top Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           {/* Search Container */}
-          <SearchBar placeholder="Search clients, projects, and more..." onSearch={(value) => {
+          <SearchBar placeholder="Search contacts, projects, and more..." onSearch={(value) => {
             // You can implement dashboard-wide search logic here
             // For now, we'll redirect to clients page with search functionality
             if (value.trim()) {
@@ -116,7 +116,7 @@ export default function DashboardPage() {
               onMouseEnter={() => setHoveredTile(0)}
               onMouseLeave={() => setHoveredTile(null)}
             >
-              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Active Clients</div>
+              <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.60)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>Active Contacts</div>
               <div style={{ opacity: 0.90, textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>{clientCount ?? '—'}</div>
               <div style={{ color: '#00F5A0', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600', wordWrap: 'break-word' }}>↑ 5% vs last week</div>
             </div>
@@ -195,8 +195,8 @@ export default function DashboardPage() {
                 padding: '10px 0',
                 borderBottom: '1px solid #f0f0f0'
               }}>
-                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Client" />
-                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Client #22</div>
+                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Contact" />
+                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Contact #22</div>
                 <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>blah blah #1</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Dec 31</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>$67</div>
@@ -222,8 +222,8 @@ export default function DashboardPage() {
                 padding: '10px 0',
                 borderBottom: '1px solid #f0f0f0'
               }}>
-                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-2.png" alt="Client" />
-                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Client #21</div>
+                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-2.png" alt="Contact" />
+                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Contact #21</div>
                 <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>blah blah #2</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Nov 3</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>$512</div>
@@ -249,8 +249,8 @@ export default function DashboardPage() {
                 padding: '10px 0',
                 borderBottom: '1px solid #f0f0f0'
               }}>
-                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Client" />
-                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Client #3</div>
+                <img style={{ width: 40, height: 40, borderRadius: '50%' }} src="/images/images/client-1.png" alt="Contact" />
+                <div style={{ color: 'black', fontSize: 15, fontFamily: 'Poppins', fontWeight: '600' }}>Contact #3</div>
                 <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>blah blah #3</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>Dec 31</div>
                 <div style={{ color: 'black', fontSize: 10, fontFamily: 'Poppins', fontWeight: '600' }}>$283</div>
