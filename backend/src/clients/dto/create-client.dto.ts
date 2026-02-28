@@ -57,4 +57,44 @@ export class CreateClientDto {
     @IsArray()
     @IsString({ each: true })
     tags?: string[];
+
+    @IsOptional()
+    @IsString()
+    company?: string;
+
+    @IsOptional()
+    @IsString()
+    relationship_owner?: string;
+
+    @IsOptional()
+    @IsString()
+    status?: string;
+
+    @IsOptional()
+    @IsString()
+    contact_medium?: string;
+
+    @IsOptional()
+    @IsString()
+    date_of_contact?: string;
+
+    @IsOptional()
+    @IsString()
+    where_met?: string;
+
+    @IsOptional()
+    @IsString()
+    chat_summary?: string;
+
+    @IsOptional()
+    @IsString()
+    outcome?: string;
+
+    @IsOptional()
+    @IsString()
+    relationship_status?: string;
+
+    @IsOptional()
+    @IsString()
+    notes?: string;
 }

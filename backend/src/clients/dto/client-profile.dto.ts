@@ -14,6 +14,16 @@ export interface ClientContactDto {
   website?: string;
   social_links?: any;
   additional_info?: string;
+  company?: string;
+  relationship_owner?: string;
+  status?: string;
+  contact_medium?: string;
+  date_of_contact?: string;
+  where_met?: string;
+  chat_summary?: string;
+  outcome?: string;
+  relationship_status?: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
