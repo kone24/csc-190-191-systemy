@@ -25,6 +25,15 @@ export default function AddClientPage() {
     email: "",
     phone: "",
     company: "",
+    title: "",
+    relationshipOwner: "",
+    status: "",
+    contactMedium: "",
+    dateOfContact: "",
+    whereMet: "",
+    chatSummary: "",
+    outcome: "",
+    relationshipStatus: "",
     address: {
       street: "",
       city: "",
@@ -134,7 +143,7 @@ export default function AddClientPage() {
   }
 
   const handleChange = (field: keyof CreateClientRequest) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
     if (errors[field]) {
@@ -200,7 +209,17 @@ export default function AddClientPage() {
         preferred_contact_method: "email",
         additional_info: form.notes || "",
         // Optional: Include social media
-        social_links: form.socialLinks || {}
+        social_links: form.socialLinks || {},
+        // CRM fields
+        title: form.title || undefined,
+        relationship_owner: form.relationshipOwner || undefined,
+        status: form.status || undefined,
+        contact_medium: form.contactMedium || undefined,
+        date_of_contact: form.dateOfContact || undefined,
+        where_met: form.whereMet || undefined,
+        chat_summary: form.chatSummary || undefined,
+        outcome: form.outcome || undefined,
+        relationship_status: form.relationshipStatus || undefined
       };
 
       // Call your NestJS backend (correct port: 3001)
@@ -386,6 +405,227 @@ export default function AddClientPage() {
                 {errors.company && (
                   <p style={{ marginTop: '4px', fontSize: '14px', color: '#dc2626', fontFamily: 'Poppins' }}>{errors.company}</p>
                 )}
+              </div>
+
+              {/* Title - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Title</span>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={handleChange("title")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. VP of Engineering"
+                  />
+                </label>
+              </div>
+
+              {/* Relationship Owner - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Relationship Owner</span>
+                  <input
+                    type="text"
+                    value={form.relationshipOwner}
+                    onChange={handleChange("relationshipOwner")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="Team member managing this contact"
+                  />
+                </label>
+              </div>
+
+              {/* Status - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Status</span>
+                  <input
+                    type="text"
+                    value={form.status}
+                    onChange={handleChange("status")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Active, Inactive"
+                  />
+                </label>
+              </div>
+
+              {/* Contact Medium - Optional (Dropdown) */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Contact Medium</span>
+                  <select
+                    value={form.contactMedium}
+                    onChange={handleChange("contactMedium")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins',
+                      background: '#ffffff'
+                    }}
+                  >
+                    <option value="">Select a contact medium</option>
+                    <option value="Email">Email</option>
+                    <option value="Phone">Phone</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="DM">DM</option>
+                  </select>
+                </label>
+              </div>
+
+              {/* Date of Contact - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Date of Contact</span>
+                  <input
+                    type="date"
+                    value={form.dateOfContact}
+                    onChange={handleChange("dateOfContact")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                  />
+                </label>
+              </div>
+
+              {/* Where Met - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Where Met</span>
+                  <input
+                    type="text"
+                    value={form.whereMet}
+                    onChange={handleChange("whereMet")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Tech Conference 2026"
+                  />
+                </label>
+              </div>
+
+              {/* Chat Summary - Optional (Textarea) */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Chat Summary</span>
+                  <textarea
+                    value={form.chatSummary}
+                    onChange={handleChange("chatSummary")}
+                    rows={3}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins',
+                      resize: 'vertical'
+                    }}
+                    placeholder="Summary of what was discussed..."
+                  />
+                </label>
+              </div>
+
+              {/* Outcome - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Outcome</span>
+                  <input
+                    type="text"
+                    value={form.outcome}
+                    onChange={handleChange("outcome")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Follow-up scheduled"
+                  />
+                </label>
+              </div>
+
+              {/* Relationship Status - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Relationship Status</span>
+                  <input
+                    type="text"
+                    value={form.relationshipStatus}
+                    onChange={handleChange("relationshipStatus")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Warm, Cold, Hot"
+                  />
+                </label>
               </div>
 
               {/* Address - Required */}

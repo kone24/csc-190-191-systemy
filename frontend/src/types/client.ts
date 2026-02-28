@@ -24,6 +24,15 @@ export interface Client {
   social_links?: SocialMediaLinks; // Optional, JSONB in database
   address: Address;            // Required, JSONB in database
   additional_info?: string;    // Optional
+  relationship_owner?: string; // Optional
+  status?: string;             // Optional
+  contact_medium?: string;     // Optional
+  date_of_contact?: string;    // Optional
+  where_met?: string;          // Optional
+  chat_summary?: string;       // Optional
+  outcome?: string;            // Optional
+  relationship_status?: string;// Optional
+  notes?: string;              // Optional
   tags?: string[];             // Optional
   created_at?: string;         // set by database
   updated_at?: string;         // set by database
