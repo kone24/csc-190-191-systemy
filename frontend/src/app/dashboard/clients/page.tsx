@@ -184,7 +184,7 @@ export default function ClientsPage() {
                             fontFamily: 'Poppins',
                             margin: 0
                         }}>
-                            {isSearching ? 'Searching...' : 'Loading clients...'}
+                            {isSearching ? 'Searching...' : 'Loading contacts...'}
                         </p>
                     </div>
                 )}
@@ -215,8 +215,7 @@ export default function ClientsPage() {
                     background: 'white',
                     borderRadius: '15px',
                     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                    overflow: 'hidden',
-                    flex: 1
+                    overflow: 'hidden'
                 }}>
                     <div style={{
                         padding: '20px',
@@ -232,7 +231,7 @@ export default function ClientsPage() {
                             fontWeight: '600',
                             margin: 0
                         }}>
-                            {isSearching ? `Search Results (${displayedClients.length})` : `All Clients (${displayedClients.length})`}
+                            {isSearching ? `Search Results (${displayedClients.length})` : `All Contacts (${displayedClients.length})`}
                         </h3>
 
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -291,7 +290,7 @@ export default function ClientsPage() {
                                     cursor: 'pointer',
                                     transition: 'background 0.2s ease'
                                 }}>
-                                    Add New Client
+                                    Add New Contact
                                 </button>
                             </Link>
                         </div>
@@ -300,9 +299,7 @@ export default function ClientsPage() {
                     {/* Clients Table/List */}
                     {displayedClients.length > 0 ? (
                         <div style={{
-                            overflowX: 'auto',
-                            maxHeight: '500px',
-                            overflowY: 'auto'
+                            overflowX: 'auto'
                         }}>
                             <table style={{
                                 width: '100%',
@@ -498,7 +495,7 @@ export default function ClientsPage() {
                                         fontFamily: 'Poppins',
                                         margin: 0
                                     }}>
-                                        No clients found for "{searchQuery}"
+                                        No contacts found for "{searchQuery}"
                                     </p>
                                 </>
                             ) : (
@@ -513,7 +510,7 @@ export default function ClientsPage() {
                                         fontFamily: 'Poppins',
                                         marginBottom: '20px'
                                     }}>
-                                        No clients yet. Add your first client to get started!
+                                        No contacts yet. Add your first contact to get started!
                                     </p>
                                     <Link href="/dashboard/clients/add" style={{ textDecoration: 'none' }}>
                                         <button style={{
@@ -527,7 +524,7 @@ export default function ClientsPage() {
                                             fontWeight: '500',
                                             cursor: 'pointer'
                                         }}>
-                                            Add First Client
+                                            Add First Contact
                                         </button>
                                     </Link>
                                 </>
