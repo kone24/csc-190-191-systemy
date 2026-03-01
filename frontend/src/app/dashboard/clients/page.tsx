@@ -215,8 +215,7 @@ export default function ClientsPage() {
                     background: 'white',
                     borderRadius: '15px',
                     boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                    overflow: 'hidden',
-                    flex: 1
+                    overflow: 'hidden'
                 }}>
                     <div style={{
                         padding: '20px',
@@ -300,9 +299,7 @@ export default function ClientsPage() {
                     {/* Clients Table/List */}
                     {displayedClients.length > 0 ? (
                         <div style={{
-                            overflowX: 'auto',
-                            maxHeight: '500px',
-                            overflowY: 'auto'
+                            overflowX: 'auto'
                         }}>
                             <table style={{
                                 width: '100%',
