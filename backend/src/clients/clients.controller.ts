@@ -1,7 +1,9 @@
 import { Body, Controller, Get, Query, Post, Patch, Param, HttpCode } from '@nestjs/common';
+ // import { Body, Controller, Get, Query, Post, Patch, Param, UseGuards, HttpCode } from '@nestjs/common';
 import { ClientsSupabaseService } from './clients.supabase.service';
 import { ClientProfileDto } from './dto/client-profile.dto';
 import { CreateClientDto } from './dto/create-client.dto';
+// import { JwtAuthGuard } from '../auth/jwt.guard';
 
 @Controller('clients')
 export class ClientsController {
@@ -35,6 +37,7 @@ export class ClientsController {
     return { ok: true, items };
   }
 
+  // @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: any) {
     const updated = await this.clientsService.update(id, body);

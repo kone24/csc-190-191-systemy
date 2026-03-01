@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import Select from 'react-select';
 import Sidebar from '@/components/Sidebar';
-import type { CreateClientRequest, CreateClientResponse, Address, SocialMediaLinks } from "@/types/client";
+import type { ClientFormState, Address, SocialMediaLinks } from "@/types/client";
 import { COUNTRIES, STATES_BY_COUNTRY } from "@/constants/location-data";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import type { Country, State } from "@/types/location";
 
-type FormErrors = Partial<Record<keyof CreateClientRequest, string>>;
+type FormErrors = Partial<Record<keyof ClientFormState, string>>;
 
 export default function AddClientPage() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function AddClientPage() {
     [selectedCountry]
   );
 
-  const [form, setForm] = useState<CreateClientRequest>({
+  const [form, setForm] = useState<ClientFormState>({
     firstName: "",
     lastName: "",
     email: "",
@@ -122,7 +122,7 @@ export default function AddClientPage() {
     return newErrors;
   }
 
-  const handleChange = (field: keyof CreateClientRequest) => (
+  const handleChange = (field: keyof ClientFormState) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));

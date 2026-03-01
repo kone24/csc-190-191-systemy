@@ -39,4 +39,25 @@ export interface Client {
 }
 
 export type CreateClientRequest = Omit<Client, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Frontend form state uses camelCase; transformed to snake_case before API call
+export interface ClientFormState {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  company: string;
+  title: string;
+  relationshipOwner: string;
+  status: string;
+  contactMedium: string;
+  dateOfContact: string;
+  whereMet: string;
+  chatSummary: string;
+  outcome: string;
+  relationshipStatus: string;
+  address: Address;
+  socialLinks: SocialMediaLinks;
+  notes: string;
+}
 export type CreateClientResponse = { ok: true; client: Client } | { ok: false; message: string };
