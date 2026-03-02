@@ -57,6 +57,12 @@ export class AuthController {
       prompt: 'consent',
     });
 
+    // optional domain restriction (workspace users only)
+    // add GOOGLE_WORKSPACE_DOMAIN=domain.com to .env to test this
+    if (process.env.GOOGLE_WORKSPACE_DOMAIN) {
+      params.set('hd', process.env.GOOGLE_WORKSPACE_DOMAIN);
+    }
+
     return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
   }
 
@@ -88,6 +94,34 @@ export class AuthController {
 
     const tokenData = await tokenResponse.json();
 
+    // basic error handling
+    if (tokenData.error) {
+      console.warn('Google token exchange failed', tokenData);
+      return res.redirect('http://localhost:3000/login?error=oauth');
+    }
+
+    const grantedScopes: string[] = (tokenData.scope || '').split(' ');
+    const requiredScopes: string[] = (process.env.GOOGLE_SCOPES || '').split(' ');
+    const missing = requiredScopes.filter(s => !grantedScopes.includes(s));
+    if (missing.length) {
+      return res.redirect(
+        `http://localhost:3000/login?error=missing_scopes&scopes=${encodeURIComponent(
+          missing.join(' '),
+        )}`,
+      );
+    }
+
+    const loginResult = await this.authService.handleGoogleCallback(tokenData);
+
+    if (loginResult?.token) {
+      res.cookie('access_token', loginResult.token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 1000 * 60 * 20,
+        path: '/',
+      });
+    }
     return res.redirect('http://localhost:3000/dashboard');
   }
 }
