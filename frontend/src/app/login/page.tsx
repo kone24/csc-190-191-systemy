@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LoginPage() {
@@ -12,6 +12,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  // check for OAuth error message
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|; )oauth_error=([^;]+)/);
+    if (match) {
+      const msg = decodeURIComponent(match[1]);
+      setMessage(msg);
+      document.cookie = 'oauth_error=; Max-Age=0; path=/';
+    }
+  }, []);
 
   const handleRecaptchaChange = (token: string | null) => {
     setRecaptchaToken(token);

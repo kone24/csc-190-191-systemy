@@ -104,11 +104,13 @@ export class AuthController {
     const requiredScopes: string[] = (process.env.GOOGLE_SCOPES || '').split(' ');
     const missing = requiredScopes.filter(s => !grantedScopes.includes(s));
     if (missing.length) {
-      return res.redirect(
-        `http://localhost:3000/login?error=missing_scopes&scopes=${encodeURIComponent(
-          missing.join(' '),
-        )}`,
-      );
+      // set short-lived error cookie to display on login page
+      res.cookie('oauth_error', `Please grant the permissions required to sync Google data. Missing: ${missing.join(', ')}`, {
+        httpOnly: false,
+        maxAge: 30 * 1000,
+        path: '/',
+      });
+      return res.redirect('http://localhost:3000/login');
     }
 
     const loginResult = await this.authService.handleGoogleCallback(tokenData);
