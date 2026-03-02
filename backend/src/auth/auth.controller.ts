@@ -86,7 +86,27 @@ export class AuthController {
       },
     );
 
-    const tokenData = await tokenResponse.json();
+    const tokenData = await tokenResponse.json() as { id_token?: string };
+
+    if (!tokenData.id_token) {
+      return res.redirect('http://localhost:3000/login?error=oauth');
+    }
+
+    const result = await this.authService.googleLogin(tokenData.id_token);
+
+    if (!result.ok) {
+      // Domain mismatch or token verification failure — block access.
+      const errorParam = result.message.includes('restricted') ? 'domain' : 'oauth';
+      return res.redirect(`http://localhost:3000/login?error=${errorParam}`);
+    }
+
+    res.cookie('access_token', result.token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 20, // 20 minutes
+      path: '/',
+    });
 
     return res.redirect('http://localhost:3000/dashboard');
   }
