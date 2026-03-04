@@ -82,7 +82,7 @@ export class AuthService {
       if (dbError || !dbUser) {
         return {
           ok: false,
-          message: 'User not found. Contact your administrator to be added to the system.',
+          message: 'User not found.Contact your administrator to be added to the system.',
         };
       }
     }
