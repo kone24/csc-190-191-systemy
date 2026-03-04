@@ -92,4 +92,38 @@ export class AuthService {
 
     return { ok: true, token, user };
   }
+
+  /**
+   * Find a user record by email address.
+   */
+  async findUserByEmail(email: string) {
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('*')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (error || !data) {
+      return { ok: false, message: 'User not found', error: error?.message };
+    }
+
+    return { ok: true, user: data };
+  }
+
+  /**
+   * Find a user record by user_id.
+   */
+  async findUserById(userId: string) {
+    const { data, error } = await this.supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error || !data) {
+      return { ok: false, message: 'User not found', error: error?.message };
+    }
+
+    return { ok: true, user: data };
+  }
 }
