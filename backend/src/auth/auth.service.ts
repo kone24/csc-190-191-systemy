@@ -1,11 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt'; // needed for JSON tokens
+import { ConfigService } from '@nestjs/config';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const ALLOWED_DOMAIN = '@futureandsuns.com';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) { }
+  private supabase: SupabaseClient;
+
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {
+    this.supabase = createClient(
+      this.configService.get<string>('SUPABASE_URL')!,
+      this.configService.get<string>('SUPABASE_ANON_KEY')!,
+    );
+  }
 
   async login(username: string, password: string) {
     // Temporary fake logic
@@ -54,6 +66,25 @@ export class AuthService {
         ok: false,
         message: `Access restricted to ${ALLOWED_DOMAIN} accounts`,
       };
+    }
+
+    // Dev-allowlisted emails skip the DB check (they won't exist in the users table).
+    if (!isDevAllowed) {
+      // Check that this email exists in your Supabase users table.
+      // The users table should have at minimum an `email` column.
+      // Pre-populate it with the emails of team members who are allowed access.
+      const { data: dbUser, error: dbError } = await this.supabase
+        .from('users')
+        .select('email')
+        .eq('email', info.email.toLowerCase())
+        .single();
+
+      if (dbError || !dbUser) {
+        return {
+          ok: false,
+          message: 'User not found. Contact your administrator to be added to the system.',
+        };
+      }
     }
 
     const user = { email: info.email };
