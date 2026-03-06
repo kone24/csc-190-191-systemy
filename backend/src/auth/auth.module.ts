@@ -5,9 +5,11 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt'; // Needed for JSON tokens
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt.guard';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'dev-secret', // REPLACE AFTER TESTING!
