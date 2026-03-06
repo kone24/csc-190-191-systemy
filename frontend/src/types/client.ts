@@ -38,7 +38,7 @@ export interface Client {
   updated_at?: string;         // set by database
 }
 
-export type CreateClientRequest = Omit<Client, 'id' | 'createdAt' | 'updatedAt'>;
+export type CreateClientRequest = Omit<Client, 'id' | 'created_at' | 'updated_at'>;
 
 // Frontend form state uses camelCase; transformed to snake_case before API call
 export interface ClientFormState {

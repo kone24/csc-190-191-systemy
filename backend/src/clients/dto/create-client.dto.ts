@@ -4,9 +4,9 @@ import {
     IsNotEmpty,
     IsObject,
     IsOptional,
-    isString,
     IsString,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateClientDto {
     @IsString()
@@ -75,8 +75,8 @@ export class CreateClientDto {
     contact_medium?: string;
 
     @IsOptional()
-    @IsString()
-    date_of_contact?: string;
+    @Transform(({ value }) => value ? new Date(value) : undefined)
+    date_of_contact?: Date;
 
     @IsOptional()
     @IsString()
@@ -97,4 +97,21 @@ export class CreateClientDto {
     @IsOptional()
     @IsString()
     notes?: string;
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    services_needed?: string[];
+
+    @IsOptional()
+    @IsString()
+    project_timeline?: string;
+
+    @IsOptional()
+    @IsString()
+    budget_range?: string;
+
+    @IsOptional()
+    @IsString()
+    preferred_contact_method?: string;
 }
