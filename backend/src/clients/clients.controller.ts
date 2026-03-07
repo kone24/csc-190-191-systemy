@@ -3,6 +3,7 @@ import type { Request } from 'express';
 import { ClientsSupabaseService } from './clients.supabase.service';
 import { ClientProfileDto } from './dto/client-profile.dto';
 import { CreateClientDto } from './dto/create-client.dto';
+import { UpdateClientTagsDto } from './dto/update-client-tags.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 
 @Controller('clients')
@@ -17,7 +18,7 @@ export class ClientsController {
 
   @Post()
   @HttpCode(201)
-  async create(@Body() body: any) {
+  async create(@Body() body: CreateClientDto) {
     const saved = await this.clientsService.create(body);
     return {
       ok: true,
@@ -67,9 +68,10 @@ export class ClientsController {
     return { ok: true, items };
   }
 
+  // TODO: Restrict tag updates to admin/manager roles once SYS-134 permissions branch is merged
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() body: any) {
+  async update(@Param('id') id: string, @Body() body: UpdateClientTagsDto) {
     const updated = await this.clientsService.update(id, body);
     return { ok: true, client: updated };
   }

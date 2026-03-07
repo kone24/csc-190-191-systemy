@@ -4,9 +4,9 @@ import {
     IsNotEmpty,
     IsObject,
     IsOptional,
-    isString,
     IsString,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateClientDto {
     @IsString()
@@ -57,4 +57,61 @@ export class CreateClientDto {
     @IsArray()
     @IsString({ each: true })
     tags?: string[];
+
+    @IsOptional()
+    @IsString()
+    company?: string;
+
+    @IsOptional()
+    @IsString()
+    relationship_owner?: string;
+
+    @IsOptional()
+    @IsString()
+    status?: string;
+
+    @IsOptional()
+    @IsString()
+    contact_medium?: string;
+
+    @IsOptional()
+    @Transform(({ value }) => value ? new Date(value) : undefined)
+    date_of_contact?: Date;
+
+    @IsOptional()
+    @IsString()
+    where_met?: string;
+
+    @IsOptional()
+    @IsString()
+    chat_summary?: string;
+
+    @IsOptional()
+    @IsString()
+    outcome?: string;
+
+    @IsOptional()
+    @IsString()
+    relationship_status?: string;
+
+    @IsOptional()
+    @IsString()
+    notes?: string;
+
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    services_needed?: string[];
+
+    @IsOptional()
+    @IsString()
+    project_timeline?: string;
+
+    @IsOptional()
+    @IsString()
+    budget_range?: string;
+
+    @IsOptional()
+    @IsString()
+    preferred_contact_method?: string;
 }
