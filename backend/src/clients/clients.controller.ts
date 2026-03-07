@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Query, Post, Patch, Param, UseGuards, HttpCode, Req, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Get, Query, Post, Patch, Param, UseGuards, HttpCode, Req, ForbiddenException, BadRequestException } from '@nestjs/common';
 import type { Request } from 'express';
 import { ClientsSupabaseService } from './clients.supabase.service';
 import { ClientProfileDto } from './dto/client-profile.dto';
@@ -49,7 +49,7 @@ export class ClientsController {
     const newsletter = body?.newsletter === true || body?.newsletter === 'true' || body?.newsletter === 'yes';
 
     if (!firstName || !email) {
-      throw new ForbiddenException('Missing required fields');
+      throw new BadRequestException('Missing required fields');
     }
 
     const saved = await this.clientsService.createContactClient({ firstName, lastName, email, message, origin: source, newsletter });

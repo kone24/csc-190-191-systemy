@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Client } from './entities/client.entity';
@@ -203,7 +203,7 @@ export class ClientsSupabaseService {
             }
 
             if (existing) {
-                throw new Error('A client with this email already exists.');
+                throw new ConflictException('A client with this email already exists.');
             }
 
             const noteParts: string[] = [];
