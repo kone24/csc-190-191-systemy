@@ -281,7 +281,7 @@ export default function InvoicesPage() {
                         borderBottom: '1px solid #e0e0e0'
                     }}>
                         <div>Invoice #</div>
-                        <div>Client</div>
+                        <div>Contact</div>
                         <div>Amount</div>
                         <div>Status</div>
                         <div>Issue Date</div>
