@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Res, Get, UseGuards, Req, Query } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
@@ -86,8 +86,47 @@ export class AuthController {
       },
     );
 
-    const tokenData = await tokenResponse.json();
+    const tokenData = await tokenResponse.json() as { id_token?: string };
+
+    if (!tokenData.id_token) {
+      return res.redirect('http://localhost:3000/login?error=oauth');
+    }
+
+    const result = await this.authService.googleLogin(tokenData.id_token);
+
+    if (!result.ok) {
+      // Domain mismatch or token verification failure — block access.
+      const errorParam = result.message.includes('restricted') ? 'domain' : 'oauth';
+      return res.redirect(`http://localhost:3000/login?error=${errorParam}`);
+    }
+
+    res.cookie('access_token', result.token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 20, // 20 minutes
+      path: '/',
+    });
 
     return res.redirect('http://localhost:3000/dashboard');
+  }
+
+  /**
+   * Demo endpoint: find a user by email or user_id.
+   * GET /auth/find-user?email=someone@futureandsuns.com
+   * GET /auth/find-user?id=<uuid>
+   */
+  @Get('find-user')
+  async findUser(
+    @Query('email') email?: string,
+    @Query('id') id?: string,
+  ) {
+    if (email) {
+      return this.authService.findUserByEmail(email);
+    }
+    if (id) {
+      return this.authService.findUserById(id);
+    }
+    return { ok: false, message: 'Provide ?email= or ?id= query parameter' };
   }
 }
