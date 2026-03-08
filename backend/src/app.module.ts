@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
+import { RemindersModule } from './reminders/reminders.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     }),
     ScheduleModule.forRoot(),
     NotificationsModule,
+    RemindersModule,
     AuthModule,
     ClientsModule,
     WebhookModule,
