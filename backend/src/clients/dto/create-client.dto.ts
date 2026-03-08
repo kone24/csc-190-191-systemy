@@ -5,29 +5,50 @@ import {
     IsObject,
     IsOptional,
     IsString,
+    Validate,
+    ValidatorConstraint,
+    ValidatorConstraintInterface,
+    ValidationArguments,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+
+@ValidatorConstraint({ name: 'EmailOrPhone', async: false })
+export class EmailOrPhoneConstraint implements ValidatorConstraintInterface {
+    validate(_: unknown, args: ValidationArguments) {
+        const obj = args.object as CreateClientDto;
+        return !!(obj.email || obj.phone_number);
+    }
+
+    defaultMessage() {
+        return 'At least one of email or phone_number must be provided';
+    }
+}
 
 export class CreateClientDto {
     @IsString()
     @IsNotEmpty()
     first_name!: string;
 
+    @IsOptional()
     @IsString()
-    @IsNotEmpty()
-    last_name!: string;
+    last_name?: string;
 
+    @IsOptional()
     @IsEmail()
-    @IsNotEmpty()
-    email!: string;
+    @Transform(({ value }) => (typeof value === 'string' && value.trim() === '' ? undefined : value))
+    email?: string;
 
+    @IsOptional()
     @IsString()
-    @IsNotEmpty()
-    phone_number!: string;
+    @Transform(({ value }) => (typeof value === 'string' && value.trim() === '' ? undefined : value))
+    phone_number?: string;
 
+    @IsOptional()
     @IsString()
-    @IsNotEmpty()
-    business_name!: string;
+    business_name?: string;
+
+    @Validate(EmailOrPhoneConstraint)
+    _contactCheck?: unknown;
 
     @IsObject()
     @IsOptional()
