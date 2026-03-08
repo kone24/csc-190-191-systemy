@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import Select from 'react-select';
 import Sidebar from '@/components/Sidebar';
-import type { CreateClientRequest, CreateClientResponse, Address, SocialMediaLinks } from "@/types/client";
+import type { ClientFormState, Address, SocialMediaLinks } from "@/types/client";
 import { COUNTRIES, STATES_BY_COUNTRY } from "@/constants/location-data";
 import { PhoneNumberInput } from "@/components/PhoneNumberInput";
 import type { Country, State } from "@/types/location";
 
-type FormErrors = Partial<Record<keyof CreateClientRequest, string>>;
+type FormErrors = Partial<Record<keyof ClientFormState, string>>;
 
 export default function AddClientPage() {
   const router = useRouter();
@@ -19,12 +19,21 @@ export default function AddClientPage() {
     [selectedCountry]
   );
 
-  const [form, setForm] = useState<CreateClientRequest>({
+  const [form, setForm] = useState<ClientFormState>({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     company: "",
+    title: "",
+    relationshipOwner: "",
+    status: "",
+    contactMedium: "",
+    dateOfContact: "",
+    whereMet: "",
+    chatSummary: "",
+    outcome: "",
+    relationshipStatus: "",
     address: {
       street: "",
       city: "",
@@ -50,65 +59,45 @@ export default function AddClientPage() {
     const newErrors: FormErrors = {};
     const MAX_LENGTH = 255;
 
-    // Required fields with length validation
+    // First name is always required
     if (!form.firstName.trim()) {
       newErrors.firstName = "First name is required";
     } else if (form.firstName.length > MAX_LENGTH) {
       newErrors.firstName = `First name must be less than ${MAX_LENGTH} characters`;
     }
 
-    if (!form.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    } else if (form.lastName.length > MAX_LENGTH) {
+    // At least one of email or phone is required
+    if (!form.email.trim() && !form.phone.trim()) {
+      newErrors.email = "Email or phone number is required";
+    }
+
+    // Optional length validations
+    if (form.lastName && form.lastName.length > MAX_LENGTH) {
       newErrors.lastName = `Last name must be less than ${MAX_LENGTH} characters`;
     }
 
-    if (!form.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (form.email.length > MAX_LENGTH) {
+    if (form.email && form.email.length > MAX_LENGTH) {
       newErrors.email = `Email must be less than ${MAX_LENGTH} characters`;
     }
 
-    if (!form.company.trim()) {
-      newErrors.company = "Company is required";
-    } else if (form.company.length > MAX_LENGTH) {
+    if (form.company && form.company.length > MAX_LENGTH) {
       newErrors.company = `Company name must be less than ${MAX_LENGTH} characters`;
     }
 
-    // Address validation
+    // Address length validation (all optional)
     const address = form.address;
-    if (!address.street.trim()) {
-      newErrors.address = "Street is required";
-    } else if (address.street.length > MAX_LENGTH) {
+    if (address.street && address.street.length > MAX_LENGTH) {
       newErrors.address = `Street must be less than ${MAX_LENGTH} characters`;
     }
-
-    if (!address.city.trim()) {
-      newErrors.address = "City is required";
-    } else if (address.city.length > MAX_LENGTH) {
+    if (address.city && address.city.length > MAX_LENGTH) {
       newErrors.address = `City must be less than ${MAX_LENGTH} characters`;
     }
-
-    if (!address.state.code) {
-      newErrors.address = "State is required";
-    }
-
-    if (!address.postalCode.trim()) {
-      newErrors.address = "Postal code is required";
-    } else if (address.postalCode.length > 20) { // Postal codes are typically shorter
+    if (address.postalCode && address.postalCode.length > 20) {
       newErrors.address = "Postal code is too long";
     }
-
-    if (!address.country.code) {
-      newErrors.address = "Country is required";
-    }
-
-    // Optional fields validation
     if (address.additionalInfo && address.additionalInfo.length > MAX_LENGTH) {
       newErrors.address = `Additional address info must be less than ${MAX_LENGTH} characters`;
     }
-
-    // Phone validation handled by PhoneNumberInput component
 
     // Social media URL validation (optional)
     if (form.socialLinks) {
@@ -126,15 +115,15 @@ export default function AddClientPage() {
     }
 
     // Notes length validation (optional)
-    if (form.notes && form.notes.length > 1000) { // Allow longer notes
+    if (form.notes && form.notes.length > 1000) {
       newErrors.notes = "Notes must be less than 1000 characters";
     }
 
     return newErrors;
   }
 
-  const handleChange = (field: keyof CreateClientRequest) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  const handleChange = (field: keyof ClientFormState) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
     if (errors[field]) {
@@ -200,7 +189,17 @@ export default function AddClientPage() {
         preferred_contact_method: "email",
         additional_info: form.notes || "",
         // Optional: Include social media
-        social_links: form.socialLinks || {}
+        social_links: form.socialLinks || {},
+        // CRM fields
+        title: form.title || undefined,
+        relationship_owner: form.relationshipOwner || undefined,
+        status: form.status || undefined,
+        contact_medium: form.contactMedium || undefined,
+        date_of_contact: form.dateOfContact || undefined,
+        where_met: form.whereMet || undefined,
+        chat_summary: form.chatSummary || undefined,
+        outcome: form.outcome || undefined,
+        relationship_status: form.relationshipStatus || undefined
       };
 
       // Call your NestJS backend (correct port: 3001)
@@ -223,11 +222,11 @@ export default function AddClientPage() {
       }
 
       if (res.ok && data.ok) {
-        setMessage(`✅ Client created successfully! ID: ${data.client.id}`);
+        setMessage(`✅ Contact created successfully! ID: ${data.client.id}`);
         // Brief delay to show success message, then redirect
         setTimeout(() => router.push("/dashboard/clients"), 2000);
       } else {
-        setMessage(`❌ ${data.message || "Failed to create client"}`);
+        setMessage(`❌ ${data.message || "Failed to create contact"}`);
       }
     } catch (err) {
       console.error("Error creating client:", err);
@@ -246,9 +245,9 @@ export default function AddClientPage() {
       <div style={{ flex: 1, minHeight: '100vh', background: '#f9fafb', padding: '32px 30px' }}>
         <main style={{ margin: '0 auto', maxWidth: '672px', padding: '0 16px' }}>
           <div style={{ marginBottom: '32px' }}>
-            <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#000', fontFamily: 'Poppins' }}>Add New Client</h1>
+            <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#000', fontFamily: 'Poppins' }}>Add New Contact</h1>
             <p style={{ marginTop: '8px', color: '#6b7280', fontFamily: 'Poppins' }}>
-              Enter the client's information below
+              Enter the contact's information below
             </p>
           </div>
 
@@ -283,11 +282,11 @@ export default function AddClientPage() {
                 )}
               </div>
 
-              {/* Last Name - Required */}
+              {/* Last Name - Optional */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
-                    Last Name <span style={{ color: '#ef4444' }}>*</span>
+                    Last Name
                   </span>
                   <input
                     type="text"
@@ -312,11 +311,11 @@ export default function AddClientPage() {
                 )}
               </div>
 
-              {/* Email - Required */}
+              {/* Email - Required if no phone */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
-                    Email <span style={{ color: '#ef4444' }}>*</span>
+                    Email <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: '400' }}>(email or phone required)</span>
                   </span>
                   <input
                     type="email"
@@ -334,7 +333,6 @@ export default function AddClientPage() {
                       fontFamily: 'Poppins'
                     }}
                     placeholder="john@example.com"
-                    required
                   />
                 </label>
                 {errors.email && (
@@ -342,7 +340,7 @@ export default function AddClientPage() {
                 )}
               </div>
 
-              {/* Phone - Optional */}
+              {/* Phone - Required if no email */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Phone</span>
@@ -353,17 +351,20 @@ export default function AddClientPage() {
                       if (errors.phone) {
                         setErrors(prev => ({ ...prev, phone: undefined }));
                       }
+                      if (errors.email) {
+                        setErrors(prev => ({ ...prev, email: undefined }));
+                      }
                     }}
                     error={errors.phone}
                   />
                 </label>
               </div>
 
-              {/* Company - Required */}
+              {/* Company - Optional */}
               <div style={{ marginBottom: '24px' }}>
                 <label style={{ display: 'block' }}>
                   <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>
-                    Company <span style={{ color: '#ef4444' }}>*</span>
+                    Company
                   </span>
                   <input
                     type="text"
@@ -388,10 +389,231 @@ export default function AddClientPage() {
                 )}
               </div>
 
-              {/* Address - Required */}
+              {/* Title - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Title</span>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={handleChange("title")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. VP of Engineering"
+                  />
+                </label>
+              </div>
+
+              {/* Relationship Owner - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Relationship Owner</span>
+                  <input
+                    type="text"
+                    value={form.relationshipOwner}
+                    onChange={handleChange("relationshipOwner")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="Team member managing this contact"
+                  />
+                </label>
+              </div>
+
+              {/* Status - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Status</span>
+                  <input
+                    type="text"
+                    value={form.status}
+                    onChange={handleChange("status")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Active, Inactive"
+                  />
+                </label>
+              </div>
+
+              {/* Contact Medium - Optional (Dropdown) */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Contact Medium</span>
+                  <select
+                    value={form.contactMedium}
+                    onChange={handleChange("contactMedium")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins',
+                      background: '#ffffff'
+                    }}
+                  >
+                    <option value="">Select a contact medium</option>
+                    <option value="Email">Email</option>
+                    <option value="Phone">Phone</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="DM">DM</option>
+                  </select>
+                </label>
+              </div>
+
+              {/* Date of Contact - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Date of Contact</span>
+                  <input
+                    type="date"
+                    value={form.dateOfContact}
+                    onChange={handleChange("dateOfContact")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                  />
+                </label>
+              </div>
+
+              {/* Where Met - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Where Met</span>
+                  <input
+                    type="text"
+                    value={form.whereMet}
+                    onChange={handleChange("whereMet")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Tech Conference 2026"
+                  />
+                </label>
+              </div>
+
+              {/* Chat Summary - Optional (Textarea) */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Chat Summary</span>
+                  <textarea
+                    value={form.chatSummary}
+                    onChange={handleChange("chatSummary")}
+                    rows={3}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins',
+                      resize: 'vertical'
+                    }}
+                    placeholder="Summary of what was discussed..."
+                  />
+                </label>
+              </div>
+
+              {/* Outcome - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Outcome</span>
+                  <input
+                    type="text"
+                    value={form.outcome}
+                    onChange={handleChange("outcome")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Follow-up scheduled"
+                  />
+                </label>
+              </div>
+
+              {/* Relationship Status - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Relationship Status</span>
+                  <input
+                    type="text"
+                    value={form.relationshipStatus}
+                    onChange={handleChange("relationshipStatus")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Warm, Cold, Hot"
+                  />
+                </label>
+              </div>
+
+              {/* Address - Optional */}
               <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Street <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Street</label>
                   <input
                     type="text"
                     value={form.address.street}
@@ -411,7 +633,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>City <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>City</label>
                   <input
                     type="text"
                     value={form.address.city}
@@ -431,7 +653,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Country <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Country</label>
                   <Select<Country>
                     instanceId="country-select"
                     options={COUNTRIES}
@@ -493,7 +715,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>State/Province <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>State/Province</label>
                   <Select<State>
                     instanceId="state-select"
                     options={availableStates}
@@ -554,7 +776,7 @@ export default function AddClientPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Postal Code <span style={{ color: '#ef4444' }}>*</span></label>
+                  <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Postal Code</label>
                   <input
                     type="text"
                     value={form.address.postalCode}
@@ -702,7 +924,7 @@ export default function AddClientPage() {
                       fontFamily: 'Poppins',
                       resize: 'vertical'
                     }}
-                    placeholder="Additional notes about the client..."
+                    placeholder="Additional notes about the contact..."
                   />
                 </label>
               </div>
@@ -743,7 +965,7 @@ export default function AddClientPage() {
                   fontFamily: 'Poppins'
                 }}
               >
-                {loading ? "Creating..." : "Create Client"}
+                {loading ? "Creating..." : "Create Contact"}
               </button>
             </div>
 

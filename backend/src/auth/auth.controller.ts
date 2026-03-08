@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Res, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Res, Get, UseGuards, Req, Query } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
@@ -92,20 +92,37 @@ export class AuthController {
       },
     );
 
-    const tokenData = await tokenResponse.json();
+    const tokenData = await tokenResponse.json() as {
+      id_token?: string;
+      scope?: string;
+      error?: string;
+    };
 
     // basic error handling
-    if (tokenData.error) {
+    if (tokenData.error || !tokenData.id_token) {
       console.warn('Google token exchange failed', tokenData);
       return res.redirect('http://localhost:3000/login?error=oauth');
     }
 
-    const grantedScopes: string[] = (tokenData.scope || '').split(' ');
-    const requiredScopes: string[] = (process.env.GOOGLE_SCOPES || '').split(' ');
-    const missing = requiredScopes.filter(s => !grantedScopes.includes(s));
-    if (missing.length) {
-      // set short-lived error cookie to display on login page
-      res.cookie('oauth_error', `Please grant the permissions required to sync Google data. Missing: ${missing.join(', ')}`, {
+    // Validate granted scopes and show a human-friendly message when missing.
+    const grantedScopes = (tokenData.scope || '').split(' ').filter(Boolean);
+    const requiredScopes = (process.env.GOOGLE_SCOPES || '').split(' ').filter(Boolean);
+    const missingScopes = requiredScopes.filter((s) => !grantedScopes.includes(s));
+
+    if (missingScopes.length) {
+      const scopeLabelMap: Record<string, string> = {
+        'https://www.googleapis.com/auth/calendar.readonly': 'Calendar',
+        'https://www.googleapis.com/auth/contacts.readonly': 'Contacts',
+      };
+      const labels = missingScopes
+        .map((scope) => scopeLabelMap[scope])
+        .filter(Boolean);
+
+      const message = labels.length
+        ? `Please grant ${labels.join(' and ')} access to continue.`
+        : 'Please grant all requested Google permissions to continue.';
+
+      res.cookie('oauth_error', message, {
         httpOnly: false,
         maxAge: 30 * 1000,
         path: '/',
@@ -113,17 +130,39 @@ export class AuthController {
       return res.redirect('http://localhost:3000/login');
     }
 
-    const loginResult = await this.authService.handleGoogleCallback(tokenData);
+    const result = await this.authService.googleLogin(tokenData.id_token);
 
-    if (loginResult?.token) {
-      res.cookie('access_token', loginResult.token, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 20,
-        path: '/',
-      });
+    if (!result.ok) {
+      const errorParam = result.message.includes('restricted') ? 'domain' : 'oauth';
+      return res.redirect(`http://localhost:3000/login?error=${errorParam}`);
     }
+
+    res.cookie('access_token', result.token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 1000 * 60 * 20,
+      path: '/',
+    });
     return res.redirect('http://localhost:3000/dashboard');
+  }
+
+  /**
+   * Demo endpoint: find a user by email or user_id.
+   * GET /auth/find-user?email=someone@futureandsuns.com
+   * GET /auth/find-user?id=<uuid>
+   */
+  @Get('find-user')
+  async findUser(
+    @Query('email') email?: string,
+    @Query('id') id?: string,
+  ) {
+    if (email) {
+      return this.authService.findUserByEmail(email);
+    }
+    if (id) {
+      return this.authService.findUserById(id);
+    }
+    return { ok: false, message: 'Provide ?email= or ?id= query parameter' };
   }
 }

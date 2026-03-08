@@ -68,7 +68,7 @@ export default function SearchPage() {
             wordWrap: 'break-word',
             textShadow: '0px 4px 4px rgba(0, 0, 0, 0.20)'
           }}>
-            Search Clients
+            Search Contacts
           </div>
         </div>
 
