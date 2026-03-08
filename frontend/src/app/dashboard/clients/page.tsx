@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
@@ -12,6 +12,7 @@ interface Client {
     last_name: string;
     email: string;
     business_name: string;
+    company?: string;
     phone_number: string;
     additional_info: string;
     title?: string;
@@ -24,8 +25,8 @@ interface Client {
     outcome?: string;
     relationship_status?: string;
     tags: string[];
-    createdAt?: string;
-    updatedAt?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 // Tags stored as "label|#color"; plain strings fall back to default purple.
@@ -39,6 +40,7 @@ type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'd
 
 export default function ClientsPage() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const initialSearch = searchParams.get('search') || '';
 
     const [searchQuery, setSearchQuery] = useState(initialSearch);
@@ -114,16 +116,16 @@ export default function ClientsPage() {
                 sorted.sort((a, b) => `${b.first_name ?? ''} ${b.last_name ?? ''}`.localeCompare(`${a.first_name ?? ''} ${a.last_name ?? ''}`));
                 break;
             case 'company-asc':
-                sorted.sort((a, b) => (a.business_name ?? '').localeCompare(b.business_name ?? ''));
+                sorted.sort((a, b) => (a.company || a.business_name || '').localeCompare(b.company || b.business_name || ''));
                 break;
             case 'company-desc':
-                sorted.sort((a, b) => (b.business_name ?? '').localeCompare(a.business_name ?? ''));
+                sorted.sort((a, b) => (b.company || b.business_name || '').localeCompare(a.company || a.business_name || ''));
                 break;
             case 'date-created':
-                sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                sorted.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
                 break;
             case 'date-updated':
-                sorted.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+                sorted.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
                 break;
         }
 
@@ -336,6 +338,7 @@ export default function ClientsPage() {
                                     {displayedClients.map((client, idx) => (
                                         <tr
                                             key={client.id}
+                                            onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                                             style={{
                                                 background: idx % 2 === 0 ? 'white' : 'rgba(255, 245, 230, 0.50)',
                                                 transition: 'background 0.2s',
@@ -363,7 +366,7 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.business_name}
+                                                {client.company || client.business_name}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
