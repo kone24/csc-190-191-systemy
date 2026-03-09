@@ -48,7 +48,12 @@ const RANGE_OPTIONS: { label: string; value: RangeOption }[] = [
   { label: 'All Time', value: 'all' },
 ];
 
-const PIE_COLORS = ['#00F5A0', '#FF5900', '#FF0022', '#999'];
+const PIE_COLORS: Record<string, string> = {
+  Paid: '#FF5900',
+  Unpaid: '#B0B0B0',
+  Overdue: '#FF0022',
+  Cancelled: '#1A1A1A',
+};
 
 export default function AnalyticsPage() {
   const { canViewReports } = usePermissions();
@@ -356,42 +361,48 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Invoice Status — Pie Chart */}
-        <div style={{ background: 'white', borderRadius: 20, padding: '20px', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', height: 300 }}>
-          <div style={{ marginBottom: '15px' }}>
-            <h3 style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', margin: 0, textAlign: 'center' }}>
-              Invoice Status Breakdown
-            </h3>
+        <div style={{ background: 'white', borderRadius: 20, padding: '20px', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', minHeight: 275, position: 'relative' }}>
+          <div style={{ fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: '20px', textAlign: 'center' }}>
+            Invoice Status Breakdown
           </div>
           {pieData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="90%" height={200}>
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={3}
+                  outerRadius={70}
+                  innerRadius={30}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  startAngle={90}
+                  endAngle={450}
                 >
-                  {pieData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[entry.name] || '#999'} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(value, name) => [value, name]}
-                  contentStyle={{ backgroundColor: 'white', border: '1px solid #ddd', borderRadius: '8px', fontSize: '12px' }}
-                />
                 <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  formatter={(value) => <span style={{ color: '#666', fontFamily: 'Poppins', fontSize: 13 }}>{value}</span>}
+                  verticalAlign="middle"
+                  align="right"
+                  layout="vertical"
+                  iconType="circle"
+                  iconSize={10}
+                  wrapperStyle={{ right: 200, top: 50 }}
+                  formatter={(value) => {
+                    const dataItem = pieData.find(item => item.name === value);
+                    const count = dataItem ? dataItem.value : 0;
+                    return (
+                      <span style={{ fontSize: 10, fontFamily: 'Poppins', fontWeight: '600', color: 'black' }}>
+                        {count} {value}
+                      </span>
+                    );
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontFamily: 'Poppins' }}>
+            <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontFamily: 'Poppins' }}>
               No invoice data for this period
             </div>
           )}
