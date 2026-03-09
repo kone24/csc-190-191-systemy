@@ -81,14 +81,14 @@ export class AuthController {
       'https://oauth2.googleapis.com/token',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: process.env.GOOGLE_CLIENT_ID,
-          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: process.env.GOOGLE_CLIENT_ID || '',
+          client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
           code,
           grant_type: 'authorization_code',
-          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-        }),
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI || '',
+        }).toString(),
       },
     );
 
@@ -99,23 +99,28 @@ export class AuthController {
     };
 
     // basic error handling
-    if (tokenData.error || !tokenData.id_token) {
-      console.warn('Google token exchange failed', tokenData);
+    if (!tokenResponse.ok || tokenData.error || !tokenData.id_token) {
+      const tokenErrorMessage = 'Google sign-in failed. Please try again.';
+      res.cookie('oauth_error', tokenErrorMessage, {
+        httpOnly: false,
+        maxAge: 30 * 1000,
+        path: '/',
+      });
       return res.redirect('http://localhost:3000/login?error=oauth');
     }
 
-    // Validate granted scopes and show a human-friendly message when missing.
+    // Validate granted scopes and show message if missing
     const grantedScopes = (tokenData.scope || '').split(' ').filter(Boolean);
     const requiredScopes = (process.env.GOOGLE_SCOPES || '').split(' ').filter(Boolean);
     const missingScopes = requiredScopes.filter((s) => !grantedScopes.includes(s));
 
     if (missingScopes.length) {
-      const scopeLabelMap: Record<string, string> = {
+      const scopeLabel: Record<string, string> = {
         'https://www.googleapis.com/auth/calendar.readonly': 'Calendar',
         'https://www.googleapis.com/auth/contacts.readonly': 'Contacts',
       };
       const labels = missingScopes
-        .map((scope) => scopeLabelMap[scope])
+        .map((scope) => scopeLabel[scope])
         .filter(Boolean);
 
       const message = labels.length
@@ -133,6 +138,11 @@ export class AuthController {
     const result = await this.authService.googleLogin(tokenData.id_token);
 
     if (!result.ok) {
+      res.cookie('oauth_error', result.message, {
+        httpOnly: false,
+        maxAge: 30 * 1000,
+        path: '/',
+      });
       const errorParam = result.message.includes('restricted') ? 'domain' : 'oauth';
       return res.redirect(`http://localhost:3000/login?error=${errorParam}`);
     }
@@ -141,7 +151,7 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 1000 * 60 * 20,
+      maxAge: 1000 * 60 * 20, // 20 minutes
       path: '/',
     });
     return res.redirect('http://localhost:3000/dashboard');
