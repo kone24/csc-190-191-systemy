@@ -81,14 +81,14 @@ export class AuthController {
       'https://oauth2.googleapis.com/token',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: process.env.GOOGLE_CLIENT_ID || '',
-          client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
           code,
           grant_type: 'authorization_code',
-          redirect_uri: process.env.GOOGLE_REDIRECT_URI || '',
-        }).toString(),
+          redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+        }),
       },
     );
 
@@ -99,13 +99,7 @@ export class AuthController {
     };
 
     // basic error handling
-    if (!tokenResponse.ok || tokenData.error || !tokenData.id_token) {
-      const tokenErrorMessage = 'Google sign-in failed. Please try again.';
-      res.cookie('oauth_error', tokenErrorMessage, {
-        httpOnly: false,
-        maxAge: 30 * 1000,
-        path: '/',
-      });
+    if (tokenData.error || !tokenData.id_token) {
       return res.redirect('http://localhost:3000/login?error=oauth');
     }
 
@@ -138,11 +132,6 @@ export class AuthController {
     const result = await this.authService.googleLogin(tokenData.id_token);
 
     if (!result.ok) {
-      res.cookie('oauth_error', result.message, {
-        httpOnly: false,
-        maxAge: 30 * 1000,
-        path: '/',
-      });
       const errorParam = result.message.includes('restricted') ? 'domain' : 'oauth';
       return res.redirect(`http://localhost:3000/login?error=${errorParam}`);
     }
