@@ -37,9 +37,25 @@ export default function LoginPage() {
   
   // EXCEPTION SHOULD BE REMOVED LATER
   if (trimmedUsername === "admin" && trimmedPassword === "1234") {
-    // simulate a successful login
-    setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
-    router.replace("/dashboard");
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:3001/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword }),
+      });
+      if (res.ok) {
+        setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
+        router.replace("/dashboard");
+      } else {
+        setMessage("Admin login failed. Is the backend running?");
+      }
+    } catch {
+      setMessage("Could not reach the server.");
+    } finally {
+      setLoading(false);
+    }
     resetRecaptcha();
     return; 
   }

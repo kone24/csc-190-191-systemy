@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { usePermissions } from '@/components/RoleGuard';
@@ -51,6 +52,7 @@ const PIE_COLORS = ['#00F5A0', '#FF5900', '#FF0022', '#999'];
 
 export default function AnalyticsPage() {
   const { canViewReports } = usePermissions();
+  const router = useRouter();
   const [range, setRange] = useState<RangeOption>('30d');
   const [summary, setSummary] = useState<SummaryData | null>(null);
   const [revenueData, setRevenueData] = useState<RevenueMonth[]>([]);
@@ -76,8 +78,7 @@ export default function AnalyticsPage() {
 
       // Check auth first
       if (summaryRes.status === 401) {
-        setError('Session expired. Please log in again.');
-        setLoading(false);
+        router.push('/login?from=/dashboard/analytics');
         return;
       }
 
