@@ -81,7 +81,6 @@ export default function AnalyticsPage() {
         fetch(`${API_BASE}/analytics/invoice-status${qs}`, opts),
       ]);
 
-      // Check auth first
       if (summaryRes.status === 401) {
         router.push('/login?from=/dashboard/analytics');
         return;
@@ -118,7 +117,6 @@ export default function AnalyticsPage() {
     }
   }, [canViewReports, fetchAnalytics]);
 
-  // --- Access denied for non-manager roles ---
   if (!canViewReports) {
     return (
       <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -134,7 +132,6 @@ export default function AnalyticsPage() {
     );
   }
 
-  // --- Loading skeleton ---
   if (loading) {
     return (
       <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -142,7 +139,7 @@ export default function AnalyticsPage() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
           {/* Top Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <SearchBar placeholder="Search analytics..." onSearch={(value) => console.log('Search:', value)} />
+            <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
           </div>
           {/* Skeleton cards */}
           <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(auto-fill, minmax(366px, 1fr))', justifyItems: 'center' }}>
@@ -161,7 +158,6 @@ export default function AnalyticsPage() {
     );
   }
 
-  // --- Error state ---
   if (error) {
     return (
       <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -180,7 +176,6 @@ export default function AnalyticsPage() {
     );
   }
 
-  // --- Build pie chart data ---
   const pieData = invoiceStatus
     ? [
         { name: 'Paid', value: invoiceStatus.paid },
@@ -205,7 +200,7 @@ export default function AnalyticsPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
         {/* Top Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <SearchBar placeholder="Search analytics..." onSearch={(value) => console.log('Search:', value)} />
+          <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
           <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
             <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
             <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
