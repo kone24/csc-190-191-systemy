@@ -52,6 +52,8 @@ export default function ProjectsPage() {
     const [create_hover, set_create_hover] = useState(false);
     const [edit_project, set_edit_project] = useState<Project | null>(null);
     const [edit_save_hover, set_edit_save_hover] = useState(false);
+    const [show_delete_confirm, set_show_delete_confirm] = useState(false);
+    const [delete_hover, set_delete_hover] = useState(false);
 
     const filtered_projects = useMemo(() => {
         return MOCK_PROJECTS.filter(p => {
@@ -210,31 +212,50 @@ export default function ProjectsPage() {
                                     }}>
                                     {/* Top Section */}
                                     <div style={{ padding: '18px 18px 0 18px', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-                                        {/* Edit pencil icon — visible on card hover */}
+                                        {/* Edit pencil + Delete trash icons — visible on card hover */}
                                         {hovered_card === project.id && (
-                                            <button
-                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_edit_project(project); }}
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: '6px',
-                                                    right: '6px',
-                                                    background: 'rgba(255,255,255,0.85)',
-                                                    border: '1px solid #ddd',
-                                                    borderRadius: '6px',
-                                                    width: 28,
-                                                    height: 28,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    cursor: 'pointer',
-                                                    padding: 0,
-                                                    zIndex: 2,
-                                                }}>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                                </svg>
-                                            </button>
+                                            <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px', zIndex: 2 }}>
+                                                <button
+                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_edit_project(project); }}
+                                                    style={{
+                                                        background: 'rgba(255,255,255,0.85)',
+                                                        border: '1px solid #ddd',
+                                                        borderRadius: '6px',
+                                                        width: 28,
+                                                        height: 28,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        padding: 0,
+                                                    }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_show_delete_confirm(true); }}
+                                                    style={{
+                                                        background: 'rgba(255,255,255,0.85)',
+                                                        border: '1px solid #ddd',
+                                                        borderRadius: '6px',
+                                                        width: 28,
+                                                        height: 28,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        padding: 0,
+                                                    }}>
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <polyline points="3 6 5 6 21 6" />
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                        <line x1="10" y1="11" x2="10" y2="17" />
+                                                        <line x1="14" y1="11" x2="14" y2="17" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         )}
                                         <div style={{
                                             display: 'flex',
@@ -301,7 +322,7 @@ export default function ProjectsPage() {
                                                 width: 32,
                                                 height: 32,
                                                 borderRadius: '50%',
-                                                background: 'linear-gradient(135deg, #FF5900, #FFAC80)',
+                                                background: '#999',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -394,13 +415,6 @@ export default function ProjectsPage() {
                             display: 'flex',
                             flexDirection: 'column',
                         }}>
-                        {/* Lavender accent stripe */}
-                        <div style={{
-                            height: '4px',
-                            background: '#DFCCFF',
-                            borderRadius: '20px 20px 0 0',
-                        }} />
-
                         {/* Header */}
                         <div style={{
                             display: 'flex',
@@ -674,8 +688,6 @@ export default function ProjectsPage() {
                             display: 'flex',
                             flexDirection: 'column',
                         }}>
-                        <div style={{ height: '4px', background: '#DFCCFF', borderRadius: '20px 20px 0 0' }} />
-
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px 0 28px' }}>
                             <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>Edit Project</h2>
                             <button onClick={() => { set_edit_project(null); set_edit_save_hover(false); }} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', padding: '0 4px', lineHeight: 1, fontFamily: 'Poppins' }}>&times;</button>
@@ -757,13 +769,100 @@ export default function ProjectsPage() {
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                                <button onClick={() => { set_edit_project(null); set_edit_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
                                 <button
-                                    onClick={() => { set_edit_project(null); set_edit_save_hover(false); }}
-                                    onMouseEnter={() => set_edit_save_hover(true)}
-                                    onMouseLeave={() => set_edit_save_hover(false)}
-                                    style={{ background: edit_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s ease' }}>
-                                    Save
+                                    onClick={() => set_show_delete_confirm(true)}
+                                    style={{ background: 'none', border: '1px solid #DC2626', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#DC2626', cursor: 'pointer' }}>
+                                    Delete Project
+                                </button>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button onClick={() => { set_edit_project(null); set_edit_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
+                                    <button
+                                        onClick={() => { set_edit_project(null); set_edit_save_hover(false); }}
+                                        onMouseEnter={() => set_edit_save_hover(true)}
+                                        onMouseLeave={() => set_edit_save_hover(false)}
+                                        style={{ background: edit_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s ease' }}>
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {show_delete_confirm && (
+                <div
+                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1100,
+                    }}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            width: '420px',
+                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
+                        }}>
+                        {/* Red accent stripe */}
+                        <div style={{ height: '4px', background: '#DC2626', borderRadius: '20px 20px 0 0' }} />
+
+                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+                            {/* Warning icon */}
+                            <div style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: '50%',
+                                background: '#FEE2E2',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </div>
+
+                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>
+                                Delete Project?
+                            </h2>
+                            <p style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins', margin: 0, lineHeight: 1.5 }}>
+                                Are you sure you want to delete this project? This action cannot be undone.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', width: '100%', justifyContent: 'center' }}>
+                                <button
+                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                                    style={{
+                                        background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                        color: '#666', cursor: 'pointer',
+                                    }}>
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); set_edit_project(null); set_edit_save_hover(false); }}
+                                    onMouseEnter={() => set_delete_hover(true)}
+                                    onMouseLeave={() => set_delete_hover(false)}
+                                    style={{
+                                        background: delete_hover ? '#B91C1C' : '#DC2626',
+                                        color: 'white', border: 'none', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
+                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                    }}>
+                                    Delete
                                 </button>
                             </div>
                         </div>

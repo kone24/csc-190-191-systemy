@@ -125,6 +125,8 @@ export default function ProjectDetailPage() {
     const [edit_hover, set_edit_hover] = useState(false);
     const [show_edit_project, set_show_edit_project] = useState(false);
     const [edit_project_save_hover, set_edit_project_save_hover] = useState(false);
+    const [show_delete_confirm, set_show_delete_confirm] = useState(false);
+    const [delete_hover, set_delete_hover] = useState(false);
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -140,72 +142,69 @@ export default function ProjectDetailPage() {
                 gap: '24px',
                 overflowX: 'hidden',
             }}>
-                {/*Page Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                    <Link href="/dashboard/projects" style={{
-                        color: '#FF5900',
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                        textDecoration: 'none',
-                        fontWeight: '500',
-                    }}>
-                        &larr; Back
-                    </Link>
-
-                    <h1 style={{
-                        fontSize: 24,
-                        fontWeight: '700',
-                        fontFamily: 'Poppins',
-                        color: 'black',
-                        margin: 0,
-                    }}>
-                        {PROJECT_NAME}
-                    </h1>
-
-                    <span style={{
-                        background: '#FFAC80',
-                        color: 'black',
-                        padding: '6px 20px',
-                        borderRadius: '20px',
-                        fontSize: 14,
-                        fontWeight: '600',
-                        fontFamily: 'Poppins',
-                        whiteSpace: 'nowrap',
-                    }}>
-                        {PROJECT_STATUS}
-                    </span>
-
-                    <button
-                        onClick={() => set_show_edit_project(true)}
-                        style={{
-                            background: '#FF5900',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            padding: '8px 20px',
+                {/* Page Header */}
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    borderBottom: '1px solid #E5E5E5',
+                    paddingBottom: '16px',
+                }}>
+                    {/* Line 1: Back, Name, Status, Edit */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                        <Link href="/dashboard/projects" style={{
+                            color: '#FF5900',
                             fontSize: 14,
                             fontFamily: 'Poppins',
+                            textDecoration: 'none',
                             fontWeight: '500',
-                            cursor: 'pointer',
-                            transition: 'background 0.2s ease',
                         }}>
-                        Edit
-                    </button>
-                </div>
+                            &larr; Back
+                        </Link>
 
-                {/* Project Info Card*/}
-                <div style={{
-                    background: 'white',
-                    borderRadius: '20px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                    padding: '18px 24px',
-                    flexShrink: 0,
-                }}>
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(6, 1fr)',
-                        gap: '20px',
-                    }}>
+                        <h1 style={{
+                            fontSize: 24,
+                            fontWeight: '700',
+                            fontFamily: 'Poppins',
+                            color: 'black',
+                            margin: 0,
+                        }}>
+                            {PROJECT_NAME}
+                        </h1>
+
+                        <span style={{
+                            background: '#FFAC80',
+                            color: 'black',
+                            padding: '6px 20px',
+                            borderRadius: '20px',
+                            fontSize: 14,
+                            fontWeight: '600',
+                            fontFamily: 'Poppins',
+                            whiteSpace: 'nowrap',
+                        }}>
+                            {PROJECT_STATUS}
+                        </span>
+
+                        <button
+                            onClick={() => set_show_edit_project(true)}
+                            style={{
+                                background: '#FF5900',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                padding: '8px 20px',
+                                fontSize: 14,
+                                fontFamily: 'Poppins',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                transition: 'background 0.2s ease',
+                            }}>
+                            Edit
+                        </button>
+                    </div>
+
+                    {/* Line 2: Project details inline */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
                         {[
                             { label: 'Vendor', value: PROJECT_DETAILS.vendor },
                             { label: 'Owner', value: PROJECT_DETAILS.owner },
@@ -214,34 +213,28 @@ export default function ProjectDetailPage() {
                             { label: 'End Date', value: format_date(PROJECT_DETAILS.end_date) },
                             { label: 'Budget', value: format_currency(PROJECT_DETAILS.budget) },
                         ].map(item => (
-                            <div key={item.label} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span style={{ fontSize: 11, color: '#999', fontFamily: 'Poppins', fontWeight: '500' }}>
+                            <div key={item.label} style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: 10, color: '#999', fontFamily: 'Poppins', fontWeight: '500' }}>
                                     {item.label}
                                 </span>
-                                <span style={{ fontSize: 14, color: 'black', fontFamily: 'Poppins', fontWeight: '500' }}>
+                                <span style={{ fontSize: 15, color: 'black', fontFamily: 'Poppins', fontWeight: '700' }}>
                                     {item.value}
                                 </span>
                             </div>
                         ))}
                     </div>
+
+                    {/* Line 3: Description */}
                     <p style={{
-                        fontSize: 12,
-                        color: '#777',
+                        fontSize: 13,
+                        color: '#444',
                         fontFamily: 'Poppins',
-                        margin: '12px 0 0 0',
-                        lineHeight: 1.5,
+                        margin: '-4px 0 0 0',
+                        lineHeight: 1.4,
                     }}>
                         {PROJECT_DETAILS.description}
                     </p>
                 </div>
-
-                {/*Filter Row Placeholder*/}
-                <div style={{
-                    background: 'rgba(217, 217, 217, 0.3)',
-                    borderRadius: '12px',
-                    height: '50px',
-                    flexShrink: 0,
-                }} />
 
                 {/* Kanban Board */}
                 <div style={{
@@ -874,8 +867,6 @@ export default function ProjectDetailPage() {
                             display: 'flex',
                             flexDirection: 'column',
                         }}>
-                        <div style={{ height: '4px', background: '#DFCCFF', borderRadius: '20px 20px 0 0' }} />
-
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px 0 28px' }}>
                             <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>Edit Project</h2>
                             <button onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', padding: '0 4px', lineHeight: 1, fontFamily: 'Poppins' }}>&times;</button>
@@ -958,13 +949,100 @@ export default function ProjectDetailPage() {
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                                <button onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
                                 <button
-                                    onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }}
-                                    onMouseEnter={() => set_edit_project_save_hover(true)}
-                                    onMouseLeave={() => set_edit_project_save_hover(false)}
-                                    style={{ background: edit_project_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s ease' }}>
-                                    Save
+                                    onClick={() => set_show_delete_confirm(true)}
+                                    style={{ background: 'none', border: '1px solid #DC2626', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#DC2626', cursor: 'pointer' }}>
+                                    Delete Project
+                                </button>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
+                                    <button
+                                        onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }}
+                                        onMouseEnter={() => set_edit_project_save_hover(true)}
+                                        onMouseLeave={() => set_edit_project_save_hover(false)}
+                                        style={{ background: edit_project_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s ease' }}>
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {show_delete_confirm && (
+                <div
+                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1100,
+                    }}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            width: '420px',
+                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
+                        }}>
+                        {/* Red accent stripe */}
+                        <div style={{ height: '4px', background: '#DC2626', borderRadius: '20px 20px 0 0' }} />
+
+                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+                            {/* Warning icon */}
+                            <div style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: '50%',
+                                background: '#FEE2E2',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </div>
+
+                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>
+                                Delete Project?
+                            </h2>
+                            <p style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins', margin: 0, lineHeight: 1.5 }}>
+                                Are you sure you want to delete this project? This action cannot be undone.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', width: '100%', justifyContent: 'center' }}>
+                                <button
+                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                                    style={{
+                                        background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                        color: '#666', cursor: 'pointer',
+                                    }}>
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); set_show_edit_project(false); set_edit_project_save_hover(false); }}
+                                    onMouseEnter={() => set_delete_hover(true)}
+                                    onMouseLeave={() => set_delete_hover(false)}
+                                    style={{
+                                        background: delete_hover ? '#B91C1C' : '#DC2626',
+                                        color: 'white', border: 'none', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
+                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                    }}>
+                                    Delete
                                 </button>
                             </div>
                         </div>
