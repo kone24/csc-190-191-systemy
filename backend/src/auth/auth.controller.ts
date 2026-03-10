@@ -12,7 +12,6 @@ export class AuthController {
     @Body() body: { username: string; password: string },
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log('login body:', body); // TEMP: see what we receive
     const { username, password } = body ?? {};
 
     const result = await this.authService.login(username, password);
@@ -28,14 +27,11 @@ export class AuthController {
       return { ok: true, user: result.user };
     }
 
-    // return { ok: false, message: result.message };
     return { ok: false, message: result?.message ?? 'Invalid credentials' };
   }
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
-    console.log('User logging out, clearing session cookie');
-
     res.clearCookie('access_token', { path: '/', httpOnly: true });
     return { ok: true, message: 'Logged out successfully', redirect: '/login' };
   }

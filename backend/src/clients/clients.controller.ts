@@ -5,10 +5,16 @@ import { ClientProfileDto } from './dto/client-profile.dto';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientTagsDto } from './dto/update-client-tags.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
+import { AuditService } from '../audit/audit.service';
+
+const TRACKED_FIELDS = ['status', 'relationship_status'];
 
 @Controller('clients')
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsSupabaseService) { }
+  constructor(
+    private readonly clientsService: ClientsSupabaseService,
+    private readonly auditService: AuditService,
+  ) { }
 
   @Get('search')
   async search(@Query('q') query: string) {
@@ -68,11 +74,25 @@ export class ClientsController {
     return { ok: true, items };
   }
 
-  // TODO: Restrict tag updates to admin/manager roles once SYS-134 permissions branch is merged
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() body: UpdateClientTagsDto) {
+  async update(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+    const before = await this.clientsService.findOne(id);
+
+    const diff: Record<string, { old: unknown; new: unknown }> = {};
+    for (const field of TRACKED_FIELDS) {
+      if (field in body && body[field] !== (before as any)[field]) {
+        diff[field] = { old: (before as any)[field] ?? null, new: body[field] };
+      }
+    }
+
     const updated = await this.clientsService.update(id, body);
+
+    if (Object.keys(diff).length > 0) {
+      const userId = (req as any).user?.userId ?? (req as any).user?.sub ?? null;
+      await this.auditService.log('client', id, 'update', diff, userId);
+    }
+
     return { ok: true, client: updated };
   }
 
@@ -85,5 +105,12 @@ export class ClientsController {
   @Get(':id/profile')
   getProfile(@Param('id') id: string) {
     return this.clientsService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/audit')
+  async getAuditHistory(@Param('id') id: string) {
+    const history = await this.auditService.getHistory('client', id);
+    return { ok: true, history };
   }
 }

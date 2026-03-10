@@ -20,7 +20,6 @@ export class AuthService {
   }
 
   async login(username: string, password: string) {
-    // Temporary fake logic
     if (username === 'admin' && password === '1234') {
       const user = { username };
       const payload = { username };

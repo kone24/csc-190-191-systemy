@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
       envFilePath: '.env',
     }),
     ScheduleModule.forRoot(),
+    AuditModule,
     NotificationsModule,
     AuthModule,
     ClientsModule,
