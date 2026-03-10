@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
+export class SupabaseAuthGuard extends AuthGuard('supabase-jwt') {
     // This handles what happens when authentication fails
     handleRequest(err: any, user: any, info: any, context: any) {
         console.log('Auth guard check:', { err, user, info }); // Debug log

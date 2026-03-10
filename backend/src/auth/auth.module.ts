@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt'; // Needed for JSON tokens
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt.guard';
+import { SupabaseJwtStrategy } from './supabase-jwt.strategy';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { JwtAuthGuard } from './jwt.guard';
       signOptions: { expiresIn: '20m' }, // sign in only valid for 20 minutes of inactivity
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, SupabaseJwtStrategy],
   controllers: [AuthController],
   exports: [AuthService, JwtAuthGuard],
 })
