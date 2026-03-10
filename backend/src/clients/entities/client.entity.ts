@@ -38,6 +38,36 @@ export class Client {
   @Column('text', { nullable: true, name: 'additional_info' })
   additional_info?: string;
 
+  @Column({ nullable: true })
+  company?: string;
+
+  @Column({ nullable: true, name: 'relationship_owner' })
+  relationship_owner?: string;
+
+  @Column({ nullable: true })
+  status?: string;
+
+  @Column({ nullable: true, name: 'contact_medium' })
+  contact_medium?: string;
+
+  @Column('date', { nullable: true, name: 'date_of_contact' })
+  date_of_contact?: Date;
+
+  @Column({ nullable: true, name: 'where_met' })
+  where_met?: string;
+
+  @Column('text', { nullable: true, name: 'chat_summary' })
+  chat_summary?: string;
+
+  @Column({ nullable: true })
+  outcome?: string;
+
+  @Column({ nullable: true, name: 'relationship_status' })
+  relationship_status?: string;
+
+  @Column('text', { nullable: true })
+  notes?: string;
+
   @Column('text', { array: true, default: '{}' })
   tags: string[];
 

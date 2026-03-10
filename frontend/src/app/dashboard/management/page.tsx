@@ -210,7 +210,7 @@ export default function ManagementPage() {
                         <StatCard title="Total Users" value={stats.totalUsers.toString()} />
                         <StatCard title="Active Users" value={stats.activeUsers.toString()} />
                         <StatCard title="Total Projects" value={stats.totalProjects.toString()} />
-                        <StatCard title="Total Clients" value={stats.totalClients.toString()} />
+                        <StatCard title="Total Contacts" value={stats.totalClients.toString()} />
                         <StatCard title="System Uptime" value={stats.systemUptime} />
                         <StatCard title="Last Backup" value={stats.lastBackup} />
                     </div>

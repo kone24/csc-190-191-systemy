@@ -179,7 +179,7 @@ export default function ClientProfilePage() {
           fontWeight: '500',
           textDecoration: 'none',
         }}>
-          ← Back to Clients
+          ← Back to Contacts
         </Link>
 
         {loading && <p style={{ fontFamily: 'Poppins', fontSize: 14, color: '#FF5900' }}>Loading…</p>}
