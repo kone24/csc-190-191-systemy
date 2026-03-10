@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 
@@ -90,10 +90,26 @@ interface ClientData {
   website?: string;
   additional_info?: string;
   tags?: string[];
+  status?: string;
+  relationship_status?: string;
 }
+
+interface AuditEntry {
+  audit_id: string;
+  entity_type: string;
+  entity_id: string;
+  action: string;
+  performed_by: string | null;
+  diff: Record<string, { old: unknown; new: unknown }> | null;
+  created_at: string;
+}
+
+const STATUS_OPTIONS = ['Lead', 'Prospect', 'Active', 'Inactive', 'Churned'];
+const RELATIONSHIP_OPTIONS = ['Cold', 'Warm', 'Hot'];
 
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
 
   const [client, setClient]     = useState<ClientData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -104,6 +120,10 @@ export default function ClientProfilePage() {
   const [newColor, setNewColor] = useState(DEFAULT_COLOR);
   const [saving, setSaving]     = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const [auditHistory, setAuditHistory] = useState<AuditEntry[]>([]);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -120,6 +140,53 @@ export default function ClientProfilePage() {
       .catch(err => setFetchError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const fetchAudit = useCallback(() => {
+    fetch(`http://localhost:3001/clients/${id}/audit`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setAuditHistory(data.history ?? []))
+      .catch(() => {});
+  }, [id]);
+
+  useEffect(() => { fetchAudit(); }, [fetchAudit]);
+
+  const updateStatus = async (field: 'status' | 'relationship_status', value: string) => {
+    if (!client) return;
+    setStatusError(null);
+
+    // Optimistically update the UI immediately
+    const previous = { ...client };
+    setClient({ ...client, [field]: value });
+
+    setStatusSaving(true);
+    try {
+      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          router.push(`/login?from=/dashboard/clients/${id}`);
+          return;
+        } else {
+          setStatusError(`Failed to save (${res.status})`);
+        }
+        setClient(previous); // revert
+        return;
+      }
+      const data = await res.json();
+      setClient(data.client);
+      fetchAudit();
+    } catch (err: any) {
+      console.error('Failed to update status:', err);
+      setStatusError(err.message ?? 'Network error');
+      setClient(previous); // revert
+    } finally {
+      setStatusSaving(false);
+    }
+  };
 
   // Persist tag array to backend
   const persist = async (next: Tag[]) => {
@@ -206,6 +273,106 @@ export default function ClientProfilePage() {
                   <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
                 ))}
               </div>
+            </div>
+
+            {/* Status card */}
+            <div style={{
+              background: 'white',
+              borderRadius: 20,
+              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+              padding: '24px 30px',
+            }}>
+              <div style={{
+                fontFamily: 'Poppins', fontSize: 18, fontWeight: '600',
+                color: 'rgba(255, 89, 0, 0.80)', marginBottom: 20,
+              }}>
+                Status
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180 }}>
+                  <label style={{ fontFamily: 'Poppins', fontSize: 13, fontWeight: '600', color: 'rgba(0,0,0,0.50)' }}>Client Status</label>
+                  <select
+                    value={client.status || ''}
+                    disabled={statusSaving}
+                    onChange={e => updateStatus('status', e.target.value)}
+                    style={{
+                      height: 38, padding: '0 12px', borderRadius: 10,
+                      border: '1.5px solid rgba(0,0,0,0.20)',
+                      fontFamily: 'Poppins', fontSize: 14, color: 'black',
+                      background: 'white', cursor: 'pointer', outline: 'none',
+                    }}
+                  >
+                    <option value="">— Select —</option>
+                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 180 }}>
+                  <label style={{ fontFamily: 'Poppins', fontSize: 13, fontWeight: '600', color: 'rgba(0,0,0,0.50)' }}>Relationship</label>
+                  <select
+                    value={client.relationship_status || ''}
+                    disabled={statusSaving}
+                    onChange={e => updateStatus('relationship_status', e.target.value)}
+                    style={{
+                      height: 38, padding: '0 12px', borderRadius: 10,
+                      border: '1.5px solid rgba(0,0,0,0.20)',
+                      fontFamily: 'Poppins', fontSize: 14, color: 'black',
+                      background: 'white', cursor: 'pointer', outline: 'none',
+                    }}
+                  >
+                    <option value="">— Select —</option>
+                    {RELATIONSHIP_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Change History card */}
+            <div style={{
+              background: 'white',
+              borderRadius: 20,
+              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+              padding: '24px 30px',
+            }}>
+              <div style={{
+                fontFamily: 'Poppins', fontSize: 18, fontWeight: '600',
+                color: 'rgba(255, 89, 0, 0.80)', marginBottom: 20,
+              }}>
+                Change History
+              </div>
+
+              {auditHistory.length === 0 ? (
+                <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.35)' }}>No changes recorded yet.</span>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {auditHistory.map(entry => (
+                    <div key={entry.audit_id} style={{
+                      display: 'flex', flexDirection: 'column', gap: 4,
+                      padding: '12px 16px', borderRadius: 12,
+                      background: 'rgba(217, 217, 217, 0.15)',
+                      borderLeft: '3px solid #FF5900',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontFamily: 'Poppins', fontSize: 12, fontWeight: '600', color: 'rgba(0,0,0,0.50)', textTransform: 'uppercase' }}>
+                          {entry.action}
+                        </span>
+                        <span style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.40)' }}>
+                          {new Date(entry.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      {entry.diff && Object.entries(entry.diff).map(([field, change]) => (
+                        <div key={field} style={{ fontFamily: 'Poppins', fontSize: 13, color: 'rgba(0,0,0,0.70)' }}>
+                          <span style={{ fontWeight: '600' }}>{field.replace(/_/g, ' ')}</span>:{' '}
+                          <span style={{ color: '#999', textDecoration: 'line-through' }}>{String(change.old || '—')}</span>
+                          {' → '}
+                          <span style={{ color: '#FF5900', fontWeight: '500' }}>{String(change.new || '—')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Tags card */}

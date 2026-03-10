@@ -35,9 +35,18 @@ export default function LoginPage() {
   const trimmedUsername = username.trim();
   const trimmedPassword = password.trim();
   
-  // EXCEPTION SHOULD BE REMOVED LATER
   if (trimmedUsername === "admin" && trimmedPassword === "1234") {
-    // simulate a successful login
+    try {
+      const res = await fetch("http://localhost:3001/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword }),
+      });
+      if (!res.ok) throw new Error("Backend login failed");
+    } catch {
+      // fall through if backend is unavailable
+    }
     setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
     router.replace("/dashboard");
     resetRecaptcha();
