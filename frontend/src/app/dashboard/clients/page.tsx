@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
@@ -29,6 +29,7 @@ function parseTag(raw: string): { name: string; color: string } {
 type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated';
 
 export default function ClientsPage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const initialSearch = searchParams.get('search') || '';
 
@@ -379,6 +380,7 @@ export default function ClientsPage() {
                                     {displayedClients.map((client, idx) => (
                                         <tr
                                             key={client.id}
+                                            onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                                             style={{
                                                 background: idx % 2 === 0 ? 'white' : 'rgba(255, 245, 230, 0.50)',
                                                 transition: 'background 0.2s',
@@ -395,9 +397,7 @@ export default function ClientsPage() {
                                                 color: 'rgba(26, 26, 26, 0.80)',
                                                 fontWeight: '500'
                                             }}>
-                                                <Link href={`/dashboard/clients/${client.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                                                    {client.first_name} {client.last_name}
-                                                </Link>
+                                                {client.first_name} {client.last_name}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -443,35 +443,33 @@ export default function ClientsPage() {
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
                                             }}>
-                                                <Link href={`/dashboard/clients/${client.id}`} style={{ textDecoration: 'none' }}>
-                                                    {client.tags?.length ? (
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                            {client.tags.map((raw, i) => {
-                                                                const { name, color } = parseTag(raw);
-                                                                return (
-                                                                    <span key={i} style={{
-                                                                        display: 'inline-flex',
-                                                                        alignItems: 'center',
-                                                                        height: 35,
-                                                                        paddingLeft: 29,
-                                                                        paddingRight: 29,
-                                                                        borderRadius: 20,
-                                                                        background: color,
-                                                                        color: 'white',
-                                                                        fontSize: 12,
-                                                                        fontFamily: 'Poppins',
-                                                                        fontWeight: '600',
-                                                                        whiteSpace: 'nowrap',
-                                                                    }}>
-                                                                        {name}
-                                                                    </span>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    ) : (
-                                                        <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(26, 26, 26, 0.80)' }}>—</span>
-                                                    )}
-                                                </Link>
+                                                {client.tags?.length ? (
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                        {client.tags.map((raw, i) => {
+                                                            const { name, color } = parseTag(raw);
+                                                            return (
+                                                                <span key={i} style={{
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    height: 35,
+                                                                    paddingLeft: 29,
+                                                                    paddingRight: 29,
+                                                                    borderRadius: 20,
+                                                                    background: color,
+                                                                    color: 'white',
+                                                                    fontSize: 12,
+                                                                    fontFamily: 'Poppins',
+                                                                    fontWeight: '600',
+                                                                    whiteSpace: 'nowrap',
+                                                                }}>
+                                                                    {name}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(26, 26, 26, 0.80)' }}>—</span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
