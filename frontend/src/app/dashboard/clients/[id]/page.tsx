@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 
@@ -110,6 +110,12 @@ export default function ClientProfilePage() {
   const [editForm, setEditForm] = useState<Partial<ClientData>>({});
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  // Delete state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -226,6 +232,23 @@ export default function ClientProfilePage() {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      router.push('/dashboard/clients');
+    } catch (err: any) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // UI LOOK
   return (
     <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -273,22 +296,40 @@ export default function ClientProfilePage() {
                     <div style={{ fontFamily: 'Poppins', fontSize: 24, fontWeight: '600', color: 'black', marginBottom: 8 }}>
                       {client.first_name} {client.last_name}
                     </div>
-                    <button
-                      onClick={startEditing}
-                      style={{
-                        background: '#FF5900',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '8px 20px',
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Edit
-                    </button>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        onClick={startEditing}
+                        style={{
+                          background: '#FF5900',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 20px',
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        style={{
+                          background: '#EF4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 20px',
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
                     {[client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
@@ -493,6 +534,81 @@ export default function ClientProfilePage() {
           </>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div
+          onClick={() => !deleting && setShowDeleteModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: 16,
+              padding: '32px 36px',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+              maxWidth: 400,
+              width: '90%',
+              fontFamily: 'Poppins',
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: '600', color: '#111', marginBottom: 12 }}>
+              Delete Contact
+            </div>
+            <p style={{ fontSize: 14, color: 'rgba(0,0,0,0.60)', margin: '0 0 24px' }}>
+              Are you sure you want to delete this contact? This action cannot be undone.
+            </p>
+            {deleteError && (
+              <p style={{ fontSize: 13, color: '#ef4444', marginBottom: 16 }}>{deleteError}</p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                style={{
+                  background: 'transparent',
+                  color: '#666',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: '8px 24px',
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  background: deleting ? 'rgba(0,0,0,0.12)' : '#EF4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 24px',
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: '500',
+                  cursor: deleting ? 'default' : 'pointer',
+                }}
+              >
+                {deleting ? 'Deleting…' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
