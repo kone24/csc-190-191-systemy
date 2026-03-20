@@ -95,21 +95,21 @@ interface ClientData {
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [client, setClient]     = useState<ClientData | null>(null);
+  const [client, setClient] = useState<ClientData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [tags, setTags]         = useState<Tag[]>([]);
-  const [newName, setNewName]   = useState('');
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(DEFAULT_COLOR);
-  const [saving, setSaving]     = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Edit mode state
-  const [editing, setEditing]   = useState(false);
+  const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<ClientData>>({});
   const [editSaving, setEditSaving] = useState(false);
-  const [editError, setEditError]   = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
