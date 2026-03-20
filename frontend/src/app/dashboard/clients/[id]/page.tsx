@@ -194,13 +194,24 @@ export default function ClientProfilePage() {
     setEditSaving(true);
     setEditError(null);
     try {
+      // Strip null/undefined/empty-string values so @IsOptional() validators skip them
+      const cleaned: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(editForm)) {
+        if (val !== null && val !== undefined && val !== '') {
+          cleaned[key] = val;
+        }
+      }
       const res = await fetch(`http://localhost:3001/clients/${id}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(cleaned),
       });
-      if (!res.ok) throw new Error(`Error ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const msg = Array.isArray(body?.message) ? body.message.join(', ') : body?.message || `Error ${res.status}`;
+        throw new Error(msg);
+      }
       const data = await res.json();
       setClient(data.client);
       setEditing(false);
