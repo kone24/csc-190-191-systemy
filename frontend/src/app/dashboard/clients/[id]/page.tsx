@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 
@@ -95,15 +95,27 @@ interface ClientData {
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [client, setClient]     = useState<ClientData | null>(null);
+  const [client, setClient] = useState<ClientData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [tags, setTags]         = useState<Tag[]>([]);
-  const [newName, setNewName]   = useState('');
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(DEFAULT_COLOR);
-  const [saving, setSaving]     = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Edit mode state
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<ClientData>>({});
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Delete state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -157,6 +169,86 @@ export default function ClientProfilePage() {
     persist(next);
   };
 
+  const startEditing = () => {
+    if (!client) return;
+    setEditForm({
+      first_name: client.first_name,
+      last_name: client.last_name,
+      email: client.email,
+      phone_number: client.phone_number,
+      business_name: client.business_name,
+      title: client.title || '',
+      industry: client.industry || '',
+      website: client.website || '',
+      additional_info: client.additional_info || '',
+    });
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+    setEditForm({});
+    setEditError(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editForm.first_name?.trim()) {
+      setEditError('First name is required');
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      // Strip null/undefined/empty-string values so @IsOptional() validators skip them
+      const cleaned: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(editForm)) {
+        if (val !== null && val !== undefined && val !== '') {
+          cleaned[key] = val;
+        }
+      }
+      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cleaned),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const msg = Array.isArray(body?.message) ? body.message.join(', ') : body?.message || `Error ${res.status}`;
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      setClient(data.client);
+      setEditing(false);
+    } catch (err: any) {
+      setEditError(err.message);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const editField = (field: keyof ClientData, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      router.push('/dashboard/clients');
+    } catch (err: any) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // UI LOOK
   return (
     <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -198,14 +290,158 @@ export default function ClientProfilePage() {
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               padding: '24px 30px',
             }}>
-              <div style={{ fontFamily: 'Poppins', fontSize: 24, fontWeight: '600', color: 'black', marginBottom: 8 }}>
-                {client.first_name} {client.last_name}
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-                {[client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
-                  <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
-                ))}
-              </div>
+              {!editing ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ fontFamily: 'Poppins', fontSize: 24, fontWeight: '600', color: 'black', marginBottom: 8 }}>
+                      {client.first_name} {client.last_name}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        onClick={startEditing}
+                        style={{
+                          background: '#FF5900',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 20px',
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        style={{
+                          background: '#EF4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 20px',
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                    {[client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
+                      <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontFamily: 'Poppins', fontSize: 18, fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: 16 }}>
+                    Edit Contact
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {([
+                      ['first_name', 'First Name'],
+                      ['last_name', 'Last Name'],
+                      ['email', 'Email'],
+                      ['phone_number', 'Phone'],
+                      ['business_name', 'Company'],
+                      ['title', 'Title'],
+                      ['industry', 'Industry'],
+                      ['website', 'Website'],
+                    ] as const).map(([field, label]) => (
+                      <div key={field}>
+                        <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
+                          {label}
+                        </label>
+                        <input
+                          value={(editForm as any)[field] ?? ''}
+                          onChange={(e) => editField(field, e.target.value)}
+                          style={{
+                            width: '100%',
+                            height: 38,
+                            padding: '0 12px',
+                            borderRadius: 8,
+                            border: '1.5px solid rgba(0,0,0,0.15)',
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: 'black',
+                            outline: 'none',
+                            background: 'white',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
+                      Notes
+                    </label>
+                    <textarea
+                      value={editForm.additional_info ?? ''}
+                      onChange={(e) => editField('additional_info', e.target.value)}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        border: '1.5px solid rgba(0,0,0,0.15)',
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        color: 'black',
+                        outline: 'none',
+                        resize: 'vertical',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  {editError && (
+                    <p style={{ fontFamily: 'Poppins', fontSize: 13, color: '#ef4444', marginTop: 8 }}>
+                      {editError}
+                    </p>
+                  )}
+                  <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                    <button
+                      onClick={saveEdit}
+                      disabled={editSaving}
+                      style={{
+                        background: editSaving ? 'rgba(0,0,0,0.12)' : '#FF5900',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '8px 24px',
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                        fontWeight: '500',
+                        cursor: editSaving ? 'default' : 'pointer',
+                      }}
+                    >
+                      {editSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      disabled={editSaving}
+                      style={{
+                        background: 'transparent',
+                        color: '#666',
+                        border: '1px solid #ddd',
+                        borderRadius: 8,
+                        padding: '8px 24px',
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Tags card */}
@@ -298,6 +534,81 @@ export default function ClientProfilePage() {
           </>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div
+          onClick={() => !deleting && setShowDeleteModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: 16,
+              padding: '32px 36px',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+              maxWidth: 400,
+              width: '90%',
+              fontFamily: 'Poppins',
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: '600', color: '#111', marginBottom: 12 }}>
+              Delete Contact
+            </div>
+            <p style={{ fontSize: 14, color: 'rgba(0,0,0,0.60)', margin: '0 0 24px' }}>
+              Are you sure you want to delete this contact? This action cannot be undone.
+            </p>
+            {deleteError && (
+              <p style={{ fontSize: 13, color: '#ef4444', marginBottom: 16 }}>{deleteError}</p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                style={{
+                  background: 'transparent',
+                  color: '#666',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: '8px 24px',
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  background: deleting ? 'rgba(0,0,0,0.12)' : '#EF4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 24px',
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: '500',
+                  cursor: deleting ? 'default' : 'pointer',
+                }}
+              >
+                {deleting ? 'Deleting…' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
