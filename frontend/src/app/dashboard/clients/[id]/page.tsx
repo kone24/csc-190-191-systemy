@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import type { Client } from '@/types/client';
@@ -123,13 +123,25 @@ export default function ClientProfilePage() {
 
   const [client, setClient]     = useState<Client | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [tags, setTags]         = useState<Tag[]>([]);
-  const [newName, setNewName]   = useState('');
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState(DEFAULT_COLOR);
-  const [saving, setSaving]     = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Edit mode state
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<ClientData>>({});
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Delete state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -181,6 +193,86 @@ export default function ClientProfilePage() {
     const next = tags.filter((_, idx) => idx !== i);
     setTags(next);
     persist(next);
+  };
+
+  const startEditing = () => {
+    if (!client) return;
+    setEditForm({
+      first_name: client.first_name,
+      last_name: client.last_name,
+      email: client.email,
+      phone_number: client.phone_number,
+      business_name: client.business_name,
+      title: client.title || '',
+      industry: client.industry || '',
+      website: client.website || '',
+      additional_info: client.additional_info || '',
+    });
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+    setEditForm({});
+    setEditError(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editForm.first_name?.trim()) {
+      setEditError('First name is required');
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      // Strip null/undefined/empty-string values so @IsOptional() validators skip them
+      const cleaned: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(editForm)) {
+        if (val !== null && val !== undefined && val !== '') {
+          cleaned[key] = val;
+        }
+      }
+      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cleaned),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        const msg = Array.isArray(body?.message) ? body.message.join(', ') : body?.message || `Error ${res.status}`;
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      setClient(data.client);
+      setEditing(false);
+    } catch (err: any) {
+      setEditError(err.message);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const editField = (field: keyof ClientData, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      router.push('/dashboard/clients');
+    } catch (err: any) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   // UI LOOK
@@ -391,6 +483,81 @@ export default function ClientProfilePage() {
           </>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && (
+        <div
+          onClick={() => !deleting && setShowDeleteModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'white',
+              borderRadius: 16,
+              padding: '32px 36px',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+              maxWidth: 400,
+              width: '90%',
+              fontFamily: 'Poppins',
+            }}
+          >
+            <div style={{ fontSize: 18, fontWeight: '600', color: '#111', marginBottom: 12 }}>
+              Delete Contact
+            </div>
+            <p style={{ fontSize: 14, color: 'rgba(0,0,0,0.60)', margin: '0 0 24px' }}>
+              Are you sure you want to delete this contact? This action cannot be undone.
+            </p>
+            {deleteError && (
+              <p style={{ fontSize: 13, color: '#ef4444', marginBottom: 16 }}>{deleteError}</p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                style={{
+                  background: 'transparent',
+                  color: '#666',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: '8px 24px',
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{
+                  background: deleting ? 'rgba(0,0,0,0.12)' : '#EF4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '8px 24px',
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                  fontWeight: '500',
+                  cursor: deleting ? 'default' : 'pointer',
+                }}
+              >
+                {deleting ? 'Deleting…' : 'Yes, Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

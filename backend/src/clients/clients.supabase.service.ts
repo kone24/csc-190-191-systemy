@@ -145,12 +145,10 @@ export class ClientsSupabaseService {
 
             // Apply text search if provided
             if (searchQuery.searchTerm) {
-                query = query.or(`
-          first_name.ilike.%${searchQuery.searchTerm}%,
-          last_name.ilike.%${searchQuery.searchTerm}%,
-          business_name.ilike.%${searchQuery.searchTerm}%,
-          email.ilike.%${searchQuery.searchTerm}%
-        `);
+                const term = searchQuery.searchTerm;
+                query = query.or(
+                    `first_name.ilike.%${term}%,last_name.ilike.%${term}%,business_name.ilike.%${term}%,email.ilike.%${term}%`
+                );
             }
 
             // Apply location filters if provided
