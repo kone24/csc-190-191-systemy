@@ -68,21 +68,27 @@ export class AuthService {
       };
     }
 
-    // Dev-allowlisted emails skip the DB check (they won't exist in the users table).
-    if (!isDevAllowed) {
-      // Check that this email exists in your Supabase users table.
-      // The users table should have at minimum an `email` column.
-      // Pre-populate it with the emails of team members who are allowed access.
-      const { data: dbUser, error: dbError } = await this.supabase
-        .from('users')
-        .select('email')
-        .eq('email', info.email.toLowerCase())
-        .single();
+    // Check if the user already exists in the users table.
+    const { data: dbUser } = await this.supabase
+      .from('users')
+      .select('email')
+      .eq('email', info.email.toLowerCase())
+      .single();
 
-      if (dbError || !dbUser) {
+    // Auto-provision: if no DB row yet, create one.
+    if (!dbUser) {
+      // Non-dev users without an allowed domain are already rejected above,
+      // so at this point the email is either allowed-domain or dev-allowlisted.
+      const emailPrefix = info.email.split('@')[0];
+      const { error: insertError } = await this.supabase
+        .from('users')
+        .insert({ email: info.email.toLowerCase(), name: emailPrefix, role: 'staff' });
+
+      if (insertError) {
+        console.error('Supabase insert error:', insertError);
         return {
           ok: false,
-          message: 'User not found.Contact your administrator to be added to the system.',
+          message: 'Failed to create user account. Please contact your administrator.',
         };
       }
     }
