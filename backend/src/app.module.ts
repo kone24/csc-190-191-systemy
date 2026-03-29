@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
+import { LeadsModule } from './leads/leads.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
@@ -20,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     AuthModule,
     ClientsModule,
     WebhookModule,
+    LeadsModule,
     AnalyticsModule,
   ],
   controllers: [AppController],
