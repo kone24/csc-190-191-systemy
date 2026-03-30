@@ -10,7 +10,7 @@ interface Project {
     id: string;
     title: string;
     client: string;
-    status: 'Open' | 'In Progress' | 'On Hold' | 'Closed';
+    status: 'On Track' | 'At Risk' | 'Behind';
     owner: string;
     owner_avatar: string;
     due_date: string;
@@ -18,24 +18,23 @@ interface Project {
 }
 
 const MOCK_PROJECTS: Project[] = [
-    { id: '1', title: 'Website Redesign', client: 'Some jit', status: 'In Progress', owner: 'Mario Gotez', owner_avatar: '', due_date: '2026-04-15', task_count: 12 },
-    { id: '2', title: 'Mobile App MVP', client: 'Tech Solutions Inc', status: 'Open', owner: 'Buyako Saka', owner_avatar: '', due_date: '2026-05-01', task_count: 8 },
-    { id: '3', title: 'Brand Identity Package', client: 'StartUp Ventures', status: 'On Hold', owner: 'Lamine Yamal', owner_avatar: '', due_date: '2026-03-30', task_count: 5 },
-    { id: '4', title: 'SEO Optimization', client: 'Digital Marketing Co', status: 'Closed', owner: 'Harry Kane', owner_avatar: '', due_date: '2026-02-28', task_count: 10 },
-    { id: '5', title: 'E-Commerce Platform', client: 'Global Systems Ltd', status: 'In Progress', owner: 'Alex Morgan', owner_avatar: '', due_date: '2026-06-10', task_count: 20 },
-    { id: '6', title: 'CRM Integration', client: 'Creative Agency', status: 'Open', owner: 'James dean', owner_avatar: '', due_date: '2026-04-20', task_count: 7 },
-    { id: '7', title: 'Annual Report Design', client: 'Acme Corporation', status: 'Closed', owner: 'Alex O', owner_avatar: '', due_date: '2026-01-31', task_count: 4 },
-    { id: '8', title: 'Data Migration', client: 'Tech Solutions Inc', status: 'On Hold', owner: 'Conan O\'Brien', owner_avatar: '', due_date: '2026-05-15', task_count: 15 },
-    { id: '9', title: 'Marketing Campaign Site', client: 'Digital Marketing Co', status: 'In Progress', owner: 'Arteta M', owner_avatar: '', due_date: '2026-04-05', task_count: 9 },
+    { id: '1', title: 'Website Redesign', client: 'Some jit', status: 'On Track', owner: 'Mario Gotez', owner_avatar: '', due_date: '2026-04-15', task_count: 12 },
+    { id: '2', title: 'Mobile App MVP', client: 'Tech Solutions Inc', status: 'On Track', owner: 'Buyako Saka', owner_avatar: '', due_date: '2026-05-01', task_count: 8 },
+    { id: '3', title: 'Brand Identity Package', client: 'StartUp Ventures', status: 'At Risk', owner: 'Lamine Yamal', owner_avatar: '', due_date: '2026-03-30', task_count: 5 },
+    { id: '4', title: 'SEO Optimization', client: 'Digital Marketing Co', status: 'Behind', owner: 'Harry Kane', owner_avatar: '', due_date: '2026-02-28', task_count: 10 },
+    { id: '5', title: 'E-Commerce Platform', client: 'Global Systems Ltd', status: 'On Track', owner: 'Alex Morgan', owner_avatar: '', due_date: '2026-06-10', task_count: 20 },
+    { id: '6', title: 'CRM Integration', client: 'Creative Agency', status: 'At Risk', owner: 'James dean', owner_avatar: '', due_date: '2026-04-20', task_count: 7 },
+    { id: '7', title: 'Annual Report Design', client: 'Acme Corporation', status: 'Behind', owner: 'Alex O', owner_avatar: '', due_date: '2026-01-31', task_count: 4 },
+    { id: '8', title: 'Data Migration', client: 'Tech Solutions Inc', status: 'At Risk', owner: 'Conan O\'Brien', owner_avatar: '', due_date: '2026-05-15', task_count: 15 },
+    { id: '9', title: 'Marketing Campaign Site', client: 'Digital Marketing Co', status: 'On Track', owner: 'Arteta M', owner_avatar: '', due_date: '2026-04-05', task_count: 9 },
 ];
 
 
 // Status badge + accent-line colors
 const STATUS_COLORS: Record<Project['status'], { bg: string; text: string; shadow: string }> = {
-    'Open':        { bg: 'rgba(91, 66, 255, 0.4)',  text: 'black', shadow: 'rgba(91, 66, 255, 0.6)'   },
-    'In Progress': { bg: '#FFAC80',                  text: 'black', shadow: 'rgba(255, 172, 128, 1.0)' },
-    'On Hold':     { bg: 'rgba(255, 246, 66, 0.32)', text: 'black', shadow: 'rgba(255, 246, 66, 0.6)'  },
-    'Closed':      { bg: '#00F5A0',                  text: 'black', shadow: 'rgba(0, 245, 160, 0.6)'   },
+    'On Track': { bg: '#22C55E',                  text: 'black', shadow: 'rgba(34, 197, 94, 0.6)'   },
+    'At Risk':  { bg: '#F59E0B',                  text: 'black', shadow: 'rgba(245, 158, 11, 0.6)'  },
+    'Behind':   { bg: '#EF4444',                  text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
 };
 
 // Derive unique owners and clients from the mock data
@@ -132,10 +131,9 @@ export default function ProjectsPage() {
                             style={select_style}
                         >
                             <option value="All">Status: All</option>
-                            <option value="Open">Open</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="On Hold">On Hold</option>
-                            <option value="Closed">Closed</option>
+                            <option value="On Track">On Track</option>
+                            <option value="At Risk">At Risk</option>
+                            <option value="Behind">Behind</option>
                         </select>
 
                         <select
@@ -465,7 +463,7 @@ export default function ProjectsPage() {
                             {/* Row 2: Vendor + Owner */}
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Vendor</label>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
                                     <select style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
@@ -476,13 +474,12 @@ export default function ProjectsPage() {
                                         background: 'white',
                                         cursor: 'pointer',
                                     }}>
-                                        <option value="">Select vendor</option>
-                                        <option>Nike</option>
-                                        <option>Acme Corporation</option>
-                                        <option>Tech Solutions Inc</option>
-                                        <option>Digital Marketing Co</option>
-                                        <option>Startup Ventures</option>
-                                        <option>Creative Agency</option>
+                                        <option value="">Select contact</option>
+                                        <option>John Smith</option>
+                                        <option>Sarah Johnson</option>
+                                        <option>Mike Chen</option>
+                                        <option>Emily Davis</option>
+                                        <option>Chris Wilson</option>
                                     </select>
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -541,11 +538,9 @@ export default function ProjectsPage() {
                                         cursor: 'pointer',
                                     }}>
                                         <option value="">Select status</option>
-                                        <option>Open</option>
-                                        <option>In Progress</option>
-                                        <option>Completed</option>
-                                        <option>On Hold</option>
-                                        <option>Cancelled</option>
+                                        <option>On Track</option>
+                                        <option>At Risk</option>
+                                        <option>Behind</option>
                                     </select>
                                 </div>
                             </div>
@@ -701,17 +696,13 @@ export default function ProjectsPage() {
 
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Vendor</label>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
                                     <select defaultValue={edit_project.client} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Nike</option>
-                                        <option>Acme Corporation</option>
-                                        <option>Tech Solutions Inc</option>
-                                        <option>Digital Marketing Co</option>
-                                        <option>Startup Ventures</option>
-                                        <option>Creative Agency</option>
-                                        <option>Some jit</option>
-                                        <option>Global Systems Ltd</option>
-                                        <option>StartUp Ventures</option>
+                                        <option>John Smith</option>
+                                        <option>Sarah Johnson</option>
+                                        <option>Mike Chen</option>
+                                        <option>Emily Davis</option>
+                                        <option>Chris Wilson</option>
                                     </select>
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -735,11 +726,9 @@ export default function ProjectsPage() {
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
                                     <select defaultValue={edit_project.status} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Open</option>
-                                        <option>In Progress</option>
-                                        <option>Completed</option>
-                                        <option>On Hold</option>
-                                        <option>Cancelled</option>
+                                        <option>On Track</option>
+                                        <option>At Risk</option>
+                                        <option>Behind</option>
                                     </select>
                                 </div>
                             </div>

@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProvided, type DroppableStateSnapshot } from '@hello-pangea/dnd';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 
@@ -10,7 +11,7 @@ interface Task {
     title: string;
     priority: 'High' | 'Medium' | 'Low';
     status: 'Todo' | 'In Progress' | 'Review' | 'Done';
-    assignee: string;
+    assignees: string[];
     due_date: string;
     description: string;
 }
@@ -23,9 +24,15 @@ interface Phase {
 
 // Mock data
 const PROJECT_NAME = 'Nike Brand Refresh';
-const PROJECT_STATUS = 'In Progress';
+const PROJECT_STATUS = 'On Track';
+
+const PROJECT_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
+    'On Track': { bg: '#22C55E', text: 'black' },
+    'At Risk':  { bg: '#F59E0B', text: 'black' },
+    'Behind':   { bg: '#EF4444', text: 'white' },
+};
 const PROJECT_DETAILS = {
-    vendor: 'Nike',
+    contact: 'John Smith',
     owner: 'Isaac',
     service_type: 'Branding',
     start_date: '2026-01-15',
@@ -40,41 +47,41 @@ const format_date = (d: string) =>
 const format_currency = (n: number) =>
     n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-const PHASES: Phase[] = [
+const INITIAL_PHASES: Phase[] = [
     {
         name: 'Discovery',
         tasks: [
-            { id: 'd1', title: 'Competitive Analysis', priority: 'High', status: 'Done', assignee: 'Isaac', due_date: '2026-02-10', description: 'Research and analyze top 5 competitors in the sportswear branding space, focusing on visual identity and messaging.' },
-            { id: 'd2', title: 'Stakeholder Interviews', priority: 'Medium', status: 'In Progress', assignee: 'Jez', due_date: '2026-03-01', description: 'Conduct interviews with key stakeholders to gather requirements and brand vision alignment.' },
-            { id: 'd3', title: 'Brand Audit Report', priority: 'Low', status: 'Review', assignee: 'Matthew', due_date: '2026-03-15', description: 'Compile a comprehensive audit of existing brand assets, touchpoints, and consistency issues.' },
-            { id: 'd4', title: 'Market Research Survey', priority: 'High', status: 'Todo', assignee: 'Ashley', due_date: '2026-03-20', description: 'Design and distribute a consumer survey to gauge brand perception and awareness.' },
+            { id: 'd1', title: 'Competitive Analysis', priority: 'High', status: 'Done', assignees: ['Isaac', 'Jez'], due_date: '2026-02-10', description: 'Research and analyze top 5 competitors in the sportswear branding space, focusing on visual identity and messaging.' },
+            { id: 'd2', title: 'Stakeholder Interviews', priority: 'Medium', status: 'In Progress', assignees: ['Jez'], due_date: '2026-03-01', description: 'Conduct interviews with key stakeholders to gather requirements and brand vision alignment.' },
+            { id: 'd3', title: 'Brand Audit Report', priority: 'Low', status: 'Review', assignees: ['Matthew', 'Ashley'], due_date: '2026-03-15', description: 'Compile a comprehensive audit of existing brand assets, touchpoints, and consistency issues.' },
+            { id: 'd4', title: 'Market Research Survey', priority: 'High', status: 'Todo', assignees: ['Ashley', 'Isaac', 'Forrest'], due_date: '2026-03-20', description: 'Design and distribute a consumer survey to gauge brand perception and awareness.' },
         ],
     },
     {
         name: 'Design',
         tasks: [
-            { id: 'de1', title: 'Mood Board Creation', priority: 'Medium', status: 'Done', assignee: 'Forrest', due_date: '2026-03-05', description: 'Create mood boards exploring three visual directions for the brand refresh.' },
-            { id: 'de2', title: 'Logo Concepts', priority: 'High', status: 'In Progress', assignee: 'Isaac', due_date: '2026-03-25', description: 'Develop 4-6 logo concept variations based on the approved mood board direction.' },
-            { id: 'de3', title: 'Typography Selection', priority: 'Low', status: 'Todo', assignee: 'Jez', due_date: '2026-04-01', description: 'Select primary and secondary typefaces that align with the new brand identity.' },
-            { id: 'de4', title: 'Color Palette Exploration', priority: 'Medium', status: 'Review', assignee: 'Matthew', due_date: '2026-04-10', description: 'Define primary, secondary, and accent color palettes with accessibility compliance.' },
-            { id: 'de5', title: 'Brand Guidelines Draft', priority: 'High', status: 'Todo', assignee: 'Ashley', due_date: '2026-04-20', description: 'Draft the initial brand guidelines document covering logo usage, colors, and typography.' },
+            { id: 'de1', title: 'Mood Board Creation', priority: 'Medium', status: 'Done', assignees: ['Forrest'], due_date: '2026-03-05', description: 'Create mood boards exploring three visual directions for the brand refresh.' },
+            { id: 'de2', title: 'Logo Concepts', priority: 'High', status: 'In Progress', assignees: ['Isaac', 'Forrest'], due_date: '2026-03-25', description: 'Develop 4-6 logo concept variations based on the approved mood board direction.' },
+            { id: 'de3', title: 'Typography Selection', priority: 'Low', status: 'Todo', assignees: ['Jez'], due_date: '2026-04-01', description: 'Select primary and secondary typefaces that align with the new brand identity.' },
+            { id: 'de4', title: 'Color Palette Exploration', priority: 'Medium', status: 'Review', assignees: ['Matthew', 'Jez'], due_date: '2026-04-10', description: 'Define primary, secondary, and accent color palettes with accessibility compliance.' },
+            { id: 'de5', title: 'Brand Guidelines Draft', priority: 'High', status: 'Todo', assignees: ['Ashley'], due_date: '2026-04-20', description: 'Draft the initial brand guidelines document covering logo usage, colors, and typography.' },
         ],
     },
     {
         name: 'Production',
         tasks: [
-            { id: 'p1', title: 'Asset Export for Web', priority: 'Medium', status: 'In Progress', assignee: 'Forrest', due_date: '2026-05-01', description: 'Export all finalized brand assets in web-optimized formats (SVG, PNG, WebP).' },
-            { id: 'p2', title: 'Print Collateral Layout', priority: 'High', status: 'Todo', assignee: 'Isaac', due_date: '2026-05-10', description: 'Design business cards, letterheads, and envelope templates using the new brand system.' },
-            { id: 'p3', title: 'Social Media Templates', priority: 'Low', status: 'Done', assignee: 'Jez', due_date: '2026-04-28', description: 'Create reusable social media post templates for Instagram, Twitter, and LinkedIn.' },
+            { id: 'p1', title: 'Asset Export for Web', priority: 'Medium', status: 'In Progress', assignees: ['Forrest', 'Matthew'], due_date: '2026-05-01', description: 'Export all finalized brand assets in web-optimized formats (SVG, PNG, WebP).' },
+            { id: 'p2', title: 'Print Collateral Layout', priority: 'High', status: 'Todo', assignees: ['Isaac'], due_date: '2026-05-10', description: 'Design business cards, letterheads, and envelope templates using the new brand system.' },
+            { id: 'p3', title: 'Social Media Templates', priority: 'Low', status: 'Done', assignees: ['Jez', 'Ashley'], due_date: '2026-04-28', description: 'Create reusable social media post templates for Instagram, Twitter, and LinkedIn.' },
         ],
     },
     {
         name: 'Review',
         tasks: [
-            { id: 'r1', title: 'Internal Design Review', priority: 'High', status: 'Review', assignee: 'Matthew', due_date: '2026-05-20', description: 'Present all deliverables to the internal team for feedback and approval.' },
-            { id: 'r2', title: 'Client Presentation Prep', priority: 'Medium', status: 'In Progress', assignee: 'Ashley', due_date: '2026-06-01', description: 'Prepare the client-facing presentation deck showcasing the brand refresh.' },
-            { id: 'r3', title: 'Final Revisions', priority: 'High', status: 'Todo', assignee: 'Forrest', due_date: '2026-06-15', description: 'Incorporate client feedback and finalize all brand assets and documentation.' },
-            { id: 'r4', title: 'Deliverables Handoff', priority: 'Low', status: 'Todo', assignee: 'Isaac', due_date: '2026-06-25', description: 'Package and hand off all final files, guidelines, and asset libraries to the client.' },
+            { id: 'r1', title: 'Internal Design Review', priority: 'High', status: 'Review', assignees: ['Matthew'], due_date: '2026-05-20', description: 'Present all deliverables to the internal team for feedback and approval.' },
+            { id: 'r2', title: 'Client Presentation Prep', priority: 'Medium', status: 'In Progress', assignees: ['Ashley', 'Isaac'], due_date: '2026-06-01', description: 'Prepare the client-facing presentation deck showcasing the brand refresh.' },
+            { id: 'r3', title: 'Final Revisions', priority: 'High', status: 'Todo', assignees: ['Forrest'], due_date: '2026-06-15', description: 'Incorporate client feedback and finalize all brand assets and documentation.' },
+            { id: 'r4', title: 'Deliverables Handoff', priority: 'Low', status: 'Todo', assignees: ['Isaac', 'Jez', 'Matthew'], due_date: '2026-06-25', description: 'Package and hand off all final files, guidelines, and asset libraries to the client.' },
         ],
     },
 ];
@@ -117,6 +124,7 @@ const COLUMN_COLORS_HOVER = [
 ];
 
 export default function ProjectDetailPage() {
+    const [phases, set_phases] = useState<Phase[]>(INITIAL_PHASES);
     const [active_modal_phase, set_active_modal_phase] = useState<number | null>(null);
     const [add_task_hover, set_add_task_hover] = useState(false);
     const [detail_task, set_detail_task] = useState<{ task: Task; phase_index: number } | null>(null);
@@ -127,6 +135,21 @@ export default function ProjectDetailPage() {
     const [edit_project_save_hover, set_edit_project_save_hover] = useState(false);
     const [show_delete_confirm, set_show_delete_confirm] = useState(false);
     const [delete_hover, set_delete_hover] = useState(false);
+    const [delete_task_hover, set_delete_task_hover] = useState(false);
+
+    const on_drag_end = useCallback((result: DropResult) => {
+        const { source, destination } = result;
+        if (!destination) return;
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+        set_phases(prev => {
+            const next = prev.map(p => ({ ...p, tasks: [...p.tasks] }));
+            const src_col = next[Number(source.droppableId)];
+            const dst_col = next[Number(destination.droppableId)];
+            const [moved] = src_col.tasks.splice(source.index, 1);
+            dst_col.tasks.splice(destination.index, 0, moved);
+            return next;
+        });
+    }, []);
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -173,8 +196,8 @@ export default function ProjectDetailPage() {
                         </h1>
 
                         <span style={{
-                            background: '#FFAC80',
-                            color: 'black',
+                            background: (PROJECT_STATUS_STYLES[PROJECT_STATUS] ?? PROJECT_STATUS_STYLES['On Track']).bg,
+                            color: (PROJECT_STATUS_STYLES[PROJECT_STATUS] ?? PROJECT_STATUS_STYLES['On Track']).text,
                             padding: '6px 20px',
                             borderRadius: '20px',
                             fontSize: 14,
@@ -206,7 +229,7 @@ export default function ProjectDetailPage() {
                     {/* Line 2: Project details inline */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
                         {[
-                            { label: 'Vendor', value: PROJECT_DETAILS.vendor },
+                            { label: 'Contact', value: PROJECT_DETAILS.contact },
                             { label: 'Owner', value: PROJECT_DETAILS.owner },
                             { label: 'Service Type', value: PROJECT_DETAILS.service_type },
                             { label: 'Start Date', value: format_date(PROJECT_DETAILS.start_date) },
@@ -237,6 +260,7 @@ export default function ProjectDetailPage() {
                 </div>
 
                 {/* Kanban Board */}
+                <DragDropContext onDragEnd={on_drag_end}>
                 <div style={{
                     display: 'flex',
                     gap: '20px',
@@ -246,7 +270,7 @@ export default function ProjectDetailPage() {
                     justifyContent: 'center',
                     paddingBottom: '10px',
                 }}>
-                    {PHASES.map((phase, index) => {
+                    {phases.map((phase, index) => {
                         const col_color = COLUMN_COLORS[index % COLUMN_COLORS.length];
                         return (
                             <div key={phase.name} style={{
@@ -300,119 +324,168 @@ export default function ProjectDetailPage() {
                                 </span>
 
                                 {/* Task Cards */}
-                                {phase.tasks.map(task => {
-                                    const pstyle = PRIORITY_STYLES[task.priority];
-                                    const sstyle = STATUS_STYLES[task.status];
-                                    return (
+                                <Droppable droppableId={String(index)}>
+                                    {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
                                         <div
-                                            key={task.id}
-                                            onClick={() => set_detail_task({ task, phase_index: index })}
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
                                             style={{
-                                                background: 'white',
-                                                borderRadius: '20px',
-                                                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
-                                                padding: '18px 20px 20px 20px',
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 gap: '10px',
-                                                cursor: 'pointer',
+                                                minHeight: '40px',
+                                                borderRadius: '12px',
+                                                padding: snapshot.isDraggingOver ? '6px' : '0px',
+                                                background: snapshot.isDraggingOver ? 'rgba(255,255,255,0.35)' : 'transparent',
+                                                border: snapshot.isDraggingOver ? '2px dashed rgba(0,0,0,0.15)' : '2px dashed transparent',
+                                                transition: 'background 200ms ease, border 200ms ease, padding 200ms ease',
                                             }}>
-                                            {/* Title + Priority */}
-                                            <div style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'flex-start',
-                                                gap: '8px',
-                                            }}>
-                                                <span style={{
-                                                    fontSize: 14,
-                                                    fontWeight: '500',
-                                                    fontFamily: 'Poppins',
-                                                    color: 'black',
-                                                    flex: 1,
-                                                }}>
-                                                    {task.title}
-                                                </span>
-                                                <span style={{
-                                                    background: pstyle.bg,
-                                                    color: pstyle.text,
-                                                    padding: '3px 12px',
-                                                    borderRadius: '12px',
-                                                    fontSize: 11,
-                                                    fontWeight: '600',
-                                                    fontFamily: 'Poppins',
-                                                    whiteSpace: 'nowrap',
-                                                }}>
-                                                    {task.priority}
-                                                </span>
-                                            </div>
+                                            {[...phase.tasks]
+                                                .map((task, original_index) => ({ task, original_index }))
+                                                .sort((a, b) => {
+                                                    if (a.task.status === 'Done' && b.task.status !== 'Done') return 1;
+                                                    if (a.task.status !== 'Done' && b.task.status === 'Done') return -1;
+                                                    return 0;
+                                                })
+                                                .map(({ task, original_index }) => {
+                                                const pstyle = PRIORITY_STYLES[task.priority];
+                                                const sstyle = STATUS_STYLES[task.status];
+                                                const is_done = task.status === 'Done';
+                                                return (
+                                                    <Draggable key={task.id} draggableId={task.id} index={original_index}>
+                                                        {(drag_provided, drag_snapshot) => (
+                                                            <div
+                                                                ref={drag_provided.innerRef}
+                                                                {...drag_provided.draggableProps}
+                                                                {...drag_provided.dragHandleProps}
+                                                                onClick={() => set_detail_task({ task, phase_index: index })}
+                                                                style={{
+                                                                    background: is_done ? '#f0f0f0' : 'white',
+                                                                    borderRadius: '20px',
+                                                                    padding: '18px 20px 20px 20px',
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    gap: '10px',
+                                                                    cursor: 'pointer',
+                                                                    boxShadow: drag_snapshot.isDragging
+                                                                        ? '0 8px 20px rgba(0,0,0,0.18)'
+                                                                        : '0 2px 6px rgba(0,0,0,0.08)',
+                                                                    opacity: is_done ? 0.5 : (drag_snapshot.isDragging ? 0.95 : 1),
+                                                                    ...drag_provided.draggableProps.style,
+                                                                }}>
+                                                                {/* Title + Priority */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'flex-start',
+                                                                    gap: '8px',
+                                                                }}>
+                                                                    <span style={{
+                                                                        fontSize: 14,
+                                                                        fontWeight: '500',
+                                                                        fontFamily: 'Poppins',
+                                                                        color: is_done ? '#999' : 'black',
+                                                                        flex: 1,
+                                                                        textDecoration: is_done ? 'line-through' : 'none',
+                                                                    }}>
+                                                                        {task.title}
+                                                                    </span>
+                                                                    <span style={{
+                                                                        background: pstyle.bg,
+                                                                        color: pstyle.text,
+                                                                        padding: '3px 12px',
+                                                                        borderRadius: '12px',
+                                                                        fontSize: 11,
+                                                                        fontWeight: '600',
+                                                                        fontFamily: 'Poppins',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}>
+                                                                        {task.priority}
+                                                                    </span>
+                                                                </div>
 
-                                            {/* Assignee */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{
-                                                    width: 26,
-                                                    height: 26,
-                                                    borderRadius: '50%',
-                                                    background: '#999',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'white',
-                                                    fontSize: 11,
-                                                    fontWeight: '600',
-                                                    fontFamily: 'Poppins',
-                                                    flexShrink: 0,
-                                                }}>
-                                                    {get_initials(task.assignee)}
-                                                </div>
-                                                <span style={{
-                                                    fontSize: 12,
-                                                    color: '#666',
-                                                    fontFamily: 'Poppins',
-                                                }}>
-                                                    {task.assignee}
-                                                </span>
-                                            </div>
+                                                                {/* Assignees */}
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                        {task.assignees.map((assignee, ai) => (
+                                                                            <div key={ai} style={{
+                                                                                width: 26,
+                                                                                height: 26,
+                                                                                borderRadius: '50%',
+                                                                                background: '#999',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                color: 'white',
+                                                                                fontSize: 11,
+                                                                                fontWeight: '600',
+                                                                                fontFamily: 'Poppins',
+                                                                                flexShrink: 0,
+                                                                                marginLeft: ai > 0 ? '-8px' : '0px',
+                                                                                border: '2px solid white',
+                                                                                boxSizing: 'content-box',
+                                                                                zIndex: task.assignees.length - ai,
+                                                                                position: 'relative',
+                                                                            }}>
+                                                                                {get_initials(assignee)}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                    <span style={{
+                                                                        fontSize: 12,
+                                                                        color: '#666',
+                                                                        fontFamily: 'Poppins',
+                                                                    }}>
+                                                                        {task.assignees.join(', ')}
+                                                                    </span>
+                                                                </div>
 
-                                            {/* Due Date + Status */}
-                                            <div style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                            }}>
-                                                <span style={{
-                                                    fontSize: 11,
-                                                    color: '#999',
-                                                    fontFamily: 'Poppins',
-                                                }}>
-                                                    {format_date(task.due_date)}
-                                                </span>
-                                                <span style={{
-                                                    background: sstyle.bg,
-                                                    color: sstyle.text,
-                                                    padding: '2px 10px',
-                                                    borderRadius: '10px',
-                                                    fontSize: 10,
-                                                    fontWeight: '600',
-                                                    fontFamily: 'Poppins',
-                                                    whiteSpace: 'nowrap',
-                                                }}>
-                                                    {task.status}
-                                                </span>
-                                            </div>
+                                                                {/* Due Date + Status */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center',
+                                                                }}>
+                                                                    <span style={{
+                                                                        fontSize: 11,
+                                                                        color: '#999',
+                                                                        fontFamily: 'Poppins',
+                                                                    }}>
+                                                                        {format_date(task.due_date)}
+                                                                    </span>
+                                                                    <span style={{
+                                                                        background: sstyle.bg,
+                                                                        color: sstyle.text,
+                                                                        padding: '2px 10px',
+                                                                        borderRadius: '10px',
+                                                                        fontSize: 10,
+                                                                        fontWeight: '600',
+                                                                        fontFamily: 'Poppins',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}>
+                                                                        {task.status}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                );
+                                            })}
+                                            {provided.placeholder}
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                </Droppable>
                             </div>
                         );
                     })}
                 </div>
+                </DragDropContext>
             </div>
 
             {/* Add Task Modal */}
             {active_modal_phase !== null && (() => {
                 const phase_index = active_modal_phase;
-                const phase_name = PHASES[phase_index].name;
+                const phase_name = phases[phase_index].name;
                 const accent = COLUMN_COLORS[phase_index % COLUMN_COLORS.length];
                 const accent_hover = COLUMN_COLORS_HOVER[phase_index % COLUMN_COLORS_HOVER.length];
                 return (
@@ -493,11 +566,11 @@ export default function ProjectDetailPage() {
                                     }} />
                                 </div>
 
-                                {/* Row 2: Assignee + Priority */}
+                                {/* Row 2: Assignees + Priority */}
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                        <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Assignee</label>
-                                        <select style={{
+                                        <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Assignees</label>
+                                        <select multiple style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -506,8 +579,8 @@ export default function ProjectDetailPage() {
                                             color: '#666',
                                             background: 'white',
                                             cursor: 'pointer',
+                                            minHeight: '80px',
                                         }}>
-                                            <option value="">Select assignee</option>
                                             <option>Isaac</option>
                                             <option>Jez</option>
                                             <option>Matthew</option>
@@ -638,7 +711,16 @@ export default function ProjectDetailPage() {
                 const pstyle = PRIORITY_STYLES[task.priority];
                 const sstyle = STATUS_STYLES[task.status];
 
-                const close_modal = () => { set_detail_task(null); set_detail_editing(false); set_save_hover(false); set_edit_hover(false); };
+                const close_modal = () => { set_detail_task(null); set_detail_editing(false); set_save_hover(false); set_edit_hover(false); set_delete_task_hover(false); };
+
+                const handle_delete_task = () => {
+                    set_phases(prev => prev.map((phase, i) =>
+                        i === phase_index
+                            ? { ...phase, tasks: phase.tasks.filter(t => t.id !== task.id) }
+                            : phase
+                    ));
+                    close_modal();
+                };
 
                 const label_style: React.CSSProperties = { fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' };
                 const input_style: React.CSSProperties = { padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' };
@@ -700,8 +782,8 @@ export default function ProjectDetailPage() {
 
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <label style={label_style}>Assignee</label>
-                                                <select defaultValue={task.assignee} style={select_style}>
+                                                <label style={label_style}>Assignees</label>
+                                                <select multiple defaultValue={task.assignees} style={{ ...select_style, minHeight: '80px' }}>
                                                     <option>Isaac</option>
                                                     <option>Jez</option>
                                                     <option>Matthew</option>
@@ -743,26 +825,39 @@ export default function ProjectDetailPage() {
                                         {/* Edit Footer */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                                             <button
-                                                onClick={() => { set_detail_editing(false); set_save_hover(false); }}
+                                                onClick={handle_delete_task}
+                                                onMouseEnter={() => set_delete_task_hover(true)}
+                                                onMouseLeave={() => set_delete_task_hover(false)}
                                                 style={{
-                                                    background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                                    background: delete_task_hover ? '#FEE2E2' : 'none', border: '1px solid #DC2626', borderRadius: '12px',
                                                     padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
-                                                    color: '#666', cursor: 'pointer',
+                                                    color: '#DC2626', cursor: 'pointer', transition: 'background 0.2s ease',
                                                 }}>
-                                                Cancel
+                                                Delete
                                             </button>
-                                            <button
-                                                onClick={close_modal}
-                                                onMouseEnter={() => set_save_hover(true)}
-                                                onMouseLeave={() => set_save_hover(false)}
-                                                style={{
-                                                    background: save_hover ? '#e04e00' : '#FF5900',
-                                                    color: 'white', border: 'none', borderRadius: '12px',
-                                                    padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
-                                                    cursor: 'pointer', transition: 'background 0.2s ease',
-                                                }}>
-                                                Save
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button
+                                                    onClick={() => { set_detail_editing(false); set_save_hover(false); }}
+                                                    style={{
+                                                        background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                                        padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                                        color: '#666', cursor: 'pointer',
+                                                    }}>
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    onClick={close_modal}
+                                                    onMouseEnter={() => set_save_hover(true)}
+                                                    onMouseLeave={() => set_save_hover(false)}
+                                                    style={{
+                                                        background: save_hover ? '#e04e00' : '#FF5900',
+                                                        color: 'white', border: 'none', borderRadius: '12px',
+                                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
+                                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                                    }}>
+                                                    Save
+                                                </button>
+                                            </div>
                                         </div>
                                     </>
                                 ) : (
@@ -786,19 +881,28 @@ export default function ProjectDetailPage() {
                                             </span>
                                         </div>
 
-                                        {/* Assignee */}
+                                        {/* Assignees */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span style={label_style}>Assignee</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{
-                                                    width: 28, height: 28, borderRadius: '50%', background: '#999',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: 'white', fontSize: 11, fontWeight: '600', fontFamily: 'Poppins', flexShrink: 0,
-                                                }}>
-                                                    {get_initials(task.assignee)}
+                                            <span style={label_style}>Assignees</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    {task.assignees.map((assignee, ai) => (
+                                                        <div key={ai} style={{
+                                                            width: 28, height: 28, borderRadius: '50%', background: '#999',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: 'white', fontSize: 11, fontWeight: '600', fontFamily: 'Poppins', flexShrink: 0,
+                                                            marginLeft: ai > 0 ? '-8px' : '0px',
+                                                            border: '2px solid white',
+                                                            boxSizing: 'content-box',
+                                                            zIndex: task.assignees.length - ai,
+                                                            position: 'relative',
+                                                        }}>
+                                                            {get_initials(assignee)}
+                                                        </div>
+                                                    ))}
                                                 </div>
                                                 <span style={{ fontSize: 14, color: 'black', fontFamily: 'Poppins', fontWeight: '500' }}>
-                                                    {task.assignee}
+                                                    {task.assignees.join(', ')}
                                                 </span>
                                             </div>
                                         </div>
@@ -820,7 +924,18 @@ export default function ProjectDetailPage() {
                                         </div>
 
                                         {/* Read-Only Footer */}
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                                            <button
+                                                onClick={handle_delete_task}
+                                                onMouseEnter={() => set_delete_task_hover(true)}
+                                                onMouseLeave={() => set_delete_task_hover(false)}
+                                                style={{
+                                                    background: delete_task_hover ? '#FEE2E2' : 'none', border: '1px solid #DC2626', borderRadius: '12px',
+                                                    padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                                    color: '#DC2626', cursor: 'pointer', transition: 'background 0.2s ease',
+                                                }}>
+                                                Delete
+                                            </button>
                                             <button
                                                 onClick={() => set_detail_editing(true)}
                                                 onMouseEnter={() => set_edit_hover(true)}
@@ -880,14 +995,13 @@ export default function ProjectDetailPage() {
 
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Vendor</label>
-                                    <select defaultValue={PROJECT_DETAILS.vendor} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Nike</option>
-                                        <option>Acme Corporation</option>
-                                        <option>Tech Solutions Inc</option>
-                                        <option>Digital Marketing Co</option>
-                                        <option>Startup Ventures</option>
-                                        <option>Creative Agency</option>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
+                                    <select defaultValue={PROJECT_DETAILS.contact} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option>John Smith</option>
+                                        <option>Sarah Johnson</option>
+                                        <option>Mike Chen</option>
+                                        <option>Emily Davis</option>
+                                        <option>Chris Wilson</option>
                                     </select>
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -915,11 +1029,9 @@ export default function ProjectDetailPage() {
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
                                     <select defaultValue={PROJECT_STATUS} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Open</option>
-                                        <option>In Progress</option>
-                                        <option>Completed</option>
-                                        <option>On Hold</option>
-                                        <option>Cancelled</option>
+                                        <option>On Track</option>
+                                        <option>At Risk</option>
+                                        <option>Behind</option>
                                     </select>
                                 </div>
                             </div>
