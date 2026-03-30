@@ -17,6 +17,11 @@ export class RemindersController {
     return this.remindersService.findAll();
   }
 
+  @Get('dashboard/due')
+  findDashboardDue() {
+    return this.remindersService.findDashboardDue();
+  }
+
   @Get('client/:clientId')
   findByClient(@Param('clientId') clientId: string) {
     return this.remindersService.findByClient(clientId);

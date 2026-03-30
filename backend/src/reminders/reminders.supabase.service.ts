@@ -74,4 +74,20 @@ export class RemindersSupabaseService {
 
     return data ?? [];
   }
+
+  async getDueReminders(nowIso: string) {
+    const { data, error } = await this.supabase
+      .from('reminders')
+      .select('*')
+      .lte('remind_at', nowIso)
+      .eq('status', 'PENDING')
+      .order('remind_at', { ascending: true });
+
+    if (error) {
+      this.logger.error('Error fetching due reminders', error);
+      throw new Error(`Failed to fetch due reminders: ${error.message}`);
+    }
+
+    return data ?? [];
+  }
 }

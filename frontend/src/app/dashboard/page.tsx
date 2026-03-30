@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import ReminderBanner from '@/components/dashboard/ReminderBanner';
 
 export default function DashboardPage() {
   const [clientCount, setClientCount] = useState<number | null>(null);
@@ -61,8 +62,6 @@ export default function DashboardPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           {/* Search Container */}
           <SearchBar placeholder="Search contacts, projects, and more..." onSearch={(value) => {
-            // You can implement dashboard-wide search logic here
-            // For now, we'll redirect to clients page with search functionality
             if (value.trim()) {
               window.location.href = `/dashboard/clients?search=${encodeURIComponent(value)}`;
             }
@@ -93,6 +92,8 @@ export default function DashboardPage() {
             }} />
           </div>
         </div>
+
+        <ReminderBanner />
 
         {/* Top Section - Stats Cards and Manage Projects */}
         <div style={{

@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
   Min,
+  IsEmail,
 } from 'class-validator';
 
 export class CreateReminderDto {
@@ -37,18 +38,23 @@ export class CreateReminderDto {
   @IsDateString()
   remind_at?: string;
 
+  @IsOptional()
   @IsString()
-  timezone!: string;
+  timezone?: string;
 
   @IsOptional()
   @IsBoolean()
   sync_to_google?: boolean;
 
   @IsOptional()
-  @IsString()
+  @IsEmail()
   assigned_to?: string;
 
   @IsOptional()
   @IsBoolean()
   admin_override?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  send_email?: boolean;
 }

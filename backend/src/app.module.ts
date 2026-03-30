@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { RemindersModule } from './reminders/reminders.module';
 
 @Module({
@@ -21,8 +22,9 @@ import { RemindersModule } from './reminders/reminders.module';
     AuthModule,
     ClientsModule,
     WebhookModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

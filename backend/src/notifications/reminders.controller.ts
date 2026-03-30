@@ -28,7 +28,7 @@ export class CreateFollowUpReminderDto {
   sendDashboard?: boolean;
 }
 
-@Controller('reminders')
+@Controller('notifications/reminders')
 export class RemindersController {
   constructor(private readonly reminders: RemindersService) {}
 

@@ -27,7 +27,7 @@ export class RemindersService {
       remind_at: remindAt,
       timezone: dto.timezone,
       days_after_interaction: dto.days_after_interaction ?? null,
-      status: 'pending',
+      status: 'PENDING',
       sync_to_google: dto.sync_to_google ?? false,
       google_event_id: null,
       assigned_to: dto.assigned_to ?? null,
@@ -39,6 +39,11 @@ export class RemindersService {
 
   async findAll() {
     return this.remindersSupabaseService.getAllReminders();
+  }
+
+  async findDashboardDue() {
+    const nowIso = new Date().toISOString();
+    return this.remindersSupabaseService.getDueReminders(nowIso);
   }
 
   async findByClient(clientId: string) {
@@ -64,7 +69,7 @@ export class RemindersService {
 
   async markCompleted(id: string) {
     return this.remindersSupabaseService.updateReminder(id, {
-      status: 'completed',
+      status: 'COMPLETED',
       updated_at: new Date().toISOString(),
     });
   }
