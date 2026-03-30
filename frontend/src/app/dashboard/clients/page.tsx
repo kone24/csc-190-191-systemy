@@ -41,7 +41,6 @@ type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'd
 export default function ClientsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const router = useRouter();
     const initialSearch = searchParams.get('search') || '';
 
     const [searchQuery, setSearchQuery] = useState(initialSearch);
