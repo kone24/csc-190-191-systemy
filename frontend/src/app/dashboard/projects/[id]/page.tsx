@@ -1,5 +1,6 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProvided, type DroppableStateSnapshot } from '@hello-pangea/dnd';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -7,39 +8,55 @@ import Sidebar from '@/components/Sidebar';
 
 // Types
 interface Task {
-    id: string;
+    task_id: string;
+    project_id: string;
+    phase_id: string;
     title: string;
-    priority: 'High' | 'Medium' | 'Low';
-    status: 'Todo' | 'In Progress' | 'Review' | 'Done';
+    description: string | null;
+    priority: number | null;
+    status: string | null;
+    due_date: string | null;
+    assigned_to: string | null;
+    assignee_name: string | null;
     assignees: string[];
-    due_date: string;
-    description: string;
+    assignee_names: string[];
 }
 
 interface Phase {
+    phase_id: string;
     name: string;
     tasks: Task[];
 }
 
+interface Project {
+    project_id: string;
+    name: string;
+    status: string | null;
+    service_type: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    client_id: string | null;
+    client_name: string | null;
+    owner_id: string | null;
+    owner_name: string | null;
+    task_count: number;
+    budget: number | null;
+    description: string | null;
+}
 
-// Mock data
-const PROJECT_NAME = 'Nike Brand Refresh';
-const PROJECT_STATUS = 'On Track';
+// Maps API status values → display label + badge colors
+const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: string }> = {
+    'open':        { label: 'On Track',   bg: '#22C55E', text: 'black' },
+    'in_progress': { label: 'At Risk',    bg: '#F59E0B', text: 'black' },
+    'completed':   { label: 'Completed',  bg: '#9CA3AF', text: 'white' },
+    'on_hold':     { label: 'On Hold',    bg: '#FF5900', text: 'white' },
+    'cancelled':   { label: 'Cancelled',  bg: '#EF4444', text: 'white' },
+    'behind':      { label: 'Behind',     bg: '#EF4444', text: 'white' },
+};
 
-const PROJECT_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-    'On Track': { bg: '#22C55E', text: 'black' },
-    'At Risk':  { bg: '#F59E0B', text: 'black' },
-    'Behind':   { bg: '#EF4444', text: 'white' },
-};
-const PROJECT_DETAILS = {
-    contact: 'John Smith',
-    owner: 'Isaac',
-    service_type: 'Branding',
-    start_date: '2026-01-15',
-    end_date: '2026-06-30',
-    budget: 48000,
-    description: 'Full brand refresh including logo redesign, updated color palette, typography system, and brand guidelines documentation for Nike\'s 2026 product line.',
-};
+const DEFAULT_PROJECT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white' };
+
+const get_project_status_display = (status: string) => PROJECT_STATUS_MAP[status] ?? DEFAULT_PROJECT_STATUS;
 
 const format_date = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -47,44 +64,6 @@ const format_date = (d: string) =>
 const format_currency = (n: number) =>
     n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-const INITIAL_PHASES: Phase[] = [
-    {
-        name: 'Discovery',
-        tasks: [
-            { id: 'd1', title: 'Competitive Analysis', priority: 'High', status: 'Done', assignees: ['Isaac', 'Jez'], due_date: '2026-02-10', description: 'Research and analyze top 5 competitors in the sportswear branding space, focusing on visual identity and messaging.' },
-            { id: 'd2', title: 'Stakeholder Interviews', priority: 'Medium', status: 'In Progress', assignees: ['Jez'], due_date: '2026-03-01', description: 'Conduct interviews with key stakeholders to gather requirements and brand vision alignment.' },
-            { id: 'd3', title: 'Brand Audit Report', priority: 'Low', status: 'Review', assignees: ['Matthew', 'Ashley'], due_date: '2026-03-15', description: 'Compile a comprehensive audit of existing brand assets, touchpoints, and consistency issues.' },
-            { id: 'd4', title: 'Market Research Survey', priority: 'High', status: 'Todo', assignees: ['Ashley', 'Isaac', 'Forrest'], due_date: '2026-03-20', description: 'Design and distribute a consumer survey to gauge brand perception and awareness.' },
-        ],
-    },
-    {
-        name: 'Design',
-        tasks: [
-            { id: 'de1', title: 'Mood Board Creation', priority: 'Medium', status: 'Done', assignees: ['Forrest'], due_date: '2026-03-05', description: 'Create mood boards exploring three visual directions for the brand refresh.' },
-            { id: 'de2', title: 'Logo Concepts', priority: 'High', status: 'In Progress', assignees: ['Isaac', 'Forrest'], due_date: '2026-03-25', description: 'Develop 4-6 logo concept variations based on the approved mood board direction.' },
-            { id: 'de3', title: 'Typography Selection', priority: 'Low', status: 'Todo', assignees: ['Jez'], due_date: '2026-04-01', description: 'Select primary and secondary typefaces that align with the new brand identity.' },
-            { id: 'de4', title: 'Color Palette Exploration', priority: 'Medium', status: 'Review', assignees: ['Matthew', 'Jez'], due_date: '2026-04-10', description: 'Define primary, secondary, and accent color palettes with accessibility compliance.' },
-            { id: 'de5', title: 'Brand Guidelines Draft', priority: 'High', status: 'Todo', assignees: ['Ashley'], due_date: '2026-04-20', description: 'Draft the initial brand guidelines document covering logo usage, colors, and typography.' },
-        ],
-    },
-    {
-        name: 'Production',
-        tasks: [
-            { id: 'p1', title: 'Asset Export for Web', priority: 'Medium', status: 'In Progress', assignees: ['Forrest', 'Matthew'], due_date: '2026-05-01', description: 'Export all finalized brand assets in web-optimized formats (SVG, PNG, WebP).' },
-            { id: 'p2', title: 'Print Collateral Layout', priority: 'High', status: 'Todo', assignees: ['Isaac'], due_date: '2026-05-10', description: 'Design business cards, letterheads, and envelope templates using the new brand system.' },
-            { id: 'p3', title: 'Social Media Templates', priority: 'Low', status: 'Done', assignees: ['Jez', 'Ashley'], due_date: '2026-04-28', description: 'Create reusable social media post templates for Instagram, Twitter, and LinkedIn.' },
-        ],
-    },
-    {
-        name: 'Review',
-        tasks: [
-            { id: 'r1', title: 'Internal Design Review', priority: 'High', status: 'Review', assignees: ['Matthew'], due_date: '2026-05-20', description: 'Present all deliverables to the internal team for feedback and approval.' },
-            { id: 'r2', title: 'Client Presentation Prep', priority: 'Medium', status: 'In Progress', assignees: ['Ashley', 'Isaac'], due_date: '2026-06-01', description: 'Prepare the client-facing presentation deck showcasing the brand refresh.' },
-            { id: 'r3', title: 'Final Revisions', priority: 'High', status: 'Todo', assignees: ['Forrest'], due_date: '2026-06-15', description: 'Incorporate client feedback and finalize all brand assets and documentation.' },
-            { id: 'r4', title: 'Deliverables Handoff', priority: 'Low', status: 'Todo', assignees: ['Isaac', 'Jez', 'Matthew'], due_date: '2026-06-25', description: 'Package and hand off all final files, guidelines, and asset libraries to the client.' },
-        ],
-    },
-];
 
 
 // Column background colors (cycle if > 4)
@@ -95,19 +74,24 @@ const COLUMN_COLORS = [
     'rgba(149, 255, 218, 0.8)',
 ];
 
-// Priority badge colors
-const PRIORITY_STYLES: Record<Task['priority'], { bg: string; text: string }> = {
-    High:   { bg: '#FF0000', text: 'white' },
-    Medium: { bg: '#FFF631', text: 'black' },
-    Low:    { bg: '#28CC95', text: 'white' },
+// Priority badge colors (keyed by API integer values)
+const PRIORITY_STYLES: Record<number, { label: string; bg: string; text: string }> = {
+    1: { label: 'High',   bg: '#FF0000', text: 'white' },
+    2: { label: 'Medium', bg: '#FFF631', text: 'black' },
+    3: { label: 'Low',    bg: '#28CC95', text: 'white' },
 };
+const DEFAULT_PRIORITY = { label: 'N/A', bg: '#9CA3AF', text: 'white' };
+const get_priority = (p: number | null) => PRIORITY_STYLES[p ?? 0] ?? DEFAULT_PRIORITY;
 
-const STATUS_STYLES: Record<Task['status'], { bg: string; text: string }> = {
-    'Todo':        { bg: '#9CA3AF', text: 'white' },
-    'In Progress': { bg: '#3B82F6', text: 'white' },
-    'Review':      { bg: '#8B5CF6', text: 'white' },
-    'Done':        { bg: '#22C55E', text: 'white' },
+// Task status styles (keyed by API string values)
+const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }> = {
+    'todo':        { label: 'Todo',        bg: '#9CA3AF', text: 'white' },
+    'in_progress': { label: 'In Progress', bg: '#3B82F6', text: 'white' },
+    'review':      { label: 'Review',      bg: '#8B5CF6', text: 'white' },
+    'done':        { label: 'Done',        bg: '#22C55E', text: 'white' },
 };
+const DEFAULT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white' };
+const get_status = (s: string | null) => STATUS_STYLES[s ?? ''] ?? DEFAULT_STATUS;
 
 
 // Helpers
@@ -124,7 +108,12 @@ const COLUMN_COLORS_HOVER = [
 ];
 
 export default function ProjectDetailPage() {
-    const [phases, set_phases] = useState<Phase[]>(INITIAL_PHASES);
+    const params = useParams();
+    const project_id = params.id as string;
+
+    const [project, set_project] = useState<Project | null>(null);
+    const [phases, set_phases] = useState<Phase[]>([]);
+    const [loading, set_loading] = useState(true);
     const [active_modal_phase, set_active_modal_phase] = useState<number | null>(null);
     const [add_task_hover, set_add_task_hover] = useState(false);
     const [detail_task, set_detail_task] = useState<{ task: Task; phase_index: number } | null>(null);
@@ -136,6 +125,45 @@ export default function ProjectDetailPage() {
     const [show_delete_confirm, set_show_delete_confirm] = useState(false);
     const [delete_hover, set_delete_hover] = useState(false);
     const [delete_task_hover, set_delete_task_hover] = useState(false);
+    const [confirm_delete_task, set_confirm_delete_task] = useState(false);
+    const [confirm_delete_hover, set_confirm_delete_hover] = useState(false);
+
+    useEffect(() => {
+        async function load() {
+            try {
+                // Fetch project details from the list endpoint
+                const projRes = await fetch('http://localhost:3001/projects', { credentials: 'include' });
+                const projJson = await projRes.json();
+                const proj = (projJson.items as Project[]).find(p => p.project_id === project_id) ?? null;
+                set_project(proj);
+
+                // Fetch phases
+                const phasesRes = await fetch(`http://localhost:3001/projects/${project_id}/phases`, { credentials: 'include' });
+                const phasesJson = await phasesRes.json();
+                const apiPhases = phasesJson.items as { phase_id: string; project_id: string; name: string; order_index: number; assignee_id: string | null; assignee_name: string | null }[];
+
+                // Fetch tasks for each phase in parallel
+                const phasesWithTasks: Phase[] = await Promise.all(
+                    apiPhases.map(async (ph) => {
+                        const tasksRes = await fetch(`http://localhost:3001/phases/${ph.phase_id}/tasks`, { credentials: 'include' });
+                        const tasksJson = await tasksRes.json();
+                        return {
+                            phase_id: ph.phase_id,
+                            name: ph.name,
+                            tasks: tasksJson.items as Task[],
+                        };
+                    })
+                );
+
+                set_phases(phasesWithTasks);
+            } catch (err) {
+                console.error('Failed to load project data:', err);
+            } finally {
+                set_loading(false);
+            }
+        }
+        load();
+    }, [project_id]);
 
     const on_drag_end = useCallback((result: DropResult) => {
         const { source, destination } = result;
@@ -165,6 +193,15 @@ export default function ProjectDetailPage() {
                 gap: '24px',
                 overflowX: 'hidden',
             }}>
+                {loading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                        <span style={{ fontSize: 16, color: '#999', fontFamily: 'Poppins' }}>Loading project...</span>
+                    </div>
+                ) : !project ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                        <span style={{ fontSize: 16, color: '#999', fontFamily: 'Poppins' }}>Project not found.</span>
+                    </div>
+                ) : (<>
                 {/* Page Header */}
                 <div style={{
                     display: 'flex',
@@ -192,12 +229,12 @@ export default function ProjectDetailPage() {
                             color: 'black',
                             margin: 0,
                         }}>
-                            {PROJECT_NAME}
+                            {project.name}
                         </h1>
 
                         <span style={{
-                            background: (PROJECT_STATUS_STYLES[PROJECT_STATUS] ?? PROJECT_STATUS_STYLES['On Track']).bg,
-                            color: (PROJECT_STATUS_STYLES[PROJECT_STATUS] ?? PROJECT_STATUS_STYLES['On Track']).text,
+                            background: get_project_status_display(project.status ?? '').bg,
+                            color: get_project_status_display(project.status ?? '').text,
                             padding: '6px 20px',
                             borderRadius: '20px',
                             fontSize: 14,
@@ -205,7 +242,7 @@ export default function ProjectDetailPage() {
                             fontFamily: 'Poppins',
                             whiteSpace: 'nowrap',
                         }}>
-                            {PROJECT_STATUS}
+                            {get_project_status_display(project.status ?? '').label}
                         </span>
 
                         <button
@@ -229,12 +266,12 @@ export default function ProjectDetailPage() {
                     {/* Line 2: Project details inline */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
                         {[
-                            { label: 'Contact', value: PROJECT_DETAILS.contact },
-                            { label: 'Owner', value: PROJECT_DETAILS.owner },
-                            { label: 'Service Type', value: PROJECT_DETAILS.service_type },
-                            { label: 'Start Date', value: format_date(PROJECT_DETAILS.start_date) },
-                            { label: 'End Date', value: format_date(PROJECT_DETAILS.end_date) },
-                            { label: 'Budget', value: format_currency(PROJECT_DETAILS.budget) },
+                            { label: 'Contact', value: project.client_name ?? 'N/A' },
+                            { label: 'Owner', value: project.owner_name ?? 'Unassigned' },
+                            { label: 'Service Type', value: project.service_type ?? 'N/A' },
+                            { label: 'Start Date', value: project.start_date ? format_date(project.start_date) : 'N/A' },
+                            { label: 'End Date', value: project.end_date ? format_date(project.end_date) : 'N/A' },
+                            { label: 'Budget', value: project.budget != null ? format_currency(project.budget) : 'N/A' },
                         ].map(item => (
                             <div key={item.label} style={{ display: 'flex', flexDirection: 'column' }}>
                                 <span style={{ fontSize: 10, color: '#999', fontFamily: 'Poppins', fontWeight: '500' }}>
@@ -255,7 +292,7 @@ export default function ProjectDetailPage() {
                         margin: '-4px 0 0 0',
                         lineHeight: 1.4,
                     }}>
-                        {PROJECT_DETAILS.description}
+                        {project.description ?? ''}
                     </p>
                 </div>
 
@@ -343,16 +380,17 @@ export default function ProjectDetailPage() {
                                             {[...phase.tasks]
                                                 .map((task, original_index) => ({ task, original_index }))
                                                 .sort((a, b) => {
-                                                    if (a.task.status === 'Done' && b.task.status !== 'Done') return 1;
-                                                    if (a.task.status !== 'Done' && b.task.status === 'Done') return -1;
+                                                    if (a.task.status === 'done' && b.task.status !== 'done') return 1;
+                                                    if (a.task.status !== 'done' && b.task.status === 'done') return -1;
                                                     return 0;
                                                 })
                                                 .map(({ task, original_index }) => {
-                                                const pstyle = PRIORITY_STYLES[task.priority];
-                                                const sstyle = STATUS_STYLES[task.status];
-                                                const is_done = task.status === 'Done';
+                                                const pstyle = get_priority(task.priority);
+                                                const sstyle = get_status(task.status);
+                                                const is_done = task.status === 'done';
+                                                const display_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
                                                 return (
-                                                    <Draggable key={task.id} draggableId={task.id} index={original_index}>
+                                                    <Draggable key={task.task_id} draggableId={task.task_id} index={original_index}>
                                                         {(drag_provided, drag_snapshot) => (
                                                             <div
                                                                 ref={drag_provided.innerRef}
@@ -400,14 +438,14 @@ export default function ProjectDetailPage() {
                                                                         fontFamily: 'Poppins',
                                                                         whiteSpace: 'nowrap',
                                                                     }}>
-                                                                        {task.priority}
+                                                                        {pstyle.label}
                                                                     </span>
                                                                 </div>
 
                                                                 {/* Assignees */}
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                                        {task.assignees.map((assignee, ai) => (
+                                                                        {display_names.map((name, ai) => (
                                                                             <div key={ai} style={{
                                                                                 width: 26,
                                                                                 height: 26,
@@ -424,10 +462,10 @@ export default function ProjectDetailPage() {
                                                                                 marginLeft: ai > 0 ? '-8px' : '0px',
                                                                                 border: '2px solid white',
                                                                                 boxSizing: 'content-box',
-                                                                                zIndex: task.assignees.length - ai,
+                                                                                zIndex: display_names.length - ai,
                                                                                 position: 'relative',
                                                                             }}>
-                                                                                {get_initials(assignee)}
+                                                                                {get_initials(name)}
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -436,7 +474,7 @@ export default function ProjectDetailPage() {
                                                                         color: '#666',
                                                                         fontFamily: 'Poppins',
                                                                     }}>
-                                                                        {task.assignees.join(', ')}
+                                                                        {display_names.length > 0 ? display_names.join(', ') : 'Unassigned'}
                                                                     </span>
                                                                 </div>
 
@@ -451,7 +489,7 @@ export default function ProjectDetailPage() {
                                                                         color: '#999',
                                                                         fontFamily: 'Poppins',
                                                                     }}>
-                                                                        {format_date(task.due_date)}
+                                                                        {task.due_date ? format_date(task.due_date) : 'No date'}
                                                                     </span>
                                                                     <span style={{
                                                                         background: sstyle.bg,
@@ -463,7 +501,7 @@ export default function ProjectDetailPage() {
                                                                         fontFamily: 'Poppins',
                                                                         whiteSpace: 'nowrap',
                                                                     }}>
-                                                                        {task.status}
+                                                                        {sstyle.label}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -480,6 +518,7 @@ export default function ProjectDetailPage() {
                     })}
                 </div>
                 </DragDropContext>
+                </>)}
             </div>
 
             {/* Add Task Modal */}
@@ -708,19 +747,11 @@ export default function ProjectDetailPage() {
                 const { task, phase_index } = detail_task;
                 const accent = COLUMN_COLORS[phase_index % COLUMN_COLORS.length];
                 const accent_hover = COLUMN_COLORS_HOVER[phase_index % COLUMN_COLORS_HOVER.length];
-                const pstyle = PRIORITY_STYLES[task.priority];
-                const sstyle = STATUS_STYLES[task.status];
+                const pstyle = get_priority(task.priority);
+                const sstyle = get_status(task.status);
+                const detail_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
 
-                const close_modal = () => { set_detail_task(null); set_detail_editing(false); set_save_hover(false); set_edit_hover(false); set_delete_task_hover(false); };
-
-                const handle_delete_task = () => {
-                    set_phases(prev => prev.map((phase, i) =>
-                        i === phase_index
-                            ? { ...phase, tasks: phase.tasks.filter(t => t.id !== task.id) }
-                            : phase
-                    ));
-                    close_modal();
-                };
+                const close_modal = () => { set_detail_task(null); set_detail_editing(false); set_save_hover(false); set_edit_hover(false); set_delete_task_hover(false); set_confirm_delete_task(false); set_confirm_delete_hover(false); };
 
                 const label_style: React.CSSProperties = { fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' };
                 const input_style: React.CSSProperties = { padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' };
@@ -793,10 +824,10 @@ export default function ProjectDetailPage() {
                                             </div>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Priority</label>
-                                                <select defaultValue={task.priority} style={select_style}>
-                                                    <option>High</option>
-                                                    <option>Medium</option>
-                                                    <option>Low</option>
+                                                <select defaultValue={String(task.priority ?? '')} style={select_style}>
+                                                    <option value="1">High</option>
+                                                    <option value="2">Medium</option>
+                                                    <option value="3">Low</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -804,28 +835,28 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Status</label>
-                                                <select defaultValue={task.status} style={select_style}>
-                                                    <option>Todo</option>
-                                                    <option>In Progress</option>
-                                                    <option>Review</option>
-                                                    <option>Done</option>
+                                                <select defaultValue={task.status ?? 'todo'} style={select_style}>
+                                                    <option value="todo">Todo</option>
+                                                    <option value="in_progress">In Progress</option>
+                                                    <option value="review">Review</option>
+                                                    <option value="done">Done</option>
                                                 </select>
                                             </div>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Due Date</label>
-                                                <input type="date" defaultValue={task.due_date} style={{ ...input_style, color: '#666' }} />
+                                                <input type="date" defaultValue={task.due_date ?? ''} style={{ ...input_style, color: '#666' }} />
                                             </div>
                                         </div>
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <label style={label_style}>Description</label>
-                                            <textarea defaultValue={task.description} rows={3} style={{ ...input_style, resize: 'vertical' }} />
+                                            <textarea defaultValue={task.description ?? ''} rows={3} style={{ ...input_style, resize: 'vertical' }} />
                                         </div>
 
                                         {/* Edit Footer */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                                             <button
-                                                onClick={handle_delete_task}
+                                                onClick={() => set_confirm_delete_task(true)}
                                                 onMouseEnter={() => set_delete_task_hover(true)}
                                                 onMouseLeave={() => set_delete_task_hover(false)}
                                                 style={{
@@ -870,14 +901,14 @@ export default function ProjectDetailPage() {
                                                 padding: '3px 12px', borderRadius: '12px',
                                                 fontSize: 11, fontWeight: '600', fontFamily: 'Poppins',
                                             }}>
-                                                {task.priority}
+                                                {pstyle.label}
                                             </span>
                                             <span style={{
                                                 background: sstyle.bg, color: sstyle.text,
                                                 padding: '3px 12px', borderRadius: '12px',
                                                 fontSize: 11, fontWeight: '600', fontFamily: 'Poppins',
                                             }}>
-                                                {task.status}
+                                                {sstyle.label}
                                             </span>
                                         </div>
 
@@ -886,7 +917,7 @@ export default function ProjectDetailPage() {
                                             <span style={label_style}>Assignees</span>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    {task.assignees.map((assignee, ai) => (
+                                                    {detail_names.map((name, ai) => (
                                                         <div key={ai} style={{
                                                             width: 28, height: 28, borderRadius: '50%', background: '#999',
                                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -894,15 +925,15 @@ export default function ProjectDetailPage() {
                                                             marginLeft: ai > 0 ? '-8px' : '0px',
                                                             border: '2px solid white',
                                                             boxSizing: 'content-box',
-                                                            zIndex: task.assignees.length - ai,
+                                                            zIndex: detail_names.length - ai,
                                                             position: 'relative',
                                                         }}>
-                                                            {get_initials(assignee)}
+                                                            {get_initials(name)}
                                                         </div>
                                                     ))}
                                                 </div>
                                                 <span style={{ fontSize: 14, color: 'black', fontFamily: 'Poppins', fontWeight: '500' }}>
-                                                    {task.assignees.join(', ')}
+                                                    {detail_names.length > 0 ? detail_names.join(', ') : 'Unassigned'}
                                                 </span>
                                             </div>
                                         </div>
@@ -911,7 +942,7 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <span style={label_style}>Due Date</span>
                                             <span style={{ fontSize: 14, color: 'black', fontFamily: 'Poppins', fontWeight: '500' }}>
-                                                {format_date(task.due_date)}
+                                                {task.due_date ? format_date(task.due_date) : 'No date'}
                                             </span>
                                         </div>
 
@@ -919,14 +950,14 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <span style={label_style}>Description</span>
                                             <p style={{ fontSize: 13, color: '#444', fontFamily: 'Poppins', margin: 0, lineHeight: 1.6 }}>
-                                                {task.description}
+                                                {task.description ?? 'No description.'}
                                             </p>
                                         </div>
 
                                         {/* Read-Only Footer */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                                             <button
-                                                onClick={handle_delete_task}
+                                                onClick={() => set_confirm_delete_task(true)}
                                                 onMouseEnter={() => set_delete_task_hover(true)}
                                                 onMouseLeave={() => set_delete_task_hover(false)}
                                                 style={{
@@ -956,6 +987,89 @@ export default function ProjectDetailPage() {
                     </div>
                 );
             })()}
+
+            {/* Delete Task Confirmation Modal */}
+            {confirm_delete_task && detail_task !== null && (
+                <div
+                    onClick={() => { set_confirm_delete_task(false); set_confirm_delete_hover(false); }}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1100,
+                    }}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            width: '420px',
+                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
+                        }}>
+                        <div style={{ height: '4px', background: '#DC2626', borderRadius: '20px 20px 0 0' }} />
+                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+                            <div style={{
+                                width: 48, height: 48, borderRadius: '50%', background: '#FEE2E2',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    <line x1="10" y1="11" x2="10" y2="17" />
+                                    <line x1="14" y1="11" x2="14" y2="17" />
+                                </svg>
+                            </div>
+                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>
+                                Delete Task?
+                            </h2>
+                            <p style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins', margin: 0, lineHeight: 1.5 }}>
+                                Are you sure you want to delete this task? This action cannot be undone.
+                            </p>
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', width: '100%', justifyContent: 'center' }}>
+                                <button
+                                    onClick={() => { set_confirm_delete_task(false); set_confirm_delete_hover(false); }}
+                                    style={{
+                                        background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                        color: '#666', cursor: 'pointer',
+                                    }}>
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const { task, phase_index } = detail_task;
+                                        set_phases(prev => prev.map((phase, i) =>
+                                            i === phase_index
+                                                ? { ...phase, tasks: phase.tasks.filter(t => t.task_id !== task.task_id) }
+                                                : phase
+                                        ));
+                                        set_confirm_delete_task(false);
+                                        set_confirm_delete_hover(false);
+                                        set_detail_task(null);
+                                        set_detail_editing(false);
+                                        set_delete_task_hover(false);
+                                    }}
+                                    onMouseEnter={() => set_confirm_delete_hover(true)}
+                                    onMouseLeave={() => set_confirm_delete_hover(false)}
+                                    style={{
+                                        background: confirm_delete_hover ? '#B91C1C' : '#DC2626',
+                                        color: 'white', border: 'none', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
+                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                    }}>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Edit Project Modal */}
             {show_edit_project && (
@@ -990,48 +1104,33 @@ export default function ProjectDetailPage() {
                         <div style={{ padding: '20px 28px 28px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
-                                <input type="text" defaultValue={PROJECT_NAME} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
+                                <input type="text" defaultValue={project?.name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
-                                    <select defaultValue={PROJECT_DETAILS.contact} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>John Smith</option>
-                                        <option>Sarah Johnson</option>
-                                        <option>Mike Chen</option>
-                                        <option>Emily Davis</option>
-                                        <option>Chris Wilson</option>
-                                    </select>
+                                    <input type="text" defaultValue={project?.client_name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <select defaultValue={PROJECT_DETAILS.owner} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Isaac</option>
-                                        <option>Jez</option>
-                                        <option>Matthew</option>
-                                        <option>Forrest</option>
-                                        <option>Ashley</option>
-                                    </select>
+                                    <input type="text" defaultValue={project?.owner_name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                                 </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
-                                    <select defaultValue={PROJECT_DETAILS.service_type} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Design</option>
-                                        <option>Content</option>
-                                        <option>Branding</option>
-                                        <option>Research</option>
-                                    </select>
+                                    <input type="text" defaultValue={project?.service_type ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
-                                    <select defaultValue={PROJECT_STATUS} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>On Track</option>
-                                        <option>At Risk</option>
-                                        <option>Behind</option>
+                                    <select defaultValue={project?.status ?? 'open'} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="open">On Track</option>
+                                        <option value="in_progress">At Risk</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="on_hold">On Hold</option>
+                                        <option value="cancelled">Cancelled</option>
                                     </select>
                                 </div>
                             </div>
@@ -1039,11 +1138,11 @@ export default function ProjectDetailPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Start Date</label>
-                                    <input type="date" defaultValue={PROJECT_DETAILS.start_date} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
+                                    <input type="date" defaultValue={project?.start_date ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
-                                    <input type="date" defaultValue={PROJECT_DETAILS.end_date} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
+                                    <input type="date" defaultValue={project?.end_date ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
                                 </div>
                             </div>
 
@@ -1051,13 +1150,13 @@ export default function ProjectDetailPage() {
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Budget</label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: 14, fontFamily: 'Poppins', color: '#888', pointerEvents: 'none' }}>$</span>
-                                    <input type="number" defaultValue={PROJECT_DETAILS.budget} style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', boxSizing: 'border-box' }} />
+                                    <input type="number" defaultValue={project?.budget ?? ''} style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', boxSizing: 'border-box' }} />
                                 </div>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
-                                <textarea defaultValue={PROJECT_DETAILS.description} rows={4} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', resize: 'vertical' }} />
+                                <textarea defaultValue={project?.description ?? ''} rows={4} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', resize: 'vertical' }} />
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>

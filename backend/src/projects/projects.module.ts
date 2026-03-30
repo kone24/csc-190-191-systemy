@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ProjectsSupabaseService } from './projects.supabase.service';
+import { ProjectsService } from './projects.service';
 import { ProjectsController } from './projects.controller';
 
 @Module({
     imports: [],
-    providers: [ProjectsSupabaseService],
+    providers: [ProjectsService],
     controllers: [ProjectsController],
-    exports: [ProjectsSupabaseService],
+    exports: [ProjectsService],
 })
-export class ProjectsModule { }
+export class ProjectsModule {}

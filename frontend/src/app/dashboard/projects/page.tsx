@@ -1,47 +1,42 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 
 
-// MOCK DATA swap this array for API data later
 interface Project {
-    id: string;
-    title: string;
-    client: string;
-    status: 'On Track' | 'At Risk' | 'Behind';
-    owner: string;
-    owner_avatar: string;
-    due_date: string;
+    project_id: string;
+    name: string;
+    status: string;
+    service_type: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    client_id: string | null;
+    client_name: string | null;
+    owner_id: string | null;
+    owner_name: string | null;
     task_count: number;
 }
 
-const MOCK_PROJECTS: Project[] = [
-    { id: '1', title: 'Website Redesign', client: 'Some jit', status: 'On Track', owner: 'Mario Gotez', owner_avatar: '', due_date: '2026-04-15', task_count: 12 },
-    { id: '2', title: 'Mobile App MVP', client: 'Tech Solutions Inc', status: 'On Track', owner: 'Buyako Saka', owner_avatar: '', due_date: '2026-05-01', task_count: 8 },
-    { id: '3', title: 'Brand Identity Package', client: 'StartUp Ventures', status: 'At Risk', owner: 'Lamine Yamal', owner_avatar: '', due_date: '2026-03-30', task_count: 5 },
-    { id: '4', title: 'SEO Optimization', client: 'Digital Marketing Co', status: 'Behind', owner: 'Harry Kane', owner_avatar: '', due_date: '2026-02-28', task_count: 10 },
-    { id: '5', title: 'E-Commerce Platform', client: 'Global Systems Ltd', status: 'On Track', owner: 'Alex Morgan', owner_avatar: '', due_date: '2026-06-10', task_count: 20 },
-    { id: '6', title: 'CRM Integration', client: 'Creative Agency', status: 'At Risk', owner: 'James dean', owner_avatar: '', due_date: '2026-04-20', task_count: 7 },
-    { id: '7', title: 'Annual Report Design', client: 'Acme Corporation', status: 'Behind', owner: 'Alex O', owner_avatar: '', due_date: '2026-01-31', task_count: 4 },
-    { id: '8', title: 'Data Migration', client: 'Tech Solutions Inc', status: 'At Risk', owner: 'Conan O\'Brien', owner_avatar: '', due_date: '2026-05-15', task_count: 15 },
-    { id: '9', title: 'Marketing Campaign Site', client: 'Digital Marketing Co', status: 'On Track', owner: 'Arteta M', owner_avatar: '', due_date: '2026-04-05', task_count: 9 },
-];
 
-
-// Status badge + accent-line colors
-const STATUS_COLORS: Record<Project['status'], { bg: string; text: string; shadow: string }> = {
-    'On Track': { bg: '#22C55E',                  text: 'black', shadow: 'rgba(34, 197, 94, 0.6)'   },
-    'At Risk':  { bg: '#F59E0B',                  text: 'black', shadow: 'rgba(245, 158, 11, 0.6)'  },
-    'Behind':   { bg: '#EF4444',                  text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
+// Maps API status values → display label + badge colors
+const STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
+    'open':        { label: 'On Track',   bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)'   },
+    'in_progress': { label: 'At Risk',    bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)'  },
+    'completed':   { label: 'Completed',  bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
+    'on_hold':     { label: 'On Hold',    bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)'    },
+    'cancelled':   { label: 'Cancelled',  bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
+    'behind':      { label: 'Behind',     bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
 };
 
-// Derive unique owners and clients from the mock data
-const OWNERS = Array.from(new Set(MOCK_PROJECTS.map(p => p.owner)));
-const CLIENTS = Array.from(new Set(MOCK_PROJECTS.map(p => p.client)));
+const DEFAULT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' };
+
+const get_status_display = (status: string) => STATUS_MAP[status] ?? DEFAULT_STATUS;
 
 export default function ProjectsPage() {
+    const [projects, set_projects] = useState<Project[]>([]);
+    const [loading, set_loading] = useState(true);
     const [search_query, set_search_query] = useState('');
     const [status_filter, set_status_filter] = useState('All');
     const [owner_filter, set_owner_filter] = useState('All');
@@ -54,25 +49,45 @@ export default function ProjectsPage() {
     const [show_delete_confirm, set_show_delete_confirm] = useState(false);
     const [delete_hover, set_delete_hover] = useState(false);
 
+    useEffect(() => {
+        const fetch_projects = async () => {
+            try {
+                const res = await fetch('http://localhost:3001/projects', { credentials: 'include' });
+                const json = await res.json();
+                set_projects(json.items ?? []);
+            } catch (err) {
+                console.error('Failed to fetch projects:', err);
+                set_projects([]);
+            } finally {
+                set_loading(false);
+            }
+        };
+        fetch_projects();
+    }, []);
+
+    // Derive unique owners and clients from fetched data
+    const owners = useMemo(() => Array.from(new Set(projects.map(p => p.owner_name).filter(Boolean) as string[])), [projects]);
+    const clients = useMemo(() => Array.from(new Set(projects.map(p => p.client_name).filter(Boolean) as string[])), [projects]);
+
     const filtered_projects = useMemo(() => {
-        return MOCK_PROJECTS.filter(p => {
+        return projects.filter(p => {
             // Search
             if (search_query.trim()) {
                 const q = search_query.toLowerCase();
-                const matches = p.title.toLowerCase().includes(q)
-                    || p.client.toLowerCase().includes(q)
-                    || p.owner.toLowerCase().includes(q);
+                const matches = (p.name ?? '').toLowerCase().includes(q)
+                    || (p.client_name ?? '').toLowerCase().includes(q)
+                    || (p.owner_name ?? '').toLowerCase().includes(q);
                 if (!matches) return false;
             }
             // Status
             if (status_filter !== 'All' && p.status !== status_filter) return false;
             // Owner
-            if (owner_filter !== 'All' && p.owner !== owner_filter) return false;
+            if (owner_filter !== 'All' && p.owner_name !== owner_filter) return false;
             // Client
-            if (client_filter !== 'All' && p.client !== client_filter) return false;
+            if (client_filter !== 'All' && p.client_name !== client_filter) return false;
             return true;
         });
-    }, [search_query, status_filter, owner_filter, client_filter]);
+    }, [projects, search_query, status_filter, owner_filter, client_filter]);
 
     const format_date = (date_string: string) => {
         return new Date(date_string).toLocaleDateString('en-US', {
@@ -131,9 +146,11 @@ export default function ProjectsPage() {
                             style={select_style}
                         >
                             <option value="All">Status: All</option>
-                            <option value="On Track">On Track</option>
-                            <option value="At Risk">At Risk</option>
-                            <option value="Behind">Behind</option>
+                            <option value="open">On Track</option>
+                            <option value="in_progress">At Risk</option>
+                            <option value="completed">Completed</option>
+                            <option value="on_hold">On Hold</option>
+                            <option value="cancelled">Cancelled</option>
                         </select>
 
                         <select
@@ -142,7 +159,7 @@ export default function ProjectsPage() {
                             style={select_style}
                         >
                             <option value="All">Owner: All</option>
-                            {OWNERS.map(owner => (
+                            {owners.map(owner => (
                                 <option key={owner} value={owner}>{owner}</option>
                             ))}
                         </select>
@@ -152,8 +169,8 @@ export default function ProjectsPage() {
                             onChange={(e) => set_client_filter(e.target.value)}
                             style={select_style}
                         >
-                            <option value="All">Vendor: All</option>
-                            {CLIENTS.map(client => (
+                            <option value="All">Contact: All</option>
+                            {clients.map(client => (
                                 <option key={client} value={client}>{client}</option>
                             ))}
                         </select>
@@ -178,28 +195,55 @@ export default function ProjectsPage() {
                     </button>
                 </div>
 
+                {/* Loading State */}
+                {loading && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        color: '#999',
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                    }}>
+                        Loading projects...
+                    </div>
+                )}
+
+                {/* Empty state — no projects from API */}
+                {!loading && projects.length === 0 && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        color: '#999',
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                    }}>
+                        No projects yet. Click &quot;+ Add New Project&quot; to create one.
+                    </div>
+                )}
+
                 {/* Project Cards Grid */}
+                {!loading && projects.length > 0 && (
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                     gap: '20px',
                 }}>
                     {filtered_projects.map((project) => {
-                        const status_color = STATUS_COLORS[project.status];
+                        const status_display = get_status_display(project.status);
                         return (
                             <Link
-                                key={project.id}
-                                href={`/dashboard/projects/${project.id}`}
+                                key={project.project_id}
+                                href={`/dashboard/projects/${project.project_id}`}
                                 style={{ textDecoration: 'none', color: 'inherit' }}
                             >
                                 <div
-                                    onMouseEnter={() => set_hovered_card(project.id)}
+                                    onMouseEnter={() => set_hovered_card(project.project_id)}
                                     onMouseLeave={() => set_hovered_card(null)}
                                     style={{
                                         background: 'white',
                                         borderRadius: '15px',
-                                        boxShadow: hovered_card === project.id
-                                            ? `0px 4px 10px 0px ${status_color.shadow}`
+                                        boxShadow: hovered_card === project.project_id
+                                            ? `0px 4px 10px 0px ${status_display.shadow}`
                                             : '0px 4px 6px rgba(0, 0, 0, 0.1)',
                                         overflow: 'hidden',
                                         cursor: 'pointer',
@@ -211,7 +255,7 @@ export default function ProjectsPage() {
                                     {/* Top Section */}
                                     <div style={{ padding: '18px 18px 0 18px', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
                                         {/* Edit pencil + Delete trash icons — visible on card hover */}
-                                        {hovered_card === project.id && (
+                                        {hovered_card === project.project_id && (
                                             <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px', zIndex: 2 }}>
                                                 <button
                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_edit_project(project); }}
@@ -272,11 +316,11 @@ export default function ProjectsPage() {
                                                 textOverflow: 'ellipsis',
                                                 whiteSpace: 'nowrap',
                                             }}>
-                                                {project.title}
+                                                {project.name}
                                             </h3>
                                             <span style={{
-                                                background: status_color.bg,
-                                                color: status_color.text,
+                                                background: status_display.bg,
+                                                color: status_display.text,
                                                 padding: '6px 20px',
                                                 borderRadius: '20px',
                                                 fontSize: 14,
@@ -284,7 +328,7 @@ export default function ProjectsPage() {
                                                 fontFamily: 'Poppins',
                                                 whiteSpace: 'nowrap',
                                             }}>
-                                                {project.status}
+                                                {status_display.label}
                                             </span>
                                         </div>
                                         <div style={{
@@ -296,14 +340,14 @@ export default function ProjectsPage() {
                                             textOverflow: 'ellipsis',
                                             whiteSpace: 'nowrap',
                                         }}>
-                                            {project.client}
+                                            {project.client_name ?? 'No contact'}
                                         </div>
                                     </div>
 
                                     {/* Status Accent Line */}
                                     <div style={{
                                         height: '3px',
-                                        background: status_color.bg,
+                                        background: status_display.bg,
                                         margin: '12px 18px 0 18px',
                                     }} />
 
@@ -329,7 +373,7 @@ export default function ProjectsPage() {
                                                 fontWeight: '600',
                                                 fontFamily: 'Poppins',
                                             }}>
-                                                {get_initials(project.owner)}
+                                                {get_initials(project.owner_name ?? '?')}
                                             </div>
                                             <span style={{
                                                 fontSize: 13,
@@ -341,7 +385,7 @@ export default function ProjectsPage() {
                                                 whiteSpace: 'nowrap',
                                                 maxWidth: '100px',
                                             }}>
-                                                {project.owner}
+                                                {project.owner_name ?? 'Unassigned'}
                                             </span>
                                         </div>
 
@@ -357,7 +401,7 @@ export default function ProjectsPage() {
                                                 color: '#999',
                                                 fontFamily: 'Poppins',
                                             }}>
-                                                Due {format_date(project.due_date)}
+                                                Due {project.end_date ? format_date(project.end_date) : 'N/A'}
                                             </span>
                                             <span style={{
                                                 fontSize: 12,
@@ -373,9 +417,10 @@ export default function ProjectsPage() {
                         );
                     })}
                 </div>
+                )}
 
-                {/* Empty state */}
-                {filtered_projects.length === 0 && (
+                {/* Filter empty state — projects exist but none match filters */}
+                {!loading && projects.length > 0 && filtered_projects.length === 0 && (
                     <div style={{
                         textAlign: 'center',
                         padding: '60px 20px',
@@ -691,24 +736,22 @@ export default function ProjectsPage() {
                         <div style={{ padding: '20px 28px 28px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
-                                <input type="text" defaultValue={edit_project.title} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
+                                <input type="text" defaultValue={edit_project.name} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
-                                    <select defaultValue={edit_project.client} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>John Smith</option>
-                                        <option>Sarah Johnson</option>
-                                        <option>Mike Chen</option>
-                                        <option>Emily Davis</option>
-                                        <option>Chris Wilson</option>
+                                    <select defaultValue={edit_project.client_name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select contact</option>
+                                        {clients.map(c => <option key={c}>{c}</option>)}
                                     </select>
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <select defaultValue={edit_project.owner} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        {OWNERS.map(o => <option key={o}>{o}</option>)}
+                                    <select defaultValue={edit_project.owner_name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select owner</option>
+                                        {owners.map(o => <option key={o}>{o}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -740,7 +783,7 @@ export default function ProjectsPage() {
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
-                                    <input type="date" defaultValue={edit_project.due_date} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
+                                    <input type="date" defaultValue={edit_project.end_date ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
                                 </div>
                             </div>
 
