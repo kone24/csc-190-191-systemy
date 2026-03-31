@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import type { Client } from '@/types/client';
 
 //  Tag encoding 
 const DEFAULT_COLOR = '#8A38F5';
@@ -77,25 +78,50 @@ function TagPill({ tag, onRemove }: { tag: Tag; onRemove?: () => void }) {
   );
 }
 
-// Client data shape based on backend API
-interface ClientData {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone_number: string;
-  business_name: string;
-  title?: string;
-  industry?: string;
-  website?: string;
-  additional_info?: string;
-  tags?: string[];
+// Shared card style
+const cardStyle: React.CSSProperties = {
+  background: 'white',
+  borderRadius: 20,
+  boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+  padding: '24px 30px',
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontFamily: 'Poppins',
+  fontSize: 18,
+  fontWeight: '600',
+  color: 'rgba(255, 89, 0, 0.80)',
+  marginBottom: 20,
+};
+
+const fieldLabel: React.CSSProperties = {
+  fontFamily: 'Poppins',
+  fontSize: 13,
+  fontWeight: '600',
+  color: 'rgba(0, 0, 0, 0.45)',
+  marginBottom: 4,
+};
+
+const fieldValue: React.CSSProperties = {
+  fontFamily: 'Poppins',
+  fontSize: 15,
+  fontWeight: '500',
+  color: 'black',
+};
+
+function Field({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div style={{ minWidth: 0 }}>
+      <div style={fieldLabel}>{label}</div>
+      <div style={fieldValue}>{value?.trim() ? value : '—'}</div>
+    </div>
+  );
 }
 
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [client, setClient] = useState<ClientData | null>(null);
+  const [client, setClient]     = useState<Client | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -125,7 +151,7 @@ export default function ClientProfilePage() {
       .then(res => { if (!res.ok) throw new Error(`Error ${res.status}`); return res.json(); })
       .then(data => {
         if (!data.client) throw new Error('Unexpected response shape');
-        const c: ClientData = data.client;
+        const c: Client = data.client;
         setClient(c);
         setTags((c.tags ?? []).map(parseTag));
       })
@@ -290,158 +316,14 @@ export default function ClientProfilePage() {
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               padding: '24px 30px',
             }}>
-              {!editing ? (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ fontFamily: 'Poppins', fontSize: 24, fontWeight: '600', color: 'black', marginBottom: 8 }}>
-                      {client.first_name} {client.last_name}
-                    </div>
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <button
-                        onClick={startEditing}
-                        style={{
-                          background: '#FF5900',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 8,
-                          padding: '8px 20px',
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setShowDeleteModal(true)}
-                        style={{
-                          background: '#EF4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 8,
-                          padding: '8px 20px',
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-                    {[client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
-                      <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div style={{ fontFamily: 'Poppins', fontSize: 18, fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: 16 }}>
-                    Edit Contact
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    {([
-                      ['first_name', 'First Name'],
-                      ['last_name', 'Last Name'],
-                      ['email', 'Email'],
-                      ['phone_number', 'Phone'],
-                      ['business_name', 'Company'],
-                      ['title', 'Title'],
-                      ['industry', 'Industry'],
-                      ['website', 'Website'],
-                    ] as const).map(([field, label]) => (
-                      <div key={field}>
-                        <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
-                          {label}
-                        </label>
-                        <input
-                          value={(editForm as any)[field] ?? ''}
-                          onChange={(e) => editField(field, e.target.value)}
-                          style={{
-                            width: '100%',
-                            height: 38,
-                            padding: '0 12px',
-                            borderRadius: 8,
-                            border: '1.5px solid rgba(0,0,0,0.15)',
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
-                            color: 'black',
-                            outline: 'none',
-                            background: 'white',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ marginTop: 12 }}>
-                    <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
-                      Notes
-                    </label>
-                    <textarea
-                      value={editForm.additional_info ?? ''}
-                      onChange={(e) => editField('additional_info', e.target.value)}
-                      rows={3}
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        borderRadius: 8,
-                        border: '1.5px solid rgba(0,0,0,0.15)',
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: 'black',
-                        outline: 'none',
-                        resize: 'vertical',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                  {editError && (
-                    <p style={{ fontFamily: 'Poppins', fontSize: 13, color: '#ef4444', marginTop: 8 }}>
-                      {editError}
-                    </p>
-                  )}
-                  <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                    <button
-                      onClick={saveEdit}
-                      disabled={editSaving}
-                      style={{
-                        background: editSaving ? 'rgba(0,0,0,0.12)' : '#FF5900',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '8px 24px',
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                        fontWeight: '500',
-                        cursor: editSaving ? 'default' : 'pointer',
-                      }}
-                    >
-                      {editSaving ? 'Saving…' : 'Save'}
-                    </button>
-                    <button
-                      onClick={cancelEditing}
-                      disabled={editSaving}
-                      style={{
-                        background: 'transparent',
-                        color: '#666',
-                        border: '1px solid #ddd',
-                        borderRadius: 8,
-                        padding: '8px 24px',
-                        fontSize: 14,
-                        fontFamily: 'Poppins',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              )}
+              <div style={{ fontFamily: 'Poppins', fontSize: 24, fontWeight: '600', color: 'black', marginBottom: 8 }}>
+                {client.first_name} {client.last_name}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                {[client.company || client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
+                  <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
+                ))}
+              </div>
             </div>
 
             {/* Tags card */}
@@ -530,6 +412,73 @@ export default function ClientProfilePage() {
                   Failed to save: {saveError}
                 </p>
               )}
+            </div>
+
+            {/* CRM Info */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>CRM Info</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="Company" value={client.company || client.business_name} />
+                <Field label="Title" value={client.title} />
+                <Field label="Relationship Owner" value={client.relationship_owner} />
+                <Field label="Status" value={client.status} />
+                <Field label="Contact Medium" value={client.contact_medium} />
+                <Field label="Date of Contact" value={client.date_of_contact} />
+                <Field label="Relationship Status" value={client.relationship_status} />
+              </div>
+            </div>
+
+            {/* Interaction Details */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Interaction Details</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="Where Met" value={client.where_met} />
+                <Field label="Chat Summary" value={client.chat_summary} />
+                <Field label="Outcome" value={client.outcome} />
+              </div>
+            </div>
+
+            {/* Address */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Address</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="Street" value={client.address?.street} />
+                <Field label="City" value={client.address?.city} />
+                <Field label="State" value={client.address?.state} />
+                <Field label="Country" value={client.address?.country} />
+                <Field label="Postal Code" value={client.address?.zip_code} />
+                <Field label="Additional Info" value={client.address?.additional_info} />
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Social Links</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="LinkedIn" value={client.social_links?.linkedin} />
+                <Field label="Twitter" value={client.social_links?.twitter} />
+                <Field label="Facebook" value={client.social_links?.facebook} />
+                <Field label="Instagram" value={client.social_links?.instagram} />
+                <Field label="Website" value={client.website} />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Notes</div>
+              <div style={{
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                color: client.notes?.trim() ? 'black' : 'rgba(0,0,0,0.35)',
+                background: 'rgba(217, 217, 217, 0.15)',
+                borderRadius: 12,
+                padding: '16px 20px',
+                minHeight: 80,
+                lineHeight: 1.6,
+                whiteSpace: 'pre-wrap',
+              }}>
+                {client.notes?.trim() || '—'}
+              </div>
             </div>
           </>
         )}
