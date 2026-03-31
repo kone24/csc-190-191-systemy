@@ -28,6 +28,11 @@ interface Phase {
     tasks: Task[];
 }
 
+interface User {
+    user_id: string;
+    name: string;
+}
+
 interface Project {
     project_id: string;
     name: string;
@@ -127,6 +132,14 @@ export default function ProjectDetailPage() {
     const [delete_task_hover, set_delete_task_hover] = useState(false);
     const [confirm_delete_task, set_confirm_delete_task] = useState(false);
     const [confirm_delete_hover, set_confirm_delete_hover] = useState(false);
+    const [users_list, set_users_list] = useState<User[]>([]);
+    const [submitting, set_submitting] = useState(false);
+    const [task_form, set_task_form] = useState({
+        title: '', priority: '', status: '', due_date: '', description: '', assignees: [] as string[],
+    });
+    const [edit_task_form, set_edit_task_form] = useState({
+        title: '', priority: '', status: '', due_date: '', description: '', assignees: [] as string[],
+    });
 
     useEffect(() => {
         async function load() {
@@ -164,6 +177,159 @@ export default function ProjectDetailPage() {
         }
         load();
     }, [project_id]);
+
+    // Fetch users for assignee dropdowns
+    useEffect(() => {
+        const fetch_users = async () => {
+            try {
+                const res = await fetch('http://localhost:3001/users', { credentials: 'include' });
+                const json = await res.json();
+                set_users_list(json.items ?? []);
+            } catch (err) {
+                console.error('Failed to fetch users:', err);
+            }
+        };
+        fetch_users();
+    }, []);
+
+    // Reset create form when Add Task modal opens
+    useEffect(() => {
+        if (active_modal_phase !== null) {
+            set_task_form({ title: '', priority: '', status: '', due_date: '', description: '', assignees: [] });
+        }
+    }, [active_modal_phase]);
+
+    // Populate edit form when entering edit mode
+    useEffect(() => {
+        if (detail_editing && detail_task) {
+            const t = detail_task.task;
+            set_edit_task_form({
+                title: t.title ?? '',
+                priority: t.priority != null ? String(t.priority) : '',
+                status: t.status ?? 'todo',
+                due_date: t.due_date ? t.due_date.slice(0, 10) : '',
+                description: t.description ?? '',
+                assignees: t.assignees ?? [],
+            });
+        }
+    }, [detail_editing, detail_task]);
+
+    const update_task_form = (field: string, value: string | string[]) =>
+        set_task_form(prev => ({ ...prev, [field]: value }));
+
+    const update_edit_task_form = (field: string, value: string | string[]) =>
+        set_edit_task_form(prev => ({ ...prev, [field]: value }));
+
+    const handle_create_task = async (phase_index: number) => {
+        if (!task_form.title.trim()) {
+            alert('Task title is required.');
+            return;
+        }
+        const phase = phases[phase_index];
+        set_submitting(true);
+        try {
+            const body: Record<string, unknown> = {
+                title: task_form.title,
+                project_id: project_id,
+            };
+            if (task_form.description) body.description = task_form.description;
+            if (task_form.priority) body.priority = Number(task_form.priority);
+            if (task_form.status) body.status = task_form.status;
+            if (task_form.due_date) body.due_date = task_form.due_date;
+            if (task_form.assignees.length > 0) body.assignees = task_form.assignees;
+
+            const res = await fetch(`http://localhost:3001/phases/${phase.phase_id}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            set_phases(prev => prev.map((p, i) =>
+                i === phase_index ? { ...p, tasks: [...p.tasks, json.item] } : p
+            ));
+            set_active_modal_phase(null);
+            set_add_task_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to create task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_edit_task = async () => {
+        if (!detail_task) return;
+        const t = detail_task.task;
+        set_submitting(true);
+        try {
+            const changed: Record<string, unknown> = {};
+            if (edit_task_form.title !== (t.title ?? '')) changed.title = edit_task_form.title;
+            if (edit_task_form.description !== (t.description ?? '')) changed.description = edit_task_form.description;
+            const orig_priority = t.priority != null ? String(t.priority) : '';
+            if (edit_task_form.priority !== orig_priority) changed.priority = edit_task_form.priority ? Number(edit_task_form.priority) : null;
+            if (edit_task_form.status !== (t.status ?? 'todo')) changed.status = edit_task_form.status;
+            const orig_due = t.due_date ? t.due_date.slice(0, 10) : '';
+            if (edit_task_form.due_date !== orig_due) changed.due_date = edit_task_form.due_date || null;
+            const orig_assignees = JSON.stringify(t.assignees ?? []);
+            if (JSON.stringify(edit_task_form.assignees) !== orig_assignees) changed.assignees = edit_task_form.assignees;
+
+            if (Object.keys(changed).length === 0) {
+                set_detail_task(null);
+                set_detail_editing(false);
+                set_save_hover(false);
+                return;
+            }
+
+            const res = await fetch(`http://localhost:3001/tasks/${t.task_id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(changed),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            const updated_task: Task = json.item;
+            set_phases(prev => prev.map(p => ({
+                ...p,
+                tasks: p.tasks.map(tk => tk.task_id === t.task_id ? updated_task : tk),
+            })));
+            set_detail_task(null);
+            set_detail_editing(false);
+            set_save_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to update task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_delete_task = async () => {
+        if (!detail_task) return;
+        const { task, phase_index } = detail_task;
+        set_submitting(true);
+        try {
+            const res = await fetch(`http://localhost:3001/tasks/${task.task_id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            set_phases(prev => prev.map((phase, i) =>
+                i === phase_index
+                    ? { ...phase, tasks: phase.tasks.filter(t => t.task_id !== task.task_id) }
+                    : phase
+            ));
+            set_confirm_delete_task(false);
+            set_confirm_delete_hover(false);
+            set_detail_task(null);
+            set_detail_editing(false);
+            set_delete_task_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to delete task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
 
     const on_drag_end = useCallback((result: DropResult) => {
         const { source, destination } = result;
@@ -595,7 +761,7 @@ export default function ProjectDetailPage() {
                                 {/* Row 1: Task Title */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Task Title</label>
-                                    <input type="text" placeholder="Enter task title" style={{
+                                    <input type="text" placeholder="Enter task title" value={task_form.title} onChange={(e) => update_task_form('title', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -609,7 +775,7 @@ export default function ProjectDetailPage() {
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Assignees</label>
-                                        <select multiple style={{
+                                        <select multiple value={task_form.assignees} onChange={(e) => update_task_form('assignees', Array.from(e.target.selectedOptions, o => o.value))} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -620,16 +786,12 @@ export default function ProjectDetailPage() {
                                             cursor: 'pointer',
                                             minHeight: '80px',
                                         }}>
-                                            <option>Isaac</option>
-                                            <option>Jez</option>
-                                            <option>Matthew</option>
-                                            <option>Forrest</option>
-                                            <option>Ashley</option>
+                                            {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
                                         </select>
                                     </div>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Priority</label>
-                                        <select style={{
+                                        <select value={task_form.priority} onChange={(e) => update_task_form('priority', e.target.value)} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -640,9 +802,9 @@ export default function ProjectDetailPage() {
                                             cursor: 'pointer',
                                         }}>
                                             <option value="">Select priority</option>
-                                            <option>High</option>
-                                            <option>Medium</option>
-                                            <option>Low</option>
+                                            <option value="1">High</option>
+                                            <option value="2">Medium</option>
+                                            <option value="3">Low</option>
                                         </select>
                                     </div>
                                 </div>
@@ -651,7 +813,7 @@ export default function ProjectDetailPage() {
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
-                                        <select style={{
+                                        <select value={task_form.status} onChange={(e) => update_task_form('status', e.target.value)} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -662,15 +824,15 @@ export default function ProjectDetailPage() {
                                             cursor: 'pointer',
                                         }}>
                                             <option value="">Select status</option>
-                                            <option>Todo</option>
-                                            <option>In Progress</option>
-                                            <option>Review</option>
-                                            <option>Done</option>
+                                            <option value="todo">Todo</option>
+                                            <option value="in_progress">In Progress</option>
+                                            <option value="review">Review</option>
+                                            <option value="done">Done</option>
                                         </select>
                                     </div>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Due Date</label>
-                                        <input type="date" style={{
+                                        <input type="date" value={task_form.due_date} onChange={(e) => update_task_form('due_date', e.target.value)} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -684,7 +846,7 @@ export default function ProjectDetailPage() {
                                 {/* Row 4: Description */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
-                                    <textarea placeholder="Describe the task..." rows={3} style={{
+                                    <textarea placeholder="Describe the task..." rows={3} value={task_form.description} onChange={(e) => update_task_form('description', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -718,7 +880,8 @@ export default function ProjectDetailPage() {
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={() => { set_active_modal_phase(null); set_add_task_hover(false); }}
+                                        onClick={() => handle_create_task(phase_index)}
+                                        disabled={submitting}
                                         onMouseEnter={() => set_add_task_hover(true)}
                                         onMouseLeave={() => set_add_task_hover(false)}
                                         style={{
@@ -730,10 +893,11 @@ export default function ProjectDetailPage() {
                                             fontSize: 14,
                                             fontFamily: 'Poppins',
                                             fontWeight: '600',
-                                            cursor: 'pointer',
+                                            cursor: submitting ? 'not-allowed' : 'pointer',
                                             transition: 'background 0.2s ease',
+                                            opacity: submitting ? 0.7 : 1,
                                         }}>
-                                        Add Task
+                                        {submitting ? 'Adding...' : 'Add Task'}
                                     </button>
                                 </div>
                             </div>
@@ -808,23 +972,20 @@ export default function ProjectDetailPage() {
                                         {/* Edit Mode */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <label style={label_style}>Task Title</label>
-                                            <input type="text" defaultValue={task.title} style={input_style} />
+                                            <input type="text" value={edit_task_form.title} onChange={(e) => update_edit_task_form('title', e.target.value)} style={input_style} />
                                         </div>
 
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Assignees</label>
-                                                <select multiple defaultValue={task.assignees} style={{ ...select_style, minHeight: '80px' }}>
-                                                    <option>Isaac</option>
-                                                    <option>Jez</option>
-                                                    <option>Matthew</option>
-                                                    <option>Forrest</option>
-                                                    <option>Ashley</option>
+                                                <select multiple value={edit_task_form.assignees} onChange={(e) => update_edit_task_form('assignees', Array.from(e.target.selectedOptions, o => o.value))} style={{ ...select_style, minHeight: '80px' }}>
+                                                    {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
                                                 </select>
                                             </div>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Priority</label>
-                                                <select defaultValue={String(task.priority ?? '')} style={select_style}>
+                                                <select value={edit_task_form.priority} onChange={(e) => update_edit_task_form('priority', e.target.value)} style={select_style}>
+                                                    <option value="">Select priority</option>
                                                     <option value="1">High</option>
                                                     <option value="2">Medium</option>
                                                     <option value="3">Low</option>
@@ -835,7 +996,7 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Status</label>
-                                                <select defaultValue={task.status ?? 'todo'} style={select_style}>
+                                                <select value={edit_task_form.status} onChange={(e) => update_edit_task_form('status', e.target.value)} style={select_style}>
                                                     <option value="todo">Todo</option>
                                                     <option value="in_progress">In Progress</option>
                                                     <option value="review">Review</option>
@@ -844,13 +1005,13 @@ export default function ProjectDetailPage() {
                                             </div>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Due Date</label>
-                                                <input type="date" defaultValue={task.due_date ?? ''} style={{ ...input_style, color: '#666' }} />
+                                                <input type="date" value={edit_task_form.due_date} onChange={(e) => update_edit_task_form('due_date', e.target.value)} style={{ ...input_style, color: '#666' }} />
                                             </div>
                                         </div>
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <label style={label_style}>Description</label>
-                                            <textarea defaultValue={task.description ?? ''} rows={3} style={{ ...input_style, resize: 'vertical' }} />
+                                            <textarea value={edit_task_form.description} onChange={(e) => update_edit_task_form('description', e.target.value)} rows={3} style={{ ...input_style, resize: 'vertical' }} />
                                         </div>
 
                                         {/* Edit Footer */}
@@ -877,16 +1038,18 @@ export default function ProjectDetailPage() {
                                                     Cancel
                                                 </button>
                                                 <button
-                                                    onClick={close_modal}
+                                                    onClick={handle_edit_task}
+                                                    disabled={submitting}
                                                     onMouseEnter={() => set_save_hover(true)}
                                                     onMouseLeave={() => set_save_hover(false)}
                                                     style={{
                                                         background: save_hover ? '#e04e00' : '#FF5900',
                                                         color: 'white', border: 'none', borderRadius: '12px',
                                                         padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
-                                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                                        cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease',
+                                                        opacity: submitting ? 0.7 : 1,
                                                     }}>
-                                                    Save
+                                                    {submitting ? 'Saving...' : 'Save'}
                                                 </button>
                                             </div>
                                         </div>
@@ -1042,28 +1205,18 @@ export default function ProjectDetailPage() {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        const { task, phase_index } = detail_task;
-                                        set_phases(prev => prev.map((phase, i) =>
-                                            i === phase_index
-                                                ? { ...phase, tasks: phase.tasks.filter(t => t.task_id !== task.task_id) }
-                                                : phase
-                                        ));
-                                        set_confirm_delete_task(false);
-                                        set_confirm_delete_hover(false);
-                                        set_detail_task(null);
-                                        set_detail_editing(false);
-                                        set_delete_task_hover(false);
-                                    }}
+                                    onClick={handle_delete_task}
+                                    disabled={submitting}
                                     onMouseEnter={() => set_confirm_delete_hover(true)}
                                     onMouseLeave={() => set_confirm_delete_hover(false)}
                                     style={{
                                         background: confirm_delete_hover ? '#B91C1C' : '#DC2626',
                                         color: 'white', border: 'none', borderRadius: '12px',
                                         padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
-                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                        cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease',
+                                        opacity: submitting ? 0.7 : 1,
                                     }}>
-                                    Delete
+                                    {submitting ? 'Deleting...' : 'Delete'}
                                 </button>
                             </div>
                         </div>
