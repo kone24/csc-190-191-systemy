@@ -37,13 +37,13 @@ export class CreateProjectDto {
     @Transform(({ value }) => value != null ? Number(value) : undefined)
     budget?: number;
 
-    @IsOptional()
     @IsUUID()
-    client_id?: string;
+    @IsNotEmpty()
+    client_id!: string;
 
-    @IsOptional()
     @IsUUID()
-    owner_id?: string;
+    @IsNotEmpty()
+    owner_id!: string;
 
     @IsOptional()
     @IsUUID()

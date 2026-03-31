@@ -1,9 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { ProjectResponseDto } from './dto/project-response.dto';
 import { PhaseResponseDto } from './dto/phase-response.dto';
 import { TaskResponseDto } from './dto/task-response.dto';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class ProjectsService {
@@ -214,6 +218,350 @@ export class ProjectsService {
             }));
         } catch (error) {
             this.logger.error('Error in findTasksByPhaseId method:', error);
+            throw error;
+        }
+    }
+
+    async create(dto: CreateProjectDto): Promise<ProjectResponseDto> {
+        try {
+            // 1. Insert the project
+            const { data: project, error: projectError } = await this.supabase
+                .from('project')
+                .insert({
+                    name: dto.name,
+                    client_id: dto.client_id,
+                    owner_id: dto.owner_id,
+                    service_type: dto.service_type ?? null,
+                    status: dto.status ?? 'open',
+                    start_date: dto.start_date ?? null,
+                    end_date: dto.end_date ?? null,
+                    budget: dto.budget ?? null,
+                    description: dto.description ?? null,
+                })
+                .select('project_id, name, description, service_type, status, start_date, end_date, budget, client_id, owner_id')
+                .single();
+
+            if (projectError) {
+                this.logger.error('Error creating project:', projectError);
+                throw new Error(`Failed to create project: ${projectError.message}`);
+            }
+
+            // 2. Insert 4 default phases
+            const defaultPhases = [
+                { project_id: project.project_id, name: 'Understand', order_index: 0 },
+                { project_id: project.project_id, name: 'Plan', order_index: 1 },
+                { project_id: project.project_id, name: 'Build', order_index: 2 },
+                { project_id: project.project_id, name: 'Connect', order_index: 3 },
+            ];
+
+            const { error: phasesError } = await this.supabase
+                .from('phase')
+                .insert(defaultPhases);
+
+            if (phasesError) {
+                this.logger.error('Error creating default phases:', phasesError);
+                throw new Error(`Failed to create default phases: ${phasesError.message}`);
+            }
+
+            // 3. Resolve client name and owner name
+            const [clientResult, ownerResult] = await Promise.all([
+                project.client_id
+                    ? this.supabase.from('clients').select('id, first_name, last_name').eq('id', project.client_id).single()
+                    : { data: null, error: null },
+                project.owner_id
+                    ? this.supabase.from('users').select('user_id, name').eq('user_id', project.owner_id).single()
+                    : { data: null, error: null },
+            ]);
+
+            return {
+                project_id: project.project_id,
+                name: project.name,
+                status: project.status,
+                service_type: project.service_type,
+                start_date: project.start_date,
+                end_date: project.end_date,
+                client_id: project.client_id,
+                client_name: clientResult.data ? `${clientResult.data.first_name} ${clientResult.data.last_name}`.trim() : null,
+                owner_id: project.owner_id,
+                owner_name: ownerResult.data?.name ?? null,
+                task_count: 0,
+                budget: project.budget ?? null,
+                description: project.description ?? null,
+            };
+        } catch (error) {
+            this.logger.error('Error in create method:', error);
+            throw error;
+        }
+    }
+
+    async update(projectId: string, dto: UpdateProjectDto): Promise<ProjectResponseDto> {
+        try {
+            // Build update payload with only provided fields
+            const updateData: Record<string, unknown> = {};
+            if (dto.name !== undefined) updateData.name = dto.name;
+            if (dto.client_id !== undefined) updateData.client_id = dto.client_id;
+            if (dto.owner_id !== undefined) updateData.owner_id = dto.owner_id;
+            if (dto.service_type !== undefined) updateData.service_type = dto.service_type;
+            if (dto.status !== undefined) updateData.status = dto.status;
+            if (dto.start_date !== undefined) updateData.start_date = dto.start_date;
+            if (dto.end_date !== undefined) updateData.end_date = dto.end_date;
+            if (dto.budget !== undefined) updateData.budget = dto.budget;
+            if (dto.description !== undefined) updateData.description = dto.description;
+
+            const { data: project, error: projectError } = await this.supabase
+                .from('project')
+                .update(updateData)
+                .eq('project_id', projectId)
+                .select('project_id, name, description, service_type, status, start_date, end_date, budget, client_id, owner_id')
+                .single();
+
+            if (projectError) {
+                this.logger.error('Error updating project:', projectError);
+                throw new Error(`Failed to update project: ${projectError.message}`);
+            }
+
+            if (!project) {
+                throw new NotFoundException(`Project ${projectId} not found`);
+            }
+
+            // Resolve client name and owner name
+            const [clientResult, ownerResult, tasksResult] = await Promise.all([
+                project.client_id
+                    ? this.supabase.from('clients').select('id, first_name, last_name').eq('id', project.client_id).single()
+                    : { data: null, error: null },
+                project.owner_id
+                    ? this.supabase.from('users').select('user_id, name').eq('user_id', project.owner_id).single()
+                    : { data: null, error: null },
+                this.supabase.from('task').select('project_id').eq('project_id', projectId),
+            ]);
+
+            return {
+                project_id: project.project_id,
+                name: project.name,
+                status: project.status,
+                service_type: project.service_type,
+                start_date: project.start_date,
+                end_date: project.end_date,
+                client_id: project.client_id,
+                client_name: clientResult.data ? `${clientResult.data.first_name} ${clientResult.data.last_name}`.trim() : null,
+                owner_id: project.owner_id,
+                owner_name: ownerResult.data?.name ?? null,
+                task_count: tasksResult.data?.length ?? 0,
+                budget: project.budget ?? null,
+                description: project.description ?? null,
+            };
+        } catch (error) {
+            this.logger.error('Error in update method:', error);
+            throw error;
+        }
+    }
+
+    async remove(projectId: string): Promise<void> {
+        try {
+            // 1. Get all phase IDs for this project
+            const { data: phases, error: phasesError } = await this.supabase
+                .from('phase')
+                .select('phase_id')
+                .eq('project_id', projectId);
+
+            if (phasesError) {
+                this.logger.error('Error fetching phases for deletion:', phasesError);
+                throw new Error(`Failed to fetch phases: ${phasesError.message}`);
+            }
+
+            // 2. Delete all tasks belonging to those phases
+            const phaseIds = (phases || []).map(p => p.phase_id);
+            if (phaseIds.length > 0) {
+                const { error: tasksError } = await this.supabase
+                    .from('task')
+                    .delete()
+                    .in('phase_id', phaseIds);
+
+                if (tasksError) {
+                    this.logger.error('Error deleting tasks:', tasksError);
+                    throw new Error(`Failed to delete tasks: ${tasksError.message}`);
+                }
+            }
+
+            // 3. Delete all phases for this project
+            const { error: deletePhasesError } = await this.supabase
+                .from('phase')
+                .delete()
+                .eq('project_id', projectId);
+
+            if (deletePhasesError) {
+                this.logger.error('Error deleting phases:', deletePhasesError);
+                throw new Error(`Failed to delete phases: ${deletePhasesError.message}`);
+            }
+
+            // 4. Delete the project itself
+            const { error: deleteProjectError } = await this.supabase
+                .from('project')
+                .delete()
+                .eq('project_id', projectId);
+
+            if (deleteProjectError) {
+                this.logger.error('Error deleting project:', deleteProjectError);
+                throw new Error(`Failed to delete project: ${deleteProjectError.message}`);
+            }
+        } catch (error) {
+            this.logger.error('Error in remove method:', error);
+            throw error;
+        }
+    }
+
+    async createTask(phaseId: string, dto: CreateTaskDto): Promise<TaskResponseDto> {
+        try {
+            const { data: task, error: taskError } = await this.supabase
+                .from('task')
+                .insert({
+                    phase_id: phaseId,
+                    project_id: dto.project_id,
+                    title: dto.title,
+                    description: dto.description ?? null,
+                    priority: dto.priority ?? 0,
+                    status: dto.status ?? 'todo',
+                    due_date: dto.due_date ?? null,
+                    assigned_to: dto.assigned_to ?? null,
+                    assignees: dto.assignees ?? [],
+                })
+                .select('task_id, project_id, phase_id, title, description, priority, status, due_date, assigned_to, assignees')
+                .single();
+
+            if (taskError) {
+                this.logger.error('Error creating task:', taskError);
+                throw new Error(`Failed to create task: ${taskError.message}`);
+            }
+
+            // Resolve assignee names
+            const allUserIds = new Set<string>();
+            if (task.assigned_to) allUserIds.add(task.assigned_to);
+            for (const uid of task.assignees ?? []) {
+                if (uid) allUserIds.add(uid);
+            }
+
+            let userMap = new Map<string, string>();
+            if (allUserIds.size > 0) {
+                const { data: users, error: usersError } = await this.supabase
+                    .from('users')
+                    .select('user_id, name')
+                    .in('user_id', [...allUserIds]);
+
+                if (usersError) {
+                    this.logger.error('Error fetching users for task:', usersError);
+                    throw new Error(`Failed to fetch users: ${usersError.message}`);
+                }
+
+                for (const u of users || []) {
+                    userMap.set(u.user_id, u.name);
+                }
+            }
+
+            return {
+                task_id: task.task_id,
+                project_id: task.project_id,
+                phase_id: task.phase_id,
+                title: task.title,
+                description: task.description,
+                priority: task.priority,
+                status: task.status,
+                due_date: task.due_date,
+                assigned_to: task.assigned_to,
+                assignee_name: userMap.get(task.assigned_to) || null,
+                assignees: task.assignees ?? [],
+                assignee_names: (task.assignees ?? []).map((uid: string) => userMap.get(uid)).filter(Boolean) as string[],
+            };
+        } catch (error) {
+            this.logger.error('Error in createTask method:', error);
+            throw error;
+        }
+    }
+
+    async updateTask(taskId: string, dto: UpdateTaskDto): Promise<TaskResponseDto> {
+        try {
+            const updateData: Record<string, unknown> = {};
+            if (dto.title !== undefined) updateData.title = dto.title;
+            if (dto.description !== undefined) updateData.description = dto.description;
+            if (dto.priority !== undefined) updateData.priority = dto.priority;
+            if (dto.status !== undefined) updateData.status = dto.status;
+            if (dto.due_date !== undefined) updateData.due_date = dto.due_date;
+            if (dto.assigned_to !== undefined) updateData.assigned_to = dto.assigned_to;
+            if (dto.assignees !== undefined) updateData.assignees = dto.assignees;
+            if (dto.phase_id !== undefined) updateData.phase_id = dto.phase_id;
+
+            const { data: task, error: taskError } = await this.supabase
+                .from('task')
+                .update(updateData)
+                .eq('task_id', taskId)
+                .select('task_id, project_id, phase_id, title, description, priority, status, due_date, assigned_to, assignees')
+                .single();
+
+            if (taskError) {
+                this.logger.error('Error updating task:', taskError);
+                throw new Error(`Failed to update task: ${taskError.message}`);
+            }
+
+            if (!task) {
+                throw new NotFoundException(`Task ${taskId} not found`);
+            }
+
+            // Resolve assignee names
+            const allUserIds = new Set<string>();
+            if (task.assigned_to) allUserIds.add(task.assigned_to);
+            for (const uid of task.assignees ?? []) {
+                if (uid) allUserIds.add(uid);
+            }
+
+            let userMap = new Map<string, string>();
+            if (allUserIds.size > 0) {
+                const { data: users, error: usersError } = await this.supabase
+                    .from('users')
+                    .select('user_id, name')
+                    .in('user_id', [...allUserIds]);
+
+                if (usersError) {
+                    this.logger.error('Error fetching users for task:', usersError);
+                    throw new Error(`Failed to fetch users: ${usersError.message}`);
+                }
+
+                for (const u of users || []) {
+                    userMap.set(u.user_id, u.name);
+                }
+            }
+
+            return {
+                task_id: task.task_id,
+                project_id: task.project_id,
+                phase_id: task.phase_id,
+                title: task.title,
+                description: task.description,
+                priority: task.priority,
+                status: task.status,
+                due_date: task.due_date,
+                assigned_to: task.assigned_to,
+                assignee_name: userMap.get(task.assigned_to) || null,
+                assignees: task.assignees ?? [],
+                assignee_names: (task.assignees ?? []).map((uid: string) => userMap.get(uid)).filter(Boolean) as string[],
+            };
+        } catch (error) {
+            this.logger.error('Error in updateTask method:', error);
+            throw error;
+        }
+    }
+
+    async removeTask(taskId: string): Promise<void> {
+        try {
+            const { error: deleteError } = await this.supabase
+                .from('task')
+                .delete()
+                .eq('task_id', taskId);
+
+            if (deleteError) {
+                this.logger.error('Error deleting task:', deleteError);
+                throw new Error(`Failed to delete task: ${deleteError.message}`);
+            }
+        } catch (error) {
+            this.logger.error('Error in removeTask method:', error);
             throw error;
         }
     }
