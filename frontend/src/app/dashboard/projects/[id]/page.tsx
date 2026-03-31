@@ -125,10 +125,6 @@ export default function ProjectDetailPage() {
     const [detail_editing, set_detail_editing] = useState(false);
     const [save_hover, set_save_hover] = useState(false);
     const [edit_hover, set_edit_hover] = useState(false);
-    const [show_edit_project, set_show_edit_project] = useState(false);
-    const [edit_project_save_hover, set_edit_project_save_hover] = useState(false);
-    const [show_delete_confirm, set_show_delete_confirm] = useState(false);
-    const [delete_hover, set_delete_hover] = useState(false);
     const [delete_task_hover, set_delete_task_hover] = useState(false);
     const [confirm_delete_task, set_confirm_delete_task] = useState(false);
     const [confirm_delete_hover, set_confirm_delete_hover] = useState(false);
@@ -236,7 +232,10 @@ export default function ProjectDetailPage() {
             if (task_form.priority) body.priority = Number(task_form.priority);
             if (task_form.status) body.status = task_form.status;
             if (task_form.due_date) body.due_date = task_form.due_date;
-            if (task_form.assignees.length > 0) body.assignees = task_form.assignees;
+            if (task_form.assignees.length > 0) {
+                body.assignees = task_form.assignees;
+                body.assigned_to = task_form.assignees[0];
+            }
 
             const res = await fetch(`http://localhost:3001/phases/${phase.phase_id}/tasks`, {
                 method: 'POST',
@@ -272,7 +271,10 @@ export default function ProjectDetailPage() {
             const orig_due = t.due_date ? t.due_date.slice(0, 10) : '';
             if (edit_task_form.due_date !== orig_due) changed.due_date = edit_task_form.due_date || null;
             const orig_assignees = JSON.stringify(t.assignees ?? []);
-            if (JSON.stringify(edit_task_form.assignees) !== orig_assignees) changed.assignees = edit_task_form.assignees;
+            if (JSON.stringify(edit_task_form.assignees) !== orig_assignees) {
+                changed.assignees = edit_task_form.assignees;
+                changed.assigned_to = edit_task_form.assignees.length > 0 ? edit_task_form.assignees[0] : null;
+            }
 
             if (Object.keys(changed).length === 0) {
                 set_detail_task(null);
@@ -341,6 +343,18 @@ export default function ProjectDetailPage() {
             const dst_col = next[Number(destination.droppableId)];
             const [moved] = src_col.tasks.splice(source.index, 1);
             dst_col.tasks.splice(destination.index, 0, moved);
+
+            // Persist phase change to the backend
+            if (source.droppableId !== destination.droppableId) {
+                const new_phase_id = dst_col.phase_id;
+                fetch(`http://localhost:3001/tasks/${moved.task_id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ phase_id: new_phase_id }),
+                }).catch(err => console.error('Failed to update task phase:', err));
+            }
+
             return next;
         });
     }, []);
@@ -411,22 +425,6 @@ export default function ProjectDetailPage() {
                             {get_project_status_display(project.status ?? '').label}
                         </span>
 
-                        <button
-                            onClick={() => set_show_edit_project(true)}
-                            style={{
-                                background: '#FF5900',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 20px',
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                transition: 'background 0.2s ease',
-                            }}>
-                            Edit
-                        </button>
                     </div>
 
                     {/* Line 2: Project details inline */}
@@ -470,7 +468,6 @@ export default function ProjectDetailPage() {
                     overflowX: 'auto',
                     flex: 1,
                     alignItems: 'flex-start',
-                    justifyContent: 'center',
                     paddingBottom: '10px',
                 }}>
                     {phases.map((phase, index) => {
@@ -481,8 +478,8 @@ export default function ProjectDetailPage() {
                                 borderRadius: '20px',
                                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
                                 padding: '18px',
-                                minWidth: '250px',
-                                flex: 1,
+                                minWidth: '280px',
+                                flex: '1 0 280px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '10px',
@@ -1224,195 +1221,6 @@ export default function ProjectDetailPage() {
                 </div>
             )}
 
-            {/* Edit Project Modal */}
-            {show_edit_project && (
-                <div
-                    onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1000,
-                    }}>
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            background: 'white',
-                            borderRadius: '20px',
-                            width: '560px',
-                            maxHeight: '90vh',
-                            overflowY: 'auto',
-                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                        }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px 0 28px' }}>
-                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>Edit Project</h2>
-                            <button onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', padding: '0 4px', lineHeight: 1, fontFamily: 'Poppins' }}>&times;</button>
-                        </div>
-
-                        <div style={{ padding: '20px 28px 28px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
-                                <input type="text" defaultValue={project?.name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
-                                    <input type="text" defaultValue={project?.client_name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <input type="text" defaultValue={project?.owner_name ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
-                                    <input type="text" defaultValue={project?.service_type ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
-                                    <select defaultValue={project?.status ?? 'open'} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option value="open">On Track</option>
-                                        <option value="in_progress">At Risk</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="on_hold">On Hold</option>
-                                        <option value="cancelled">Cancelled</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Start Date</label>
-                                    <input type="date" defaultValue={project?.start_date ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
-                                    <input type="date" defaultValue={project?.end_date ?? ''} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Budget</label>
-                                <div style={{ position: 'relative' }}>
-                                    <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: 14, fontFamily: 'Poppins', color: '#888', pointerEvents: 'none' }}>$</span>
-                                    <input type="number" defaultValue={project?.budget ?? ''} style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', boxSizing: 'border-box' }} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
-                                <textarea defaultValue={project?.description ?? ''} rows={4} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', resize: 'vertical' }} />
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                                <button
-                                    onClick={() => set_show_delete_confirm(true)}
-                                    style={{ background: 'none', border: '1px solid #DC2626', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#DC2626', cursor: 'pointer' }}>
-                                    Delete Project
-                                </button>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <button onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
-                                    <button
-                                        onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }}
-                                        onMouseEnter={() => set_edit_project_save_hover(true)}
-                                        onMouseLeave={() => set_edit_project_save_hover(false)}
-                                        style={{ background: edit_project_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s ease' }}>
-                                        Save
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete Confirmation Modal */}
-            {show_delete_confirm && (
-                <div
-                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1100,
-                    }}>
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            background: 'white',
-                            borderRadius: '20px',
-                            width: '420px',
-                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                        }}>
-                        {/* Red accent stripe */}
-                        <div style={{ height: '4px', background: '#DC2626', borderRadius: '20px 20px 0 0' }} />
-
-                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
-                            {/* Warning icon */}
-                            <div style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: '50%',
-                                background: '#FEE2E2',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                            }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                    <line x1="12" y1="9" x2="12" y2="13" />
-                                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                                </svg>
-                            </div>
-
-                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>
-                                Delete Project?
-                            </h2>
-                            <p style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins', margin: 0, lineHeight: 1.5 }}>
-                                Are you sure you want to delete this project? This action cannot be undone.
-                            </p>
-
-                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', width: '100%', justifyContent: 'center' }}>
-                                <button
-                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
-                                    style={{
-                                        background: 'none', border: '1px solid #ddd', borderRadius: '12px',
-                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
-                                        color: '#666', cursor: 'pointer',
-                                    }}>
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); set_show_edit_project(false); set_edit_project_save_hover(false); }}
-                                    onMouseEnter={() => set_delete_hover(true)}
-                                    onMouseLeave={() => set_delete_hover(false)}
-                                    style={{
-                                        background: delete_hover ? '#B91C1C' : '#DC2626',
-                                        color: 'white', border: 'none', borderRadius: '12px',
-                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
-                                        cursor: 'pointer', transition: 'background 0.2s ease',
-                                    }}>
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
