@@ -713,22 +713,14 @@ export default function ProjectsPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
-                                    <select value={create_form.service_type} onChange={(e) => update_create('service_type', e.target.value)} style={{
+                                    <input type="text" placeholder="Enter service type" value={create_form.service_type} onChange={(e) => update_create('service_type', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
                                         fontSize: 14,
                                         fontFamily: 'Poppins',
-                                        color: '#666',
-                                        background: 'white',
-                                        cursor: 'pointer',
-                                    }}>
-                                        <option value="">Select type</option>
-                                        <option value="Design">Design</option>
-                                        <option value="Content">Content</option>
-                                        <option value="Branding">Branding</option>
-                                        <option value="Research">Research</option>
-                                    </select>
+                                        outline: 'none',
+                                    }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
@@ -921,13 +913,7 @@ export default function ProjectsPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
-                                    <select value={edit_form.service_type} onChange={(e) => update_edit('service_type', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option value="">Select type</option>
-                                        <option value="Design">Design</option>
-                                        <option value="Content">Content</option>
-                                        <option value="Branding">Branding</option>
-                                        <option value="Research">Research</option>
-                                    </select>
+                                    <input type="text" placeholder="Enter service type" value={edit_form.service_type} onChange={(e) => update_edit('service_type', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
