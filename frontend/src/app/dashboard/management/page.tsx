@@ -9,7 +9,7 @@ interface UserData {
     firstName: string;
     lastName: string;
     email: string;
-    role: 'Administrator' | 'Manager' | 'User';
+    role: 'admin' | 'manager' | 'staff';
     status: 'Active' | 'Inactive';
     lastLogin: string;
     createdAt: string;
@@ -46,7 +46,7 @@ export default function ManagementPage() {
                 firstName: 'Admin',
                 lastName: 'User',
                 email: 'admin@headword.com',
-                role: 'Administrator',
+                role: 'admin',
                 status: 'Active',
                 lastLogin: '2026-02-17T10:30:00Z',
                 createdAt: '2025-01-01T00:00:00Z'
@@ -56,7 +56,7 @@ export default function ManagementPage() {
                 firstName: 'John',
                 lastName: 'Manager',
                 email: 'john.manager@headword.com',
-                role: 'Manager',
+                role: 'manager',
                 status: 'Active',
                 lastLogin: '2026-02-17T09:15:00Z',
                 createdAt: '2025-02-15T00:00:00Z'
@@ -66,7 +66,7 @@ export default function ManagementPage() {
                 firstName: 'Jane',
                 lastName: 'Smith',
                 email: 'jane.smith@headword.com',
-                role: 'User',
+                role: 'staff',
                 status: 'Active',
                 lastLogin: '2026-02-16T16:45:00Z',
                 createdAt: '2025-03-20T00:00:00Z'
@@ -76,7 +76,7 @@ export default function ManagementPage() {
                 firstName: 'Bob',
                 lastName: 'Johnson',
                 email: 'bob.johnson@headword.com',
-                role: 'User',
+                role: 'staff',
                 status: 'Inactive',
                 lastLogin: '2026-02-10T12:00:00Z',
                 createdAt: '2025-05-10T00:00:00Z'
@@ -88,7 +88,7 @@ export default function ManagementPage() {
     const handleRoleChange = (userId: string, newRole: string) => {
         setUsers(prev => prev.map(user => 
             user.id === userId 
-                ? { ...user, role: newRole as 'Administrator' | 'Manager' | 'User' }
+                ? { ...user, role: newRole as 'admin' | 'manager' | 'staff' }
                 : user
         ));
     };

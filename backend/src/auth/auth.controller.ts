@@ -2,6 +2,7 @@ import { Controller, Post, Body, Res, Get, UseGuards, Req, Query } from '@nestjs
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
+import { SupabaseAuthGuard } from './supabase-jwt.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -128,5 +129,11 @@ export class AuthController {
       return this.authService.findUserById(id);
     }
     return { ok: false, message: 'Provide ?email= or ?id= query parameter' };
+  }
+
+  @UseGuards(SupabaseAuthGuard)
+  @Get('myUser')
+  async getMyUser(@Req() req: any) {
+    return this.authService.getMyUser(req.user.sub);
   }
 }

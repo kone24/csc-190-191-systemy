@@ -3,9 +3,11 @@ import { useUser } from '@/contexts/UserContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
+type AppRole = 'admin' | 'manager' | 'staff';
+
 interface RoleGuardProps {
     children: React.ReactNode;
-    allowedRoles: ('Administrator' | 'Manager' | 'User')[];
+    allowedRoles: AppRole[];
     fallback?: React.ReactNode;
     redirectTo?: string;
 }
@@ -16,14 +18,24 @@ export const RoleGuard: React.FC<RoleGuardProps> = ({
     fallback,
     redirectTo
 }) => {
-    const { user, isAuthenticated } = useUser();
+    
+    const { user, isAuthenticated, loading} = useUser();
     const router = useRouter();
-
+    console.log("RoleGuard user:", user);
+    
     useEffect(() => {
-        if (!isAuthenticated && redirectTo) {
+        if (!loading && !isAuthenticated && redirectTo) {
             router.push(redirectTo);
         }
-    }, [isAuthenticated, redirectTo, router]);
+    }, [loading, isAuthenticated, redirectTo, router]);
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                Loading...
+            </div>
+        );
+    }
 
     if (!isAuthenticated) {
         return fallback || (
@@ -99,7 +111,7 @@ export const AdminOnly: React.FC<{ children: React.ReactNode; fallback?: React.R
     children,
     fallback
 }) => (
-    <RoleGuard allowedRoles={['Administrator']} fallback={fallback}>
+    <RoleGuard allowedRoles={['admin']} fallback={fallback}>
         {children}
     </RoleGuard>
 );
@@ -108,22 +120,20 @@ export const ManagerAndAbove: React.FC<{ children: React.ReactNode; fallback?: R
     children,
     fallback
 }) => (
-    <RoleGuard allowedRoles={['Administrator', 'Manager']} fallback={fallback}>
+    <RoleGuard allowedRoles={['admin', 'manager']} fallback={fallback}>
         {children}
     </RoleGuard>
 );
 
 // Hook to check permissions in components
 export const usePermissions = () => {
-    const { user, isAdmin, isManager } = useUser();
-    
-    const hasRole = (role: 'Administrator' | 'Manager' | 'User') => {
-        return user?.role === role;
-    };
+    const { user } = useUser();
 
-    const hasAnyRole = (roles: ('Administrator' | 'Manager' | 'User')[]) => {
-        return user ? roles.includes(user.role) : false;
-    };
+    const isAdmin = user?.role === 'admin';
+    const isManager = user?.role === 'manager' || user?.role === 'admin';
+    
+    const hasRole = (role: AppRole) => user?.role === role;
+    const hasAnyRole = (roles: AppRole[]) => !!user && roles.includes(user.role);
 
     return {
         isAdmin,

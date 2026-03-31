@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/app/supabase';
 
 export interface User {
     id: string;
@@ -8,7 +9,8 @@ export interface User {
     email: string;
     company: string;
     phone: string;
-    role: 'Administrator' | 'Manager' | 'User';
+    role: 'admin' | 'manager' | 'staff';
+    teamId?: string;
     avatar?: string;
 }
 
@@ -18,7 +20,9 @@ interface UserContextType {
     isAuthenticated: boolean;
     isAdmin: boolean;
     isManager: boolean;
-    logout: () => void;
+    loading: boolean;
+    refreshUser: () => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -37,69 +41,100 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Initialize user from localStorage on mount
-    useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                const parsedUser = JSON.parse(storedUser);
-                setUser(parsedUser);
-            } catch (error) {
-                console.error('Error parsing stored user:', error);
-                localStorage.removeItem('user');
+    const refreshUser = async () => {
+
+        setLoading(true);
+
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token ?? null;
+
+        if (!token) {
+            setUser(null);
+            setLoading(false);
+            return;
+        }
+
+        try {
+        const res = await fetch('http://localhost:3001/auth/myUser', {
+            headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        });
+        console.log("auth/myUser status:", res.status);
+
+            if (!res.ok) {
+                setUser(null);
+                setLoading(false);
+                return;
             }
-        } else {
-            // For demo purposes, set a default user
-            // Change role here to test different user types:
-            // 'Administrator' | 'Manager' | 'User'
-            // This part will be update later when we have the database and authentication flow in place
-            const defaultUser: User = {
-                id: '1',
-                firstName: 'Admin',
-                lastName: 'User',
-                email: 'admin@headword.com',
-                company: 'Headword Inc.',
-                phone: '+1 (555) 123-4567',
-                role: 'Administrator' // <-- Default to admin, use switcher to test other roles
+
+            const me = await res.json();
+            console.log("auth/myUser payload:", me);
+
+            const mappedUser: User = {
+                id: me.user_id,
+                firstName: me.name?.split(' ')[0] || '',
+                lastName: me.name?.split(' ').slice(1).join(' ') || '',
+                email: me.email,
+                company: me.company || '',
+                phone: me.phone || '',
+                role: me.role,
+                teamId: me.team_id,
+                avatar: me.avatar || '',
             };
-            setUser(defaultUser);
-            localStorage.setItem('user', JSON.stringify(defaultUser));
-        }
-    }, []);
 
-    // Update localStorage when user changes
-    useEffect(() => {
-        if (user) {
-            localStorage.setItem('user', JSON.stringify(user));
-        } else {
-            localStorage.removeItem('user');
-        }
-    }, [user]);
-
-    const logout = () => {
+            setUser(mappedUser);
+            localStorage.setItem('user', JSON.stringify(mappedUser));
+            console.log("Loaded app user:", mappedUser);
+            console.log("Supabase session token exists?", !!token);
+        } catch (error) {
+        console.error('Error loading authenticated user:', error);
         setUser(null);
         localStorage.removeItem('user');
-        // Redirect to login page
+        } finally {
+        setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        refreshUser();
+
+        const {
+        data: { subscription },
+        } = supabase.auth.onAuthStateChange(() => {
+        refreshUser();
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const logout = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        localStorage.removeItem('user');
         window.location.href = '/login';
     };
 
     const isAuthenticated = !!user;
-    const isAdmin = user?.role === 'Administrator';
-    const isManager = user?.role === 'Manager' || isAdmin;
+    const isAdmin = user?.role === 'admin';
+    const isManager = user?.role === 'manager' || isAdmin;
 
     return (
         <UserContext.Provider
-            value={{
-                user,
-                setUser,
-                isAuthenticated,
-                isAdmin,
-                isManager,
-                logout
-            }}
+        value={{
+            user,
+            setUser,
+            isAuthenticated,
+            isAdmin,
+            isManager,
+            loading,
+            refreshUser,
+            logout,
+        }}
         >
             {children}
         </UserContext.Provider>
     );
-};
+}

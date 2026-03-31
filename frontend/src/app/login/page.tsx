@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import ReCAPTCHA from 'react-google-recaptcha';
+import { supabase } from '@/app/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,14 +36,14 @@ export default function LoginPage() {
   const trimmedUsername = username.trim();
   const trimmedPassword = password.trim();
   
-  // EXCEPTION SHOULD BE REMOVED LATER
+  /* // EXCEPTION SHOULD BE REMOVED LATER
   if (trimmedUsername === "admin" && trimmedPassword === "1234") {
     // simulate a successful login
     setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
     router.replace("/dashboard");
     resetRecaptcha();
     return; 
-  }
+  } */
 
   // Empty / whitespace only email
   if (!trimmedUsername) {
@@ -83,41 +84,46 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3001/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          username: username.trim(),
-          password: password.trim(),
-          recaptchaToken: recaptchaToken // add reCAPTCHA token. 
-        }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: trimmedUsername,
+        password: trimmedPassword,
       });
 
-      const data = await res.json();
+      if (error) {
+        setMessage("Email or password is incorrect.");
+        setPassword("");
+        resetRecaptcha();
+        return;
+      }
 
-      if (res.ok) {
-        setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
-        router.replace("/dashboard");
-      } else {
-        let errorMessage = "Something went wrong. Please try again.";
-      if (data && typeof data.message === "string") {
-        errorMessage = data.message;
-      } else if (res.status === 400 || res.status === 401) {
-        errorMessage = "Email or password is incorrect.";
-      } else if (res.status === 429) {
-        errorMessage = "Too many login attempts. Please wait a bit and try again.";
-      } else if (res.status >= 500) {
-        errorMessage = "Server error. Please try again later.";
+      const accessToken = data.session?.access_token;
+
+      if (!accessToken) {
+        setMessage("Login succeeded, but no session token was returned.");
+        resetRecaptcha();
+        return;
       }
-        setMessage(errorMessage);
-        setPassword(""); 
-        resetRecaptcha(); // reset reCAPTCHA token on failure
+
+      // Optional immediate profile check
+      const meRes = await fetch("http://localhost:3001/auth/myUser", {
+        headers: {
+        Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!meRes.ok) {
+        const errData = await meRes.json().catch(() => null);
+        setMessage(errData?.message || "Authenticated, but failed to load your user profile.");
+        resetRecaptcha();
+        return;
       }
+
+      setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
+      router.replace("/dashboard");
     } catch (err) {
       console.error(err);
       setMessage("We couldn't reach the server. Please check your connection and try again.");
-      resetRecaptcha(); // reset reCAPTCHA token on error
+      resetRecaptcha();
     } finally {
       setLoading(false);
     }

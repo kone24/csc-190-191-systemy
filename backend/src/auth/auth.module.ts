@@ -7,6 +7,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt.guard';
 import { ConfigModule } from '@nestjs/config';
 import { SupabaseJwtStrategy } from './supabase-jwt.strategy';
+import { AuthSupabaseService } from './auth.supabase.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { SupabaseJwtStrategy } from './supabase-jwt.strategy';
       signOptions: { expiresIn: '20m' }, // sign in only valid for 20 minutes of inactivity
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, SupabaseJwtStrategy],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, SupabaseJwtStrategy, AuthSupabaseService],
   controllers: [AuthController],
   exports: [AuthService, JwtAuthGuard],
 })

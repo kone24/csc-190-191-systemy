@@ -52,15 +52,15 @@ export const DevRoleSwitcher: React.FC = () => {
     // Temporarily always show for debugging - remove this later
     console.log('DevRoleSwitcher: Rendering for user:', user.role);
     
-    const switchRole = (newRole: 'Administrator' | 'Manager' | 'User') => {
+    const switchRole = (newRole: 'admin' | 'manager' | 'staff') => {
         if (user) {
             const updatedUser = {
                 ...user,
                 role: newRole,
-                firstName: newRole === 'Administrator' ? 'Admin' : 
-                          newRole === 'Manager' ? 'Manager' : 'John',
-                lastName: newRole === 'Administrator' ? 'User' : 
-                         newRole === 'Manager' ? 'Smith' : 'Doe',
+                firstName: newRole === 'admin' ? 'Admin' : 
+                          newRole === 'manager' ? 'Manager' : 'John',
+                lastName: newRole === 'admin' ? 'staff' : 
+                         newRole === 'manager' ? 'Smith' : 'Doe',
                 email: `${newRole.toLowerCase()}@headword.com`
             };
             setUser(updatedUser);
@@ -109,48 +109,48 @@ export const DevRoleSwitcher: React.FC = () => {
                 gap: '8px'
             }}>
                 <button
-                    onClick={() => switchRole('Administrator')}
+                    onClick={() => switchRole('admin')}
                     style={{
                         padding: '8px 12px',
-                        background: user.role === 'Administrator' ? '#FF5900' : 'white',
-                        color: user.role === 'Administrator' ? 'white' : 'black',
+                        background: user.role === 'admin' ? '#FF5900' : 'white',
+                        color: user.role === 'admin' ? 'white' : 'black',
                         border: '1px solid #FF5900',
                         borderRadius: '5px',
                         fontSize: '12px',
                         cursor: 'pointer',
-                        fontWeight: user.role === 'Administrator' ? 'bold' : 'normal'
+                        fontWeight: user.role === 'admin' ? 'bold' : 'normal'
                     }}
                 >
                     👑 Administrator
                 </button>
                 
                 <button
-                    onClick={() => switchRole('Manager')}
+                    onClick={() => switchRole('manager')}
                     style={{
                         padding: '8px 12px',
-                        background: user.role === 'Manager' ? '#FF5900' : 'white',
-                        color: user.role === 'Manager' ? 'white' : 'black',
+                        background: user.role === 'manager' ? '#FF5900' : 'white',
+                        color: user.role === 'manager' ? 'white' : 'black',
                         border: '1px solid #FF5900',
                         borderRadius: '5px',
                         fontSize: '12px',
                         cursor: 'pointer',
-                        fontWeight: user.role === 'Manager' ? 'bold' : 'normal'
+                        fontWeight: user.role === 'manager' ? 'bold' : 'normal'
                     }}
                 >
                     👔 Manager
                 </button>
                 
                 <button
-                    onClick={() => switchRole('User')}
+                    onClick={() => switchRole('staff')}
                     style={{
                         padding: '8px 12px',
-                        background: user.role === 'User' ? '#FF5900' : 'white',
-                        color: user.role === 'User' ? 'white' : 'black',
+                        background: user.role === 'staff' ? '#FF5900' : 'white',
+                        color: user.role === 'staff' ? 'white' : 'black',
                         border: '1px solid #FF5900',
                         borderRadius: '5px',
                         fontSize: '12px',
                         cursor: 'pointer',
-                        fontWeight: user.role === 'User' ? 'bold' : 'normal'
+                        fontWeight: user.role === 'staff' ? 'bold' : 'normal'
                     }}
                 >
                     👤 User

@@ -1,7 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt'; // needed for JSON tokens
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { AuthSupabaseService } from './auth.supabase.service';
 
 const ALLOWED_DOMAIN = '@futureandsuns.com';
 
@@ -12,6 +17,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly authDb: AuthSupabaseService,
   ) {
     this.supabase = createClient(
       this.configService.get<string>('SUPABASE_URL')!,
@@ -20,7 +26,6 @@ export class AuthService {
   }
 
   async login(username: string, password: string) {
-    // Temporary fake logic
     if (username === 'admin' && password === '1234') {
       const user = { username };
       const payload = { username };
@@ -33,11 +38,12 @@ export class AuthService {
     }
   }
 
-  async googleLogin(idToken: string): Promise<
+  async googleLogin(
+    idToken: string,
+  ): Promise<
     | { ok: true; token: string; user: { email: string } }
     | { ok: false; message: string }
   > {
-    // Verify the Google ID token and extract claims via Google's tokeninfo endpoint.
     const infoRes = await fetch(
       `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`,
     );
@@ -46,13 +52,16 @@ export class AuthService {
       return { ok: false, message: 'Failed to verify Google ID token' };
     }
 
-    const info = await infoRes.json() as { email?: string; aud?: string; error_description?: string };
+    const info = (await infoRes.json()) as {
+      email?: string;
+      aud?: string;
+      error_description?: string;
+    };
 
     if (!info.email) {
       return { ok: false, message: 'No email found in Google token' };
     }
 
-    // Dev allowlist: personal emails explicitly whitelisted via DEV_ALLOWED_EMAILS env var.
     const devAllowedEmails = (process.env.DEV_ALLOWED_EMAILS ?? '')
       .split(',')
       .map((e) => e.trim().toLowerCase())
@@ -60,7 +69,6 @@ export class AuthService {
 
     const isDevAllowed = devAllowedEmails.includes(info.email.toLowerCase());
 
-    // Domain restriction: only @futureandsuns.com accounts (or dev allowlist) are allowed.
     if (!isDevAllowed && !info.email.endsWith(ALLOWED_DOMAIN)) {
       return {
         ok: false,
@@ -68,11 +76,7 @@ export class AuthService {
       };
     }
 
-    // Dev-allowlisted emails skip the DB check (they won't exist in the users table).
     if (!isDevAllowed) {
-      // Check that this email exists in your Supabase users table.
-      // The users table should have at minimum an `email` column.
-      // Pre-populate it with the emails of team members who are allowed access.
       const { data: dbUser, error: dbError } = await this.supabase
         .from('users')
         .select('email')
@@ -82,20 +86,21 @@ export class AuthService {
       if (dbError || !dbUser) {
         return {
           ok: false,
-          message: 'User not found.Contact your administrator to be added to the system.',
+          message:
+            'User not found. Contact your administrator to be added to the system.',
         };
       }
     }
 
     const user = { email: info.email };
-    const token = this.jwtService.sign({ username: info.email }, { expiresIn: '20m' });
+    const token = this.jwtService.sign(
+      { username: info.email },
+      { expiresIn: '20m' },
+    );
 
     return { ok: true, token, user };
   }
 
-  /**
-   * Find a user record by email address.
-   */
   async findUserByEmail(email: string) {
     const { data, error } = await this.supabase
       .from('users')
@@ -110,14 +115,11 @@ export class AuthService {
     return { ok: true, user: data };
   }
 
-  /**
-   * Find a user record by user_id.
-   */
   async findUserById(userId: string) {
     const { data, error } = await this.supabase
       .from('users')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', userId) // change to user_id if your table uses user_id
       .single();
 
     if (error || !data) {
@@ -125,5 +127,28 @@ export class AuthService {
     }
 
     return { ok: true, user: data };
+  }
+
+  async getMyUser(authUserId: string) {
+    const { data, error } = await this.authDb.db
+      .from('users')
+      .select('user_id, name, email, role, team_id')
+      .eq('user_id', authUserId) // change to user_id if your table uses user_id
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        throw new NotFoundException('User not found in users table');
+      }
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return {
+      user_id: data.user_id,
+      name: data.name,
+      email: data.email,
+      role: data.role,
+      team_id: data.team_id,
+    };
   }
 }
