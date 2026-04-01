@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import type { Client } from '@/types/client';
 
+type ClientData = Client;
+
 //  Tag encoding 
 const DEFAULT_COLOR = '#8A38F5';
 
@@ -316,14 +318,158 @@ export default function ClientProfilePage() {
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               padding: '24px 30px',
             }}>
-              <div style={{ fontFamily: 'Poppins', fontSize: 24, fontWeight: '600', color: 'black', marginBottom: 8 }}>
-                {client.first_name} {client.last_name}
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-                {[client.company || client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
-                  <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
-                ))}
-              </div>
+              {!editing ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ fontFamily: 'Poppins', fontSize: 24, fontWeight: '600', color: 'black', marginBottom: 8 }}>
+                      {client.first_name} {client.last_name}
+                    </div>
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button
+                        onClick={startEditing}
+                        style={{
+                          background: '#FF5900',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 20px',
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        style={{
+                          background: '#EF4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '8px 20px',
+                          fontSize: 14,
+                          fontFamily: 'Poppins',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+                    {[client.company || client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
+                      <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontFamily: 'Poppins', fontSize: 18, fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: 16 }}>
+                    Edit Contact
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    {([
+                      ['first_name', 'First Name'],
+                      ['last_name', 'Last Name'],
+                      ['email', 'Email'],
+                      ['phone_number', 'Phone'],
+                      ['business_name', 'Company'],
+                      ['title', 'Title'],
+                      ['industry', 'Industry'],
+                      ['website', 'Website'],
+                    ] as const).map(([field, label]) => (
+                      <div key={field}>
+                        <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
+                          {label}
+                        </label>
+                        <input
+                          value={(editForm as any)[field] ?? ''}
+                          onChange={(e) => editField(field, e.target.value)}
+                          style={{
+                            width: '100%',
+                            height: 38,
+                            padding: '0 12px',
+                            borderRadius: 8,
+                            border: '1.5px solid rgba(0,0,0,0.15)',
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            color: 'black',
+                            outline: 'none',
+                            background: 'white',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 12 }}>
+                    <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
+                      Notes
+                    </label>
+                    <textarea
+                      value={editForm.additional_info ?? ''}
+                      onChange={(e) => editField('additional_info', e.target.value)}
+                      rows={3}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        border: '1.5px solid rgba(0,0,0,0.15)',
+                        fontFamily: 'Poppins',
+                        fontSize: 14,
+                        color: 'black',
+                        outline: 'none',
+                        resize: 'vertical',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  {editError && (
+                    <p style={{ fontFamily: 'Poppins', fontSize: 13, color: '#ef4444', marginTop: 8 }}>
+                      {editError}
+                    </p>
+                  )}
+                  <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                    <button
+                      onClick={saveEdit}
+                      disabled={editSaving}
+                      style={{
+                        background: editSaving ? 'rgba(0,0,0,0.12)' : '#FF5900',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '8px 24px',
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                        fontWeight: '500',
+                        cursor: editSaving ? 'default' : 'pointer',
+                      }}
+                    >
+                      {editSaving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={cancelEditing}
+                      disabled={editSaving}
+                      style={{
+                        background: 'transparent',
+                        color: '#666',
+                        border: '1px solid #ddd',
+                        borderRadius: 8,
+                        padding: '8px 24px',
+                        fontSize: 14,
+                        fontFamily: 'Poppins',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Tags card */}
