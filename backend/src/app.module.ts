@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ClientsModule } from './clients/clients.module';
+import { VendorsModule } from './vendors/vendors.module';
+import { ProjectsModule } from './projects/projects.module';
 import { AuthModule } from './auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -20,6 +22,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
     NotificationsModule,
     AuthModule,
     ClientsModule,
+    VendorsModule,
+    ProjectsModule,
     WebhookModule,
     LeadsModule,
     AnalyticsModule,
