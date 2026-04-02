@@ -87,6 +87,8 @@ export default function ClientsPage() {
             setLoading(true);
             setError(null);
 
+            const q = searchQuery.trim().toLowerCase();
+
             fetch(`http://localhost:3001/clients/search?q=${encodeURIComponent(searchQuery)}`, {
                 credentials: 'include',
             })
@@ -94,7 +96,15 @@ export default function ClientsPage() {
                     if (!res.ok) throw new Error(`Error: ${res.status}`);
                     return res.json();
                 })
-                .then((data) => setSearchResults(data))
+                .then((data: Client[]) => {
+                    // Also match clients whose ID starts with or contains the query
+                    const idMatches = allClients.filter((c) => c.id?.toLowerCase().includes(q));
+                    const merged = [...data];
+                    for (const c of idMatches) {
+                        if (!merged.some((m) => m.id === c.id)) merged.push(c);
+                    }
+                    setSearchResults(merged);
+                })
                 .catch((err) => { console.error('Search failed:', err); setError(err.message); })
                 .finally(() => setLoading(false));
         }, 300);
@@ -131,6 +141,20 @@ export default function ClientsPage() {
 
         return sorted;
     }, [isSearching, searchResults, allClients, sortBy]);
+
+    // Compute the minimum prefix length that uniquely identifies each client's ID
+    const shortIdMap = useMemo(() => {
+        const ids = displayedClients.map((c) => c.id ?? '');
+        const map: Record<string, string> = {};
+        for (const id of ids) {
+            let len = 4;
+            while (len < id.length && ids.some((other) => other !== id && other.startsWith(id.slice(0, len)))) {
+                len++;
+            }
+            map[id] = id.slice(0, len);
+        }
+        return map;
+    }, [displayedClients]);
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -320,7 +344,7 @@ export default function ClientsPage() {
                             }}>
                                 <thead style={{ position: 'sticky', top: 0, background: 'rgba(255, 158, 77, 0.20)' }}>
                                     <tr>
-                                        {['Name', 'Company', 'Title', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Relationship Status', 'Tags'].map((header) => (
+                                        {['Name', 'Company', 'Title', 'ID', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Relationship Status', 'Tags'].map((header) => (
                                             <th key={header} style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
@@ -376,6 +400,16 @@ export default function ClientsPage() {
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
                                                 {client.title}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {shortIdMap[client.id] ?? client.id.slice(0, 4)}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
