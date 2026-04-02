@@ -87,6 +87,8 @@ export default function ClientsPage() {
             setLoading(true);
             setError(null);
 
+            const q = searchQuery.trim().toLowerCase();
+
             fetch(`http://localhost:3001/clients/search?q=${encodeURIComponent(searchQuery)}`, {
                 credentials: 'include',
             })
@@ -94,7 +96,15 @@ export default function ClientsPage() {
                     if (!res.ok) throw new Error(`Error: ${res.status}`);
                     return res.json();
                 })
-                .then((data) => setSearchResults(data))
+                .then((data: Client[]) => {
+                    // Also match clients whose ID starts with or contains the query
+                    const idMatches = allClients.filter((c) => c.id?.toLowerCase().includes(q));
+                    const merged = [...data];
+                    for (const c of idMatches) {
+                        if (!merged.some((m) => m.id === c.id)) merged.push(c);
+                    }
+                    setSearchResults(merged);
+                })
                 .catch((err) => { console.error('Search failed:', err); setError(err.message); })
                 .finally(() => setLoading(false));
         }, 300);
