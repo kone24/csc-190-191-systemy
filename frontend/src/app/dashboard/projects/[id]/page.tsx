@@ -1,38 +1,67 @@
 'use client';
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProvided, type DroppableStateSnapshot } from '@hello-pangea/dnd';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 
 
 // Types
 interface Task {
-    id: string;
+    task_id: string;
+    project_id: string;
+    phase_id: string;
     title: string;
-    priority: 'High' | 'Medium' | 'Low';
-    status: 'Todo' | 'In Progress' | 'Review' | 'Done';
-    assignee: string;
-    due_date: string;
-    description: string;
+    description: string | null;
+    priority: number | null;
+    status: string | null;
+    due_date: string | null;
+    assigned_to: string | null;
+    assignee_name: string | null;
+    assignees: string[];
+    assignee_names: string[];
 }
 
 interface Phase {
+    phase_id: string;
     name: string;
     tasks: Task[];
 }
 
+interface User {
+    user_id: string;
+    name: string;
+}
 
-// Mock data
-const PROJECT_NAME = 'Nike Brand Refresh';
-const PROJECT_STATUS = 'In Progress';
-const PROJECT_DETAILS = {
-    vendor: 'Nike',
-    owner: 'Isaac',
-    service_type: 'Branding',
-    start_date: '2026-01-15',
-    end_date: '2026-06-30',
-    budget: 48000,
-    description: 'Full brand refresh including logo redesign, updated color palette, typography system, and brand guidelines documentation for Nike\'s 2026 product line.',
+interface Project {
+    project_id: string;
+    name: string;
+    status: string | null;
+    service_type: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    client_id: string | null;
+    client_name: string | null;
+    owner_id: string | null;
+    owner_name: string | null;
+    task_count: number;
+    budget: number | null;
+    description: string | null;
+}
+
+// Maps API status values → display label + badge colors
+const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: string }> = {
+    'open':        { label: 'On Track',   bg: '#22C55E', text: 'black' },
+    'in_progress': { label: 'At Risk',    bg: '#F59E0B', text: 'black' },
+    'completed':   { label: 'Completed',  bg: '#9CA3AF', text: 'white' },
+    'on_hold':     { label: 'On Hold',    bg: '#FF5900', text: 'white' },
+    'cancelled':   { label: 'Cancelled',  bg: '#EF4444', text: 'white' },
+    'behind':      { label: 'Behind',     bg: '#EF4444', text: 'white' },
 };
+
+const DEFAULT_PROJECT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white' };
+
+const get_project_status_display = (status: string) => PROJECT_STATUS_MAP[status] ?? DEFAULT_PROJECT_STATUS;
 
 const format_date = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -40,44 +69,6 @@ const format_date = (d: string) =>
 const format_currency = (n: number) =>
     n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 
-const PHASES: Phase[] = [
-    {
-        name: 'Discovery',
-        tasks: [
-            { id: 'd1', title: 'Competitive Analysis', priority: 'High', status: 'Done', assignee: 'Isaac', due_date: '2026-02-10', description: 'Research and analyze top 5 competitors in the sportswear branding space, focusing on visual identity and messaging.' },
-            { id: 'd2', title: 'Stakeholder Interviews', priority: 'Medium', status: 'In Progress', assignee: 'Jez', due_date: '2026-03-01', description: 'Conduct interviews with key stakeholders to gather requirements and brand vision alignment.' },
-            { id: 'd3', title: 'Brand Audit Report', priority: 'Low', status: 'Review', assignee: 'Matthew', due_date: '2026-03-15', description: 'Compile a comprehensive audit of existing brand assets, touchpoints, and consistency issues.' },
-            { id: 'd4', title: 'Market Research Survey', priority: 'High', status: 'Todo', assignee: 'Ashley', due_date: '2026-03-20', description: 'Design and distribute a consumer survey to gauge brand perception and awareness.' },
-        ],
-    },
-    {
-        name: 'Design',
-        tasks: [
-            { id: 'de1', title: 'Mood Board Creation', priority: 'Medium', status: 'Done', assignee: 'Forrest', due_date: '2026-03-05', description: 'Create mood boards exploring three visual directions for the brand refresh.' },
-            { id: 'de2', title: 'Logo Concepts', priority: 'High', status: 'In Progress', assignee: 'Isaac', due_date: '2026-03-25', description: 'Develop 4-6 logo concept variations based on the approved mood board direction.' },
-            { id: 'de3', title: 'Typography Selection', priority: 'Low', status: 'Todo', assignee: 'Jez', due_date: '2026-04-01', description: 'Select primary and secondary typefaces that align with the new brand identity.' },
-            { id: 'de4', title: 'Color Palette Exploration', priority: 'Medium', status: 'Review', assignee: 'Matthew', due_date: '2026-04-10', description: 'Define primary, secondary, and accent color palettes with accessibility compliance.' },
-            { id: 'de5', title: 'Brand Guidelines Draft', priority: 'High', status: 'Todo', assignee: 'Ashley', due_date: '2026-04-20', description: 'Draft the initial brand guidelines document covering logo usage, colors, and typography.' },
-        ],
-    },
-    {
-        name: 'Production',
-        tasks: [
-            { id: 'p1', title: 'Asset Export for Web', priority: 'Medium', status: 'In Progress', assignee: 'Forrest', due_date: '2026-05-01', description: 'Export all finalized brand assets in web-optimized formats (SVG, PNG, WebP).' },
-            { id: 'p2', title: 'Print Collateral Layout', priority: 'High', status: 'Todo', assignee: 'Isaac', due_date: '2026-05-10', description: 'Design business cards, letterheads, and envelope templates using the new brand system.' },
-            { id: 'p3', title: 'Social Media Templates', priority: 'Low', status: 'Done', assignee: 'Jez', due_date: '2026-04-28', description: 'Create reusable social media post templates for Instagram, Twitter, and LinkedIn.' },
-        ],
-    },
-    {
-        name: 'Review',
-        tasks: [
-            { id: 'r1', title: 'Internal Design Review', priority: 'High', status: 'Review', assignee: 'Matthew', due_date: '2026-05-20', description: 'Present all deliverables to the internal team for feedback and approval.' },
-            { id: 'r2', title: 'Client Presentation Prep', priority: 'Medium', status: 'In Progress', assignee: 'Ashley', due_date: '2026-06-01', description: 'Prepare the client-facing presentation deck showcasing the brand refresh.' },
-            { id: 'r3', title: 'Final Revisions', priority: 'High', status: 'Todo', assignee: 'Forrest', due_date: '2026-06-15', description: 'Incorporate client feedback and finalize all brand assets and documentation.' },
-            { id: 'r4', title: 'Deliverables Handoff', priority: 'Low', status: 'Todo', assignee: 'Isaac', due_date: '2026-06-25', description: 'Package and hand off all final files, guidelines, and asset libraries to the client.' },
-        ],
-    },
-];
 
 
 // Column background colors (cycle if > 4)
@@ -88,19 +79,24 @@ const COLUMN_COLORS = [
     'rgba(149, 255, 218, 0.8)',
 ];
 
-// Priority badge colors
-const PRIORITY_STYLES: Record<Task['priority'], { bg: string; text: string }> = {
-    High:   { bg: '#FF0000', text: 'white' },
-    Medium: { bg: '#FFF631', text: 'black' },
-    Low:    { bg: '#28CC95', text: 'white' },
+// Priority badge colors (keyed by API integer values)
+const PRIORITY_STYLES: Record<number, { label: string; bg: string; text: string }> = {
+    1: { label: 'High',   bg: '#FF0000', text: 'white' },
+    2: { label: 'Medium', bg: '#FFF631', text: 'black' },
+    3: { label: 'Low',    bg: '#28CC95', text: 'white' },
 };
+const DEFAULT_PRIORITY = { label: 'N/A', bg: '#9CA3AF', text: 'white' };
+const get_priority = (p: number | null) => PRIORITY_STYLES[p ?? 0] ?? DEFAULT_PRIORITY;
 
-const STATUS_STYLES: Record<Task['status'], { bg: string; text: string }> = {
-    'Todo':        { bg: '#9CA3AF', text: 'white' },
-    'In Progress': { bg: '#3B82F6', text: 'white' },
-    'Review':      { bg: '#8B5CF6', text: 'white' },
-    'Done':        { bg: '#22C55E', text: 'white' },
+// Task status styles (keyed by API string values)
+const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }> = {
+    'todo':        { label: 'Todo',        bg: '#9CA3AF', text: 'white' },
+    'in_progress': { label: 'In Progress', bg: '#3B82F6', text: 'white' },
+    'review':      { label: 'Review',      bg: '#8B5CF6', text: 'white' },
+    'done':        { label: 'Done',        bg: '#22C55E', text: 'white' },
 };
+const DEFAULT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white' };
+const get_status = (s: string | null) => STATUS_STYLES[s ?? ''] ?? DEFAULT_STATUS;
 
 
 // Helpers
@@ -117,16 +113,251 @@ const COLUMN_COLORS_HOVER = [
 ];
 
 export default function ProjectDetailPage() {
+    const params = useParams();
+    const project_id = params.id as string;
+
+    const [project, set_project] = useState<Project | null>(null);
+    const [phases, set_phases] = useState<Phase[]>([]);
+    const [loading, set_loading] = useState(true);
     const [active_modal_phase, set_active_modal_phase] = useState<number | null>(null);
     const [add_task_hover, set_add_task_hover] = useState(false);
     const [detail_task, set_detail_task] = useState<{ task: Task; phase_index: number } | null>(null);
     const [detail_editing, set_detail_editing] = useState(false);
     const [save_hover, set_save_hover] = useState(false);
     const [edit_hover, set_edit_hover] = useState(false);
-    const [show_edit_project, set_show_edit_project] = useState(false);
-    const [edit_project_save_hover, set_edit_project_save_hover] = useState(false);
-    const [show_delete_confirm, set_show_delete_confirm] = useState(false);
-    const [delete_hover, set_delete_hover] = useState(false);
+    const [delete_task_hover, set_delete_task_hover] = useState(false);
+    const [confirm_delete_task, set_confirm_delete_task] = useState(false);
+    const [confirm_delete_hover, set_confirm_delete_hover] = useState(false);
+    const [users_list, set_users_list] = useState<User[]>([]);
+    const [submitting, set_submitting] = useState(false);
+    const [task_form, set_task_form] = useState({
+        title: '', priority: '', status: '', due_date: '', description: '', assignees: [] as string[],
+    });
+    const [edit_task_form, set_edit_task_form] = useState({
+        title: '', priority: '', status: '', due_date: '', description: '', assignees: [] as string[],
+    });
+
+    useEffect(() => {
+        async function load() {
+            try {
+                // Fetch project details from the list endpoint
+                const projRes = await fetch('http://localhost:3001/projects', { credentials: 'include' });
+                const projJson = await projRes.json();
+                const proj = (projJson.items as Project[]).find(p => p.project_id === project_id) ?? null;
+                set_project(proj);
+
+                // Fetch phases
+                const phasesRes = await fetch(`http://localhost:3001/projects/${project_id}/phases`, { credentials: 'include' });
+                const phasesJson = await phasesRes.json();
+                const apiPhases = phasesJson.items as { phase_id: string; project_id: string; name: string; order_index: number; assignee_id: string | null; assignee_name: string | null }[];
+
+                // Fetch tasks for each phase in parallel
+                const phasesWithTasks: Phase[] = await Promise.all(
+                    apiPhases.map(async (ph) => {
+                        const tasksRes = await fetch(`http://localhost:3001/phases/${ph.phase_id}/tasks`, { credentials: 'include' });
+                        const tasksJson = await tasksRes.json();
+                        return {
+                            phase_id: ph.phase_id,
+                            name: ph.name,
+                            tasks: tasksJson.items as Task[],
+                        };
+                    })
+                );
+
+                set_phases(phasesWithTasks);
+            } catch (err) {
+                console.error('Failed to load project data:', err);
+            } finally {
+                set_loading(false);
+            }
+        }
+        load();
+    }, [project_id]);
+
+    // Fetch users for assignee dropdowns
+    useEffect(() => {
+        const fetch_users = async () => {
+            try {
+                const res = await fetch('http://localhost:3001/users', { credentials: 'include' });
+                const json = await res.json();
+                set_users_list(json.items ?? []);
+            } catch (err) {
+                console.error('Failed to fetch users:', err);
+            }
+        };
+        fetch_users();
+    }, []);
+
+    // Reset create form when Add Task modal opens
+    useEffect(() => {
+        if (active_modal_phase !== null) {
+            set_task_form({ title: '', priority: '', status: '', due_date: '', description: '', assignees: [] });
+        }
+    }, [active_modal_phase]);
+
+    // Populate edit form when entering edit mode
+    useEffect(() => {
+        if (detail_editing && detail_task) {
+            const t = detail_task.task;
+            set_edit_task_form({
+                title: t.title ?? '',
+                priority: t.priority != null ? String(t.priority) : '',
+                status: t.status ?? 'todo',
+                due_date: t.due_date ? t.due_date.slice(0, 10) : '',
+                description: t.description ?? '',
+                assignees: t.assignees ?? [],
+            });
+        }
+    }, [detail_editing, detail_task]);
+
+    const update_task_form = (field: string, value: string | string[]) =>
+        set_task_form(prev => ({ ...prev, [field]: value }));
+
+    const update_edit_task_form = (field: string, value: string | string[]) =>
+        set_edit_task_form(prev => ({ ...prev, [field]: value }));
+
+    const handle_create_task = async (phase_index: number) => {
+        if (!task_form.title.trim()) {
+            alert('Task title is required.');
+            return;
+        }
+        const phase = phases[phase_index];
+        set_submitting(true);
+        try {
+            const body: Record<string, unknown> = {
+                title: task_form.title,
+                project_id: project_id,
+            };
+            if (task_form.description) body.description = task_form.description;
+            if (task_form.priority) body.priority = Number(task_form.priority);
+            if (task_form.status) body.status = task_form.status;
+            if (task_form.due_date) body.due_date = task_form.due_date;
+            if (task_form.assignees.length > 0) {
+                body.assignees = task_form.assignees;
+                body.assigned_to = task_form.assignees[0];
+            }
+
+            const res = await fetch(`http://localhost:3001/phases/${phase.phase_id}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            set_phases(prev => prev.map((p, i) =>
+                i === phase_index ? { ...p, tasks: [...p.tasks, json.item] } : p
+            ));
+            set_active_modal_phase(null);
+            set_add_task_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to create task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_edit_task = async () => {
+        if (!detail_task) return;
+        const t = detail_task.task;
+        set_submitting(true);
+        try {
+            const changed: Record<string, unknown> = {};
+            if (edit_task_form.title !== (t.title ?? '')) changed.title = edit_task_form.title;
+            if (edit_task_form.description !== (t.description ?? '')) changed.description = edit_task_form.description;
+            const orig_priority = t.priority != null ? String(t.priority) : '';
+            if (edit_task_form.priority !== orig_priority) changed.priority = edit_task_form.priority ? Number(edit_task_form.priority) : null;
+            if (edit_task_form.status !== (t.status ?? 'todo')) changed.status = edit_task_form.status;
+            const orig_due = t.due_date ? t.due_date.slice(0, 10) : '';
+            if (edit_task_form.due_date !== orig_due) changed.due_date = edit_task_form.due_date || null;
+            const orig_assignees = JSON.stringify(t.assignees ?? []);
+            if (JSON.stringify(edit_task_form.assignees) !== orig_assignees) {
+                changed.assignees = edit_task_form.assignees;
+                changed.assigned_to = edit_task_form.assignees.length > 0 ? edit_task_form.assignees[0] : null;
+            }
+
+            if (Object.keys(changed).length === 0) {
+                set_detail_task(null);
+                set_detail_editing(false);
+                set_save_hover(false);
+                return;
+            }
+
+            const res = await fetch(`http://localhost:3001/tasks/${t.task_id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(changed),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            const updated_task: Task = json.item;
+            set_phases(prev => prev.map(p => ({
+                ...p,
+                tasks: p.tasks.map(tk => tk.task_id === t.task_id ? updated_task : tk),
+            })));
+            set_detail_task(null);
+            set_detail_editing(false);
+            set_save_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to update task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_delete_task = async () => {
+        if (!detail_task) return;
+        const { task, phase_index } = detail_task;
+        set_submitting(true);
+        try {
+            const res = await fetch(`http://localhost:3001/tasks/${task.task_id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            set_phases(prev => prev.map((phase, i) =>
+                i === phase_index
+                    ? { ...phase, tasks: phase.tasks.filter(t => t.task_id !== task.task_id) }
+                    : phase
+            ));
+            set_confirm_delete_task(false);
+            set_confirm_delete_hover(false);
+            set_detail_task(null);
+            set_detail_editing(false);
+            set_delete_task_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to delete task: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const on_drag_end = useCallback((result: DropResult) => {
+        const { source, destination } = result;
+        if (!destination) return;
+        if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+        set_phases(prev => {
+            const next = prev.map(p => ({ ...p, tasks: [...p.tasks] }));
+            const src_col = next[Number(source.droppableId)];
+            const dst_col = next[Number(destination.droppableId)];
+            const [moved] = src_col.tasks.splice(source.index, 1);
+            dst_col.tasks.splice(destination.index, 0, moved);
+
+            // Persist phase change to the backend
+            if (source.droppableId !== destination.droppableId) {
+                const new_phase_id = dst_col.phase_id;
+                fetch(`http://localhost:3001/tasks/${moved.task_id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ phase_id: new_phase_id }),
+                }).catch(err => console.error('Failed to update task phase:', err));
+            }
+
+            return next;
+        });
+    }, []);
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -142,6 +373,15 @@ export default function ProjectDetailPage() {
                 gap: '24px',
                 overflowX: 'hidden',
             }}>
+                {loading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                        <span style={{ fontSize: 16, color: '#999', fontFamily: 'Poppins' }}>Loading project...</span>
+                    </div>
+                ) : !project ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+                        <span style={{ fontSize: 16, color: '#999', fontFamily: 'Poppins' }}>Project not found.</span>
+                    </div>
+                ) : (<>
                 {/* Page Header */}
                 <div style={{
                     display: 'flex',
@@ -169,12 +409,12 @@ export default function ProjectDetailPage() {
                             color: 'black',
                             margin: 0,
                         }}>
-                            {PROJECT_NAME}
+                            {project.name}
                         </h1>
 
                         <span style={{
-                            background: '#FFAC80',
-                            color: 'black',
+                            background: get_project_status_display(project.status ?? '').bg,
+                            color: get_project_status_display(project.status ?? '').text,
                             padding: '6px 20px',
                             borderRadius: '20px',
                             fontSize: 14,
@@ -182,36 +422,20 @@ export default function ProjectDetailPage() {
                             fontFamily: 'Poppins',
                             whiteSpace: 'nowrap',
                         }}>
-                            {PROJECT_STATUS}
+                            {get_project_status_display(project.status ?? '').label}
                         </span>
 
-                        <button
-                            onClick={() => set_show_edit_project(true)}
-                            style={{
-                                background: '#FF5900',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                padding: '8px 20px',
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                transition: 'background 0.2s ease',
-                            }}>
-                            Edit
-                        </button>
                     </div>
 
                     {/* Line 2: Project details inline */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
                         {[
-                            { label: 'Vendor', value: PROJECT_DETAILS.vendor },
-                            { label: 'Owner', value: PROJECT_DETAILS.owner },
-                            { label: 'Service Type', value: PROJECT_DETAILS.service_type },
-                            { label: 'Start Date', value: format_date(PROJECT_DETAILS.start_date) },
-                            { label: 'End Date', value: format_date(PROJECT_DETAILS.end_date) },
-                            { label: 'Budget', value: format_currency(PROJECT_DETAILS.budget) },
+                            { label: 'Contact', value: project.client_name ?? 'N/A' },
+                            { label: 'Owner', value: project.owner_name ?? 'Unassigned' },
+                            { label: 'Service Type', value: project.service_type ?? 'N/A' },
+                            { label: 'Start Date', value: project.start_date ? format_date(project.start_date) : 'N/A' },
+                            { label: 'End Date', value: project.end_date ? format_date(project.end_date) : 'N/A' },
+                            { label: 'Budget', value: project.budget != null ? format_currency(project.budget) : 'N/A' },
                         ].map(item => (
                             <div key={item.label} style={{ display: 'flex', flexDirection: 'column' }}>
                                 <span style={{ fontSize: 10, color: '#999', fontFamily: 'Poppins', fontWeight: '500' }}>
@@ -232,21 +456,21 @@ export default function ProjectDetailPage() {
                         margin: '-4px 0 0 0',
                         lineHeight: 1.4,
                     }}>
-                        {PROJECT_DETAILS.description}
+                        {project.description ?? ''}
                     </p>
                 </div>
 
                 {/* Kanban Board */}
+                <DragDropContext onDragEnd={on_drag_end}>
                 <div style={{
                     display: 'flex',
                     gap: '20px',
                     overflowX: 'auto',
                     flex: 1,
                     alignItems: 'flex-start',
-                    justifyContent: 'center',
                     paddingBottom: '10px',
                 }}>
-                    {PHASES.map((phase, index) => {
+                    {phases.map((phase, index) => {
                         const col_color = COLUMN_COLORS[index % COLUMN_COLORS.length];
                         return (
                             <div key={phase.name} style={{
@@ -254,8 +478,8 @@ export default function ProjectDetailPage() {
                                 borderRadius: '20px',
                                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
                                 padding: '18px',
-                                minWidth: '250px',
-                                flex: 1,
+                                minWidth: '280px',
+                                flex: '1 0 280px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '10px',
@@ -300,119 +524,170 @@ export default function ProjectDetailPage() {
                                 </span>
 
                                 {/* Task Cards */}
-                                {phase.tasks.map(task => {
-                                    const pstyle = PRIORITY_STYLES[task.priority];
-                                    const sstyle = STATUS_STYLES[task.status];
-                                    return (
+                                <Droppable droppableId={String(index)}>
+                                    {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
                                         <div
-                                            key={task.id}
-                                            onClick={() => set_detail_task({ task, phase_index: index })}
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
                                             style={{
-                                                background: 'white',
-                                                borderRadius: '20px',
-                                                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
-                                                padding: '18px 20px 20px 20px',
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 gap: '10px',
-                                                cursor: 'pointer',
+                                                minHeight: '40px',
+                                                borderRadius: '12px',
+                                                padding: snapshot.isDraggingOver ? '6px' : '0px',
+                                                background: snapshot.isDraggingOver ? 'rgba(255,255,255,0.35)' : 'transparent',
+                                                border: snapshot.isDraggingOver ? '2px dashed rgba(0,0,0,0.15)' : '2px dashed transparent',
+                                                transition: 'background 200ms ease, border 200ms ease, padding 200ms ease',
                                             }}>
-                                            {/* Title + Priority */}
-                                            <div style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'flex-start',
-                                                gap: '8px',
-                                            }}>
-                                                <span style={{
-                                                    fontSize: 14,
-                                                    fontWeight: '500',
-                                                    fontFamily: 'Poppins',
-                                                    color: 'black',
-                                                    flex: 1,
-                                                }}>
-                                                    {task.title}
-                                                </span>
-                                                <span style={{
-                                                    background: pstyle.bg,
-                                                    color: pstyle.text,
-                                                    padding: '3px 12px',
-                                                    borderRadius: '12px',
-                                                    fontSize: 11,
-                                                    fontWeight: '600',
-                                                    fontFamily: 'Poppins',
-                                                    whiteSpace: 'nowrap',
-                                                }}>
-                                                    {task.priority}
-                                                </span>
-                                            </div>
+                                            {[...phase.tasks]
+                                                .map((task, original_index) => ({ task, original_index }))
+                                                .sort((a, b) => {
+                                                    if (a.task.status === 'done' && b.task.status !== 'done') return 1;
+                                                    if (a.task.status !== 'done' && b.task.status === 'done') return -1;
+                                                    return 0;
+                                                })
+                                                .map(({ task, original_index }) => {
+                                                const pstyle = get_priority(task.priority);
+                                                const sstyle = get_status(task.status);
+                                                const is_done = task.status === 'done';
+                                                const display_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
+                                                return (
+                                                    <Draggable key={task.task_id} draggableId={task.task_id} index={original_index}>
+                                                        {(drag_provided, drag_snapshot) => (
+                                                            <div
+                                                                ref={drag_provided.innerRef}
+                                                                {...drag_provided.draggableProps}
+                                                                {...drag_provided.dragHandleProps}
+                                                                onClick={() => set_detail_task({ task, phase_index: index })}
+                                                                style={{
+                                                                    background: is_done ? '#f0f0f0' : 'white',
+                                                                    borderRadius: '20px',
+                                                                    padding: '18px 20px 20px 20px',
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    gap: '10px',
+                                                                    cursor: 'pointer',
+                                                                    boxShadow: drag_snapshot.isDragging
+                                                                        ? '0 8px 20px rgba(0,0,0,0.18)'
+                                                                        : '0 2px 6px rgba(0,0,0,0.08)',
+                                                                    opacity: is_done ? 0.5 : (drag_snapshot.isDragging ? 0.95 : 1),
+                                                                    ...drag_provided.draggableProps.style,
+                                                                }}>
+                                                                {/* Title + Priority */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'flex-start',
+                                                                    gap: '8px',
+                                                                }}>
+                                                                    <span style={{
+                                                                        fontSize: 14,
+                                                                        fontWeight: '500',
+                                                                        fontFamily: 'Poppins',
+                                                                        color: is_done ? '#999' : 'black',
+                                                                        flex: 1,
+                                                                        textDecoration: is_done ? 'line-through' : 'none',
+                                                                    }}>
+                                                                        {task.title}
+                                                                    </span>
+                                                                    <span style={{
+                                                                        background: pstyle.bg,
+                                                                        color: pstyle.text,
+                                                                        padding: '3px 12px',
+                                                                        borderRadius: '12px',
+                                                                        fontSize: 11,
+                                                                        fontWeight: '600',
+                                                                        fontFamily: 'Poppins',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}>
+                                                                        {pstyle.label}
+                                                                    </span>
+                                                                </div>
 
-                                            {/* Assignee */}
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{
-                                                    width: 26,
-                                                    height: 26,
-                                                    borderRadius: '50%',
-                                                    background: '#999',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'white',
-                                                    fontSize: 11,
-                                                    fontWeight: '600',
-                                                    fontFamily: 'Poppins',
-                                                    flexShrink: 0,
-                                                }}>
-                                                    {get_initials(task.assignee)}
-                                                </div>
-                                                <span style={{
-                                                    fontSize: 12,
-                                                    color: '#666',
-                                                    fontFamily: 'Poppins',
-                                                }}>
-                                                    {task.assignee}
-                                                </span>
-                                            </div>
+                                                                {/* Assignees */}
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                        {display_names.map((name, ai) => (
+                                                                            <div key={ai} style={{
+                                                                                width: 26,
+                                                                                height: 26,
+                                                                                borderRadius: '50%',
+                                                                                background: '#999',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                color: 'white',
+                                                                                fontSize: 11,
+                                                                                fontWeight: '600',
+                                                                                fontFamily: 'Poppins',
+                                                                                flexShrink: 0,
+                                                                                marginLeft: ai > 0 ? '-8px' : '0px',
+                                                                                border: '2px solid white',
+                                                                                boxSizing: 'content-box',
+                                                                                zIndex: display_names.length - ai,
+                                                                                position: 'relative',
+                                                                            }}>
+                                                                                {get_initials(name)}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                    <span style={{
+                                                                        fontSize: 12,
+                                                                        color: '#666',
+                                                                        fontFamily: 'Poppins',
+                                                                    }}>
+                                                                        {display_names.length > 0 ? display_names.join(', ') : 'Unassigned'}
+                                                                    </span>
+                                                                </div>
 
-                                            {/* Due Date + Status */}
-                                            <div style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                            }}>
-                                                <span style={{
-                                                    fontSize: 11,
-                                                    color: '#999',
-                                                    fontFamily: 'Poppins',
-                                                }}>
-                                                    {format_date(task.due_date)}
-                                                </span>
-                                                <span style={{
-                                                    background: sstyle.bg,
-                                                    color: sstyle.text,
-                                                    padding: '2px 10px',
-                                                    borderRadius: '10px',
-                                                    fontSize: 10,
-                                                    fontWeight: '600',
-                                                    fontFamily: 'Poppins',
-                                                    whiteSpace: 'nowrap',
-                                                }}>
-                                                    {task.status}
-                                                </span>
-                                            </div>
+                                                                {/* Due Date + Status */}
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center',
+                                                                }}>
+                                                                    <span style={{
+                                                                        fontSize: 11,
+                                                                        color: '#999',
+                                                                        fontFamily: 'Poppins',
+                                                                    }}>
+                                                                        {task.due_date ? format_date(task.due_date) : 'No date'}
+                                                                    </span>
+                                                                    <span style={{
+                                                                        background: sstyle.bg,
+                                                                        color: sstyle.text,
+                                                                        padding: '2px 10px',
+                                                                        borderRadius: '10px',
+                                                                        fontSize: 10,
+                                                                        fontWeight: '600',
+                                                                        fontFamily: 'Poppins',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}>
+                                                                        {sstyle.label}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                );
+                                            })}
+                                            {provided.placeholder}
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                </Droppable>
                             </div>
                         );
                     })}
                 </div>
+                </DragDropContext>
+                </>)}
             </div>
 
             {/* Add Task Modal */}
             {active_modal_phase !== null && (() => {
                 const phase_index = active_modal_phase;
-                const phase_name = PHASES[phase_index].name;
+                const phase_name = phases[phase_index].name;
                 const accent = COLUMN_COLORS[phase_index % COLUMN_COLORS.length];
                 const accent_hover = COLUMN_COLORS_HOVER[phase_index % COLUMN_COLORS_HOVER.length];
                 return (
@@ -483,7 +758,7 @@ export default function ProjectDetailPage() {
                                 {/* Row 1: Task Title */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Task Title</label>
-                                    <input type="text" placeholder="Enter task title" style={{
+                                    <input type="text" placeholder="Enter task title" value={task_form.title} onChange={(e) => update_task_form('title', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -493,11 +768,11 @@ export default function ProjectDetailPage() {
                                     }} />
                                 </div>
 
-                                {/* Row 2: Assignee + Priority */}
+                                {/* Row 2: Assignees + Priority */}
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                        <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Assignee</label>
-                                        <select style={{
+                                        <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Assignees</label>
+                                        <select multiple value={task_form.assignees} onChange={(e) => update_task_form('assignees', Array.from(e.target.selectedOptions, o => o.value))} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -506,18 +781,14 @@ export default function ProjectDetailPage() {
                                             color: '#666',
                                             background: 'white',
                                             cursor: 'pointer',
+                                            minHeight: '80px',
                                         }}>
-                                            <option value="">Select assignee</option>
-                                            <option>Isaac</option>
-                                            <option>Jez</option>
-                                            <option>Matthew</option>
-                                            <option>Forrest</option>
-                                            <option>Ashley</option>
+                                            {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
                                         </select>
                                     </div>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Priority</label>
-                                        <select style={{
+                                        <select value={task_form.priority} onChange={(e) => update_task_form('priority', e.target.value)} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -528,9 +799,9 @@ export default function ProjectDetailPage() {
                                             cursor: 'pointer',
                                         }}>
                                             <option value="">Select priority</option>
-                                            <option>High</option>
-                                            <option>Medium</option>
-                                            <option>Low</option>
+                                            <option value="1">High</option>
+                                            <option value="2">Medium</option>
+                                            <option value="3">Low</option>
                                         </select>
                                     </div>
                                 </div>
@@ -539,7 +810,7 @@ export default function ProjectDetailPage() {
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
-                                        <select style={{
+                                        <select value={task_form.status} onChange={(e) => update_task_form('status', e.target.value)} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -550,15 +821,15 @@ export default function ProjectDetailPage() {
                                             cursor: 'pointer',
                                         }}>
                                             <option value="">Select status</option>
-                                            <option>Todo</option>
-                                            <option>In Progress</option>
-                                            <option>Review</option>
-                                            <option>Done</option>
+                                            <option value="todo">Todo</option>
+                                            <option value="in_progress">In Progress</option>
+                                            <option value="review">Review</option>
+                                            <option value="done">Done</option>
                                         </select>
                                     </div>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Due Date</label>
-                                        <input type="date" style={{
+                                        <input type="date" value={task_form.due_date} onChange={(e) => update_task_form('due_date', e.target.value)} style={{
                                             padding: '10px 14px',
                                             borderRadius: '12px',
                                             border: '1px solid #ddd',
@@ -572,7 +843,7 @@ export default function ProjectDetailPage() {
                                 {/* Row 4: Description */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
-                                    <textarea placeholder="Describe the task..." rows={3} style={{
+                                    <textarea placeholder="Describe the task..." rows={3} value={task_form.description} onChange={(e) => update_task_form('description', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -606,7 +877,8 @@ export default function ProjectDetailPage() {
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={() => { set_active_modal_phase(null); set_add_task_hover(false); }}
+                                        onClick={() => handle_create_task(phase_index)}
+                                        disabled={submitting}
                                         onMouseEnter={() => set_add_task_hover(true)}
                                         onMouseLeave={() => set_add_task_hover(false)}
                                         style={{
@@ -618,10 +890,11 @@ export default function ProjectDetailPage() {
                                             fontSize: 14,
                                             fontFamily: 'Poppins',
                                             fontWeight: '600',
-                                            cursor: 'pointer',
+                                            cursor: submitting ? 'not-allowed' : 'pointer',
                                             transition: 'background 0.2s ease',
+                                            opacity: submitting ? 0.7 : 1,
                                         }}>
-                                        Add Task
+                                        {submitting ? 'Adding...' : 'Add Task'}
                                     </button>
                                 </div>
                             </div>
@@ -635,10 +908,11 @@ export default function ProjectDetailPage() {
                 const { task, phase_index } = detail_task;
                 const accent = COLUMN_COLORS[phase_index % COLUMN_COLORS.length];
                 const accent_hover = COLUMN_COLORS_HOVER[phase_index % COLUMN_COLORS_HOVER.length];
-                const pstyle = PRIORITY_STYLES[task.priority];
-                const sstyle = STATUS_STYLES[task.status];
+                const pstyle = get_priority(task.priority);
+                const sstyle = get_status(task.status);
+                const detail_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
 
-                const close_modal = () => { set_detail_task(null); set_detail_editing(false); set_save_hover(false); set_edit_hover(false); };
+                const close_modal = () => { set_detail_task(null); set_detail_editing(false); set_save_hover(false); set_edit_hover(false); set_delete_task_hover(false); set_confirm_delete_task(false); set_confirm_delete_hover(false); };
 
                 const label_style: React.CSSProperties = { fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' };
                 const input_style: React.CSSProperties = { padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' };
@@ -695,26 +969,23 @@ export default function ProjectDetailPage() {
                                         {/* Edit Mode */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <label style={label_style}>Task Title</label>
-                                            <input type="text" defaultValue={task.title} style={input_style} />
+                                            <input type="text" value={edit_task_form.title} onChange={(e) => update_edit_task_form('title', e.target.value)} style={input_style} />
                                         </div>
 
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <label style={label_style}>Assignee</label>
-                                                <select defaultValue={task.assignee} style={select_style}>
-                                                    <option>Isaac</option>
-                                                    <option>Jez</option>
-                                                    <option>Matthew</option>
-                                                    <option>Forrest</option>
-                                                    <option>Ashley</option>
+                                                <label style={label_style}>Assignees</label>
+                                                <select multiple value={edit_task_form.assignees} onChange={(e) => update_edit_task_form('assignees', Array.from(e.target.selectedOptions, o => o.value))} style={{ ...select_style, minHeight: '80px' }}>
+                                                    {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
                                                 </select>
                                             </div>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Priority</label>
-                                                <select defaultValue={task.priority} style={select_style}>
-                                                    <option>High</option>
-                                                    <option>Medium</option>
-                                                    <option>Low</option>
+                                                <select value={edit_task_form.priority} onChange={(e) => update_edit_task_form('priority', e.target.value)} style={select_style}>
+                                                    <option value="">Select priority</option>
+                                                    <option value="1">High</option>
+                                                    <option value="2">Medium</option>
+                                                    <option value="3">Low</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -722,47 +993,62 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Status</label>
-                                                <select defaultValue={task.status} style={select_style}>
-                                                    <option>Todo</option>
-                                                    <option>In Progress</option>
-                                                    <option>Review</option>
-                                                    <option>Done</option>
+                                                <select value={edit_task_form.status} onChange={(e) => update_edit_task_form('status', e.target.value)} style={select_style}>
+                                                    <option value="todo">Todo</option>
+                                                    <option value="in_progress">In Progress</option>
+                                                    <option value="review">Review</option>
+                                                    <option value="done">Done</option>
                                                 </select>
                                             </div>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Due Date</label>
-                                                <input type="date" defaultValue={task.due_date} style={{ ...input_style, color: '#666' }} />
+                                                <input type="date" value={edit_task_form.due_date} onChange={(e) => update_edit_task_form('due_date', e.target.value)} style={{ ...input_style, color: '#666' }} />
                                             </div>
                                         </div>
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <label style={label_style}>Description</label>
-                                            <textarea defaultValue={task.description} rows={3} style={{ ...input_style, resize: 'vertical' }} />
+                                            <textarea value={edit_task_form.description} onChange={(e) => update_edit_task_form('description', e.target.value)} rows={3} style={{ ...input_style, resize: 'vertical' }} />
                                         </div>
 
                                         {/* Edit Footer */}
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                                             <button
-                                                onClick={() => { set_detail_editing(false); set_save_hover(false); }}
+                                                onClick={() => set_confirm_delete_task(true)}
+                                                onMouseEnter={() => set_delete_task_hover(true)}
+                                                onMouseLeave={() => set_delete_task_hover(false)}
                                                 style={{
-                                                    background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                                    background: delete_task_hover ? '#FEE2E2' : 'none', border: '1px solid #DC2626', borderRadius: '12px',
                                                     padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
-                                                    color: '#666', cursor: 'pointer',
+                                                    color: '#DC2626', cursor: 'pointer', transition: 'background 0.2s ease',
                                                 }}>
-                                                Cancel
+                                                Delete
                                             </button>
-                                            <button
-                                                onClick={close_modal}
-                                                onMouseEnter={() => set_save_hover(true)}
-                                                onMouseLeave={() => set_save_hover(false)}
-                                                style={{
-                                                    background: save_hover ? '#e04e00' : '#FF5900',
-                                                    color: 'white', border: 'none', borderRadius: '12px',
-                                                    padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
-                                                    cursor: 'pointer', transition: 'background 0.2s ease',
-                                                }}>
-                                                Save
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button
+                                                    onClick={() => { set_detail_editing(false); set_save_hover(false); }}
+                                                    style={{
+                                                        background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                                        padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                                        color: '#666', cursor: 'pointer',
+                                                    }}>
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    onClick={handle_edit_task}
+                                                    disabled={submitting}
+                                                    onMouseEnter={() => set_save_hover(true)}
+                                                    onMouseLeave={() => set_save_hover(false)}
+                                                    style={{
+                                                        background: save_hover ? '#e04e00' : '#FF5900',
+                                                        color: 'white', border: 'none', borderRadius: '12px',
+                                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
+                                                        cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease',
+                                                        opacity: submitting ? 0.7 : 1,
+                                                    }}>
+                                                    {submitting ? 'Saving...' : 'Save'}
+                                                </button>
+                                            </div>
                                         </div>
                                     </>
                                 ) : (
@@ -775,30 +1061,39 @@ export default function ProjectDetailPage() {
                                                 padding: '3px 12px', borderRadius: '12px',
                                                 fontSize: 11, fontWeight: '600', fontFamily: 'Poppins',
                                             }}>
-                                                {task.priority}
+                                                {pstyle.label}
                                             </span>
                                             <span style={{
                                                 background: sstyle.bg, color: sstyle.text,
                                                 padding: '3px 12px', borderRadius: '12px',
                                                 fontSize: 11, fontWeight: '600', fontFamily: 'Poppins',
                                             }}>
-                                                {task.status}
+                                                {sstyle.label}
                                             </span>
                                         </div>
 
-                                        {/* Assignee */}
+                                        {/* Assignees */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span style={label_style}>Assignee</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{
-                                                    width: 28, height: 28, borderRadius: '50%', background: '#999',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: 'white', fontSize: 11, fontWeight: '600', fontFamily: 'Poppins', flexShrink: 0,
-                                                }}>
-                                                    {get_initials(task.assignee)}
+                                            <span style={label_style}>Assignees</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    {detail_names.map((name, ai) => (
+                                                        <div key={ai} style={{
+                                                            width: 28, height: 28, borderRadius: '50%', background: '#999',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            color: 'white', fontSize: 11, fontWeight: '600', fontFamily: 'Poppins', flexShrink: 0,
+                                                            marginLeft: ai > 0 ? '-8px' : '0px',
+                                                            border: '2px solid white',
+                                                            boxSizing: 'content-box',
+                                                            zIndex: detail_names.length - ai,
+                                                            position: 'relative',
+                                                        }}>
+                                                            {get_initials(name)}
+                                                        </div>
+                                                    ))}
                                                 </div>
                                                 <span style={{ fontSize: 14, color: 'black', fontFamily: 'Poppins', fontWeight: '500' }}>
-                                                    {task.assignee}
+                                                    {detail_names.length > 0 ? detail_names.join(', ') : 'Unassigned'}
                                                 </span>
                                             </div>
                                         </div>
@@ -807,7 +1102,7 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <span style={label_style}>Due Date</span>
                                             <span style={{ fontSize: 14, color: 'black', fontFamily: 'Poppins', fontWeight: '500' }}>
-                                                {format_date(task.due_date)}
+                                                {task.due_date ? format_date(task.due_date) : 'No date'}
                                             </span>
                                         </div>
 
@@ -815,12 +1110,23 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <span style={label_style}>Description</span>
                                             <p style={{ fontSize: 13, color: '#444', fontFamily: 'Poppins', margin: 0, lineHeight: 1.6 }}>
-                                                {task.description}
+                                                {task.description ?? 'No description.'}
                                             </p>
                                         </div>
 
                                         {/* Read-Only Footer */}
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                                            <button
+                                                onClick={() => set_confirm_delete_task(true)}
+                                                onMouseEnter={() => set_delete_task_hover(true)}
+                                                onMouseLeave={() => set_delete_task_hover(false)}
+                                                style={{
+                                                    background: delete_task_hover ? '#FEE2E2' : 'none', border: '1px solid #DC2626', borderRadius: '12px',
+                                                    padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                                    color: '#DC2626', cursor: 'pointer', transition: 'background 0.2s ease',
+                                                }}>
+                                                Delete
+                                            </button>
                                             <button
                                                 onClick={() => set_detail_editing(true)}
                                                 onMouseEnter={() => set_edit_hover(true)}
@@ -842,138 +1148,10 @@ export default function ProjectDetailPage() {
                 );
             })()}
 
-            {/* Edit Project Modal */}
-            {show_edit_project && (
+            {/* Delete Task Confirmation Modal */}
+            {confirm_delete_task && detail_task !== null && (
                 <div
-                    onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0, 0, 0, 0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 1000,
-                    }}>
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            background: 'white',
-                            borderRadius: '20px',
-                            width: '560px',
-                            maxHeight: '90vh',
-                            overflowY: 'auto',
-                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                        }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px 0 28px' }}>
-                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>Edit Project</h2>
-                            <button onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', padding: '0 4px', lineHeight: 1, fontFamily: 'Poppins' }}>&times;</button>
-                        </div>
-
-                        <div style={{ padding: '20px 28px 28px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
-                                <input type="text" defaultValue={PROJECT_NAME} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Vendor</label>
-                                    <select defaultValue={PROJECT_DETAILS.vendor} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Nike</option>
-                                        <option>Acme Corporation</option>
-                                        <option>Tech Solutions Inc</option>
-                                        <option>Digital Marketing Co</option>
-                                        <option>Startup Ventures</option>
-                                        <option>Creative Agency</option>
-                                    </select>
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <select defaultValue={PROJECT_DETAILS.owner} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Isaac</option>
-                                        <option>Jez</option>
-                                        <option>Matthew</option>
-                                        <option>Forrest</option>
-                                        <option>Ashley</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
-                                    <select defaultValue={PROJECT_DETAILS.service_type} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Design</option>
-                                        <option>Content</option>
-                                        <option>Branding</option>
-                                        <option>Research</option>
-                                    </select>
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
-                                    <select defaultValue={PROJECT_STATUS} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Open</option>
-                                        <option>In Progress</option>
-                                        <option>Completed</option>
-                                        <option>On Hold</option>
-                                        <option>Cancelled</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Start Date</label>
-                                    <input type="date" defaultValue={PROJECT_DETAILS.start_date} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
-                                    <input type="date" defaultValue={PROJECT_DETAILS.end_date} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Budget</label>
-                                <div style={{ position: 'relative' }}>
-                                    <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: 14, fontFamily: 'Poppins', color: '#888', pointerEvents: 'none' }}>$</span>
-                                    <input type="number" defaultValue={PROJECT_DETAILS.budget} style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', boxSizing: 'border-box' }} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
-                                <textarea defaultValue={PROJECT_DETAILS.description} rows={4} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', resize: 'vertical' }} />
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                                <button
-                                    onClick={() => set_show_delete_confirm(true)}
-                                    style={{ background: 'none', border: '1px solid #DC2626', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#DC2626', cursor: 'pointer' }}>
-                                    Delete Project
-                                </button>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <button onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
-                                    <button
-                                        onClick={() => { set_show_edit_project(false); set_edit_project_save_hover(false); }}
-                                        onMouseEnter={() => set_edit_project_save_hover(true)}
-                                        onMouseLeave={() => set_edit_project_save_hover(false)}
-                                        style={{ background: edit_project_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s ease' }}>
-                                        Save
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete Confirmation Modal */}
-            {show_delete_confirm && (
-                <div
-                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                    onClick={() => { set_confirm_delete_task(false); set_confirm_delete_hover(false); }}
                     style={{
                         position: 'fixed',
                         inset: 0,
@@ -994,37 +1172,28 @@ export default function ProjectDetailPage() {
                             flexDirection: 'column',
                             overflow: 'hidden',
                         }}>
-                        {/* Red accent stripe */}
                         <div style={{ height: '4px', background: '#DC2626', borderRadius: '20px 20px 0 0' }} />
-
                         <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
-                            {/* Warning icon */}
                             <div style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: '50%',
-                                background: '#FEE2E2',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                width: 48, height: 48, borderRadius: '50%', background: '#FEE2E2',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
                             }}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                    <line x1="12" y1="9" x2="12" y2="13" />
-                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    <line x1="10" y1="11" x2="10" y2="17" />
+                                    <line x1="14" y1="11" x2="14" y2="17" />
                                 </svg>
                             </div>
-
                             <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>
-                                Delete Project?
+                                Delete Task?
                             </h2>
                             <p style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins', margin: 0, lineHeight: 1.5 }}>
-                                Are you sure you want to delete this project? This action cannot be undone.
+                                Are you sure you want to delete this task? This action cannot be undone.
                             </p>
-
                             <div style={{ display: 'flex', gap: '12px', marginTop: '8px', width: '100%', justifyContent: 'center' }}>
                                 <button
-                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                                    onClick={() => { set_confirm_delete_task(false); set_confirm_delete_hover(false); }}
                                     style={{
                                         background: 'none', border: '1px solid #ddd', borderRadius: '12px',
                                         padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
@@ -1033,22 +1202,25 @@ export default function ProjectDetailPage() {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); set_show_edit_project(false); set_edit_project_save_hover(false); }}
-                                    onMouseEnter={() => set_delete_hover(true)}
-                                    onMouseLeave={() => set_delete_hover(false)}
+                                    onClick={handle_delete_task}
+                                    disabled={submitting}
+                                    onMouseEnter={() => set_confirm_delete_hover(true)}
+                                    onMouseLeave={() => set_confirm_delete_hover(false)}
                                     style={{
-                                        background: delete_hover ? '#B91C1C' : '#DC2626',
+                                        background: confirm_delete_hover ? '#B91C1C' : '#DC2626',
                                         color: 'white', border: 'none', borderRadius: '12px',
                                         padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
-                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                        cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease',
+                                        opacity: submitting ? 0.7 : 1,
                                     }}>
-                                    Delete
+                                    {submitting ? 'Deleting...' : 'Delete'}
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

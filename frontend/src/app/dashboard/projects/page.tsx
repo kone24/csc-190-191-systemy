@@ -1,48 +1,55 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 
 
-// MOCK DATA swap this array for API data later
 interface Project {
-    id: string;
-    title: string;
-    client: string;
-    status: 'Open' | 'In Progress' | 'On Hold' | 'Closed';
-    owner: string;
-    owner_avatar: string;
-    due_date: string;
+    project_id: string;
+    name: string;
+    status: string;
+    service_type: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    client_id: string | null;
+    client_name: string | null;
+    owner_id: string | null;
+    owner_name: string | null;
     task_count: number;
+    budget: number | null;
+    description: string | null;
 }
 
-const MOCK_PROJECTS: Project[] = [
-    { id: '1', title: 'Website Redesign', client: 'Some jit', status: 'In Progress', owner: 'Mario Gotez', owner_avatar: '', due_date: '2026-04-15', task_count: 12 },
-    { id: '2', title: 'Mobile App MVP', client: 'Tech Solutions Inc', status: 'Open', owner: 'Buyako Saka', owner_avatar: '', due_date: '2026-05-01', task_count: 8 },
-    { id: '3', title: 'Brand Identity Package', client: 'StartUp Ventures', status: 'On Hold', owner: 'Lamine Yamal', owner_avatar: '', due_date: '2026-03-30', task_count: 5 },
-    { id: '4', title: 'SEO Optimization', client: 'Digital Marketing Co', status: 'Closed', owner: 'Harry Kane', owner_avatar: '', due_date: '2026-02-28', task_count: 10 },
-    { id: '5', title: 'E-Commerce Platform', client: 'Global Systems Ltd', status: 'In Progress', owner: 'Alex Morgan', owner_avatar: '', due_date: '2026-06-10', task_count: 20 },
-    { id: '6', title: 'CRM Integration', client: 'Creative Agency', status: 'Open', owner: 'James dean', owner_avatar: '', due_date: '2026-04-20', task_count: 7 },
-    { id: '7', title: 'Annual Report Design', client: 'Acme Corporation', status: 'Closed', owner: 'Alex O', owner_avatar: '', due_date: '2026-01-31', task_count: 4 },
-    { id: '8', title: 'Data Migration', client: 'Tech Solutions Inc', status: 'On Hold', owner: 'Conan O\'Brien', owner_avatar: '', due_date: '2026-05-15', task_count: 15 },
-    { id: '9', title: 'Marketing Campaign Site', client: 'Digital Marketing Co', status: 'In Progress', owner: 'Arteta M', owner_avatar: '', due_date: '2026-04-05', task_count: 9 },
-];
+interface Client {
+    id: string;
+    first_name: string;
+    last_name: string;
+}
+
+interface User {
+    user_id: string;
+    name: string;
+}
 
 
-// Status badge + accent-line colors
-const STATUS_COLORS: Record<Project['status'], { bg: string; text: string; shadow: string }> = {
-    'Open':        { bg: 'rgba(91, 66, 255, 0.4)',  text: 'black', shadow: 'rgba(91, 66, 255, 0.6)'   },
-    'In Progress': { bg: '#FFAC80',                  text: 'black', shadow: 'rgba(255, 172, 128, 1.0)' },
-    'On Hold':     { bg: 'rgba(255, 246, 66, 0.32)', text: 'black', shadow: 'rgba(255, 246, 66, 0.6)'  },
-    'Closed':      { bg: '#00F5A0',                  text: 'black', shadow: 'rgba(0, 245, 160, 0.6)'   },
+// Maps API status values → display label + badge colors
+const STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
+    'open':        { label: 'On Track',   bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)'   },
+    'in_progress': { label: 'At Risk',    bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)'  },
+    'completed':   { label: 'Completed',  bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
+    'on_hold':     { label: 'On Hold',    bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)'    },
+    'cancelled':   { label: 'Cancelled',  bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
+    'behind':      { label: 'Behind',     bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
 };
 
-// Derive unique owners and clients from the mock data
-const OWNERS = Array.from(new Set(MOCK_PROJECTS.map(p => p.owner)));
-const CLIENTS = Array.from(new Set(MOCK_PROJECTS.map(p => p.client)));
+const DEFAULT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' };
+
+const get_status_display = (status: string) => STATUS_MAP[status] ?? DEFAULT_STATUS;
 
 export default function ProjectsPage() {
+    const [projects, set_projects] = useState<Project[]>([]);
+    const [loading, set_loading] = useState(true);
     const [search_query, set_search_query] = useState('');
     const [status_filter, set_status_filter] = useState('All');
     const [owner_filter, set_owner_filter] = useState('All');
@@ -54,26 +61,201 @@ export default function ProjectsPage() {
     const [edit_save_hover, set_edit_save_hover] = useState(false);
     const [show_delete_confirm, set_show_delete_confirm] = useState(false);
     const [delete_hover, set_delete_hover] = useState(false);
+    const [clients_list, set_clients_list] = useState<Client[]>([]);
+    const [users_list, set_users_list] = useState<User[]>([]);
+    const [submitting, set_submitting] = useState(false);
+    const [delete_project_id, set_delete_project_id] = useState<string | null>(null);
+    const [create_form, set_create_form] = useState({
+        name: '', client_id: '', owner_id: '', service_type: '', status: '',
+        start_date: '', end_date: '', budget: '', description: '',
+    });
+    const [edit_form, set_edit_form] = useState({
+        name: '', client_id: '', owner_id: '', service_type: '', status: '',
+        start_date: '', end_date: '', budget: '', description: '',
+    });
+
+    useEffect(() => {
+        const fetch_projects = async () => {
+            try {
+                const res = await fetch('http://localhost:3001/projects', { credentials: 'include' });
+                const json = await res.json();
+                set_projects(json.items ?? []);
+            } catch (err) {
+                console.error('Failed to fetch projects:', err);
+                set_projects([]);
+            } finally {
+                set_loading(false);
+            }
+        };
+        fetch_projects();
+    }, []);
+
+    // Fetch clients and users for dropdowns
+    useEffect(() => {
+        const fetch_options = async () => {
+            try {
+                const [clients_res, users_res] = await Promise.all([
+                    fetch('http://localhost:3001/clients', { credentials: 'include' }),
+                    fetch('http://localhost:3001/users', { credentials: 'include' }),
+                ]);
+                const clients_json = await clients_res.json();
+                const users_json = await users_res.json();
+                set_clients_list(Array.isArray(clients_json) ? clients_json : clients_json?.items ?? []);
+                set_users_list(Array.isArray(users_json) ? users_json : users_json?.items ?? []);
+            } catch (err) {
+                console.error('Failed to fetch clients/users:', err);
+            }
+        };
+        fetch_options();
+    }, []);
+
+    // Populate edit form when edit_project changes
+    useEffect(() => {
+        if (edit_project) {
+            set_edit_form({
+                name: edit_project.name ?? '',
+                client_id: edit_project.client_id ?? '',
+                owner_id: edit_project.owner_id ?? '',
+                service_type: edit_project.service_type ?? '',
+                status: edit_project.status ?? '',
+                start_date: edit_project.start_date ? edit_project.start_date.slice(0, 10) : '',
+                end_date: edit_project.end_date ? edit_project.end_date.slice(0, 10) : '',
+                budget: edit_project.budget != null ? String(edit_project.budget) : '',
+                description: edit_project.description ?? '',
+            });
+        }
+    }, [edit_project]);
+
+    const update_create = (field: string, value: string) =>
+        set_create_form(prev => ({ ...prev, [field]: value }));
+
+    const update_edit = (field: string, value: string) =>
+        set_edit_form(prev => ({ ...prev, [field]: value }));
+
+    const handle_create_submit = async () => {
+        if (!create_form.name.trim() || !create_form.client_id || !create_form.owner_id) {
+            alert('Project Name, Contact, and Owner are required.');
+            return;
+        }
+        set_submitting(true);
+        try {
+            const body: Record<string, unknown> = {
+                name: create_form.name,
+                client_id: create_form.client_id,
+                owner_id: create_form.owner_id,
+            };
+            if (create_form.service_type) body.service_type = create_form.service_type;
+            if (create_form.status) body.status = create_form.status;
+            if (create_form.start_date) body.start_date = create_form.start_date;
+            if (create_form.end_date) body.end_date = create_form.end_date;
+            if (create_form.budget) body.budget = Number(create_form.budget);
+            if (create_form.description) body.description = create_form.description;
+
+            const res = await fetch('http://localhost:3001/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            set_projects(prev => [...prev, json.item]);
+            set_show_modal(false);
+            set_create_form({ name: '', client_id: '', owner_id: '', service_type: '', status: '', start_date: '', end_date: '', budget: '', description: '' });
+        } catch (err: unknown) {
+            alert(`Failed to create project: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_edit_submit = async () => {
+        if (!edit_project) return;
+        set_submitting(true);
+        try {
+            const changed: Record<string, unknown> = {};
+            if (edit_form.name !== (edit_project.name ?? '')) changed.name = edit_form.name;
+            if (edit_form.client_id !== (edit_project.client_id ?? '')) changed.client_id = edit_form.client_id;
+            if (edit_form.owner_id !== (edit_project.owner_id ?? '')) changed.owner_id = edit_form.owner_id;
+            if (edit_form.service_type !== (edit_project.service_type ?? '')) changed.service_type = edit_form.service_type;
+            if (edit_form.status !== (edit_project.status ?? '')) changed.status = edit_form.status;
+            const orig_start = edit_project.start_date ? edit_project.start_date.slice(0, 10) : '';
+            if (edit_form.start_date !== orig_start) changed.start_date = edit_form.start_date;
+            const orig_end = edit_project.end_date ? edit_project.end_date.slice(0, 10) : '';
+            if (edit_form.end_date !== orig_end) changed.end_date = edit_form.end_date;
+            const orig_budget = edit_project.budget != null ? String(edit_project.budget) : '';
+            if (edit_form.budget !== orig_budget) changed.budget = edit_form.budget ? Number(edit_form.budget) : null;
+            if (edit_form.description !== (edit_project.description ?? '')) changed.description = edit_form.description;
+
+            if (Object.keys(changed).length === 0) {
+                set_edit_project(null);
+                return;
+            }
+
+            const res = await fetch(`http://localhost:3001/projects/${edit_project.project_id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(changed),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            set_projects(prev => prev.map(p => p.project_id === edit_project.project_id ? json.item : p));
+            set_edit_project(null);
+            set_edit_save_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to update project: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_delete_submit = async () => {
+        const target_id = delete_project_id ?? edit_project?.project_id;
+        if (!target_id) return;
+        set_submitting(true);
+        try {
+            const res = await fetch(`http://localhost:3001/projects/${target_id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            set_projects(prev => prev.filter(p => p.project_id !== target_id));
+            set_show_delete_confirm(false);
+            set_delete_project_id(null);
+            set_delete_hover(false);
+            set_edit_project(null);
+            set_edit_save_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to delete project: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    // Derive unique owners and clients from fetched data
+    const owners = useMemo(() => Array.from(new Set(projects.map(p => p.owner_name).filter(Boolean) as string[])), [projects]);
+    const clients = useMemo(() => Array.from(new Set(projects.map(p => p.client_name).filter(Boolean) as string[])), [projects]);
 
     const filtered_projects = useMemo(() => {
-        return MOCK_PROJECTS.filter(p => {
+        return projects.filter(p => {
             // Search
             if (search_query.trim()) {
                 const q = search_query.toLowerCase();
-                const matches = p.title.toLowerCase().includes(q)
-                    || p.client.toLowerCase().includes(q)
-                    || p.owner.toLowerCase().includes(q);
+                const matches = (p.name ?? '').toLowerCase().includes(q)
+                    || (p.client_name ?? '').toLowerCase().includes(q)
+                    || (p.owner_name ?? '').toLowerCase().includes(q);
                 if (!matches) return false;
             }
             // Status
             if (status_filter !== 'All' && p.status !== status_filter) return false;
             // Owner
-            if (owner_filter !== 'All' && p.owner !== owner_filter) return false;
+            if (owner_filter !== 'All' && p.owner_name !== owner_filter) return false;
             // Client
-            if (client_filter !== 'All' && p.client !== client_filter) return false;
+            if (client_filter !== 'All' && p.client_name !== client_filter) return false;
             return true;
         });
-    }, [search_query, status_filter, owner_filter, client_filter]);
+    }, [projects, search_query, status_filter, owner_filter, client_filter]);
 
     const format_date = (date_string: string) => {
         return new Date(date_string).toLocaleDateString('en-US', {
@@ -132,10 +314,11 @@ export default function ProjectsPage() {
                             style={select_style}
                         >
                             <option value="All">Status: All</option>
-                            <option value="Open">Open</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="On Hold">On Hold</option>
-                            <option value="Closed">Closed</option>
+                            <option value="open">On Track</option>
+                            <option value="in_progress">At Risk</option>
+                            <option value="completed">Completed</option>
+                            <option value="on_hold">On Hold</option>
+                            <option value="cancelled">Cancelled</option>
                         </select>
 
                         <select
@@ -144,7 +327,7 @@ export default function ProjectsPage() {
                             style={select_style}
                         >
                             <option value="All">Owner: All</option>
-                            {OWNERS.map(owner => (
+                            {owners.map(owner => (
                                 <option key={owner} value={owner}>{owner}</option>
                             ))}
                         </select>
@@ -154,8 +337,8 @@ export default function ProjectsPage() {
                             onChange={(e) => set_client_filter(e.target.value)}
                             style={select_style}
                         >
-                            <option value="All">Vendor: All</option>
-                            {CLIENTS.map(client => (
+                            <option value="All">Contact: All</option>
+                            {clients.map(client => (
                                 <option key={client} value={client}>{client}</option>
                             ))}
                         </select>
@@ -163,7 +346,7 @@ export default function ProjectsPage() {
 
                     {/* Right: Add New Project Button */}
                     <button
-                        onClick={() => set_show_modal(true)}
+                        onClick={() => { set_create_form({ name: '', client_id: '', owner_id: '', service_type: '', status: '', start_date: '', end_date: '', budget: '', description: '' }); set_show_modal(true); }}
                         style={{
                             background: '#FF5900',
                             color: 'white',
@@ -180,28 +363,55 @@ export default function ProjectsPage() {
                     </button>
                 </div>
 
+                {/* Loading State */}
+                {loading && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        color: '#999',
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                    }}>
+                        Loading projects...
+                    </div>
+                )}
+
+                {/* Empty state — no projects from API */}
+                {!loading && projects.length === 0 && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        color: '#999',
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                    }}>
+                        No projects yet. Click &quot;+ Add New Project&quot; to create one.
+                    </div>
+                )}
+
                 {/* Project Cards Grid */}
+                {!loading && projects.length > 0 && (
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                     gap: '20px',
                 }}>
                     {filtered_projects.map((project) => {
-                        const status_color = STATUS_COLORS[project.status];
+                        const status_display = get_status_display(project.status);
                         return (
                             <Link
-                                key={project.id}
-                                href={`/dashboard/projects/${project.id}`}
+                                key={project.project_id}
+                                href={`/dashboard/projects/${project.project_id}`}
                                 style={{ textDecoration: 'none', color: 'inherit' }}
                             >
                                 <div
-                                    onMouseEnter={() => set_hovered_card(project.id)}
+                                    onMouseEnter={() => set_hovered_card(project.project_id)}
                                     onMouseLeave={() => set_hovered_card(null)}
                                     style={{
                                         background: 'white',
                                         borderRadius: '15px',
-                                        boxShadow: hovered_card === project.id
-                                            ? `0px 4px 10px 0px ${status_color.shadow}`
+                                        boxShadow: hovered_card === project.project_id
+                                            ? `0px 4px 10px 0px ${status_display.shadow}`
                                             : '0px 4px 6px rgba(0, 0, 0, 0.1)',
                                         overflow: 'hidden',
                                         cursor: 'pointer',
@@ -213,7 +423,7 @@ export default function ProjectsPage() {
                                     {/* Top Section */}
                                     <div style={{ padding: '18px 18px 0 18px', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
                                         {/* Edit pencil + Delete trash icons — visible on card hover */}
-                                        {hovered_card === project.id && (
+                                        {hovered_card === project.project_id && (
                                             <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px', zIndex: 2 }}>
                                                 <button
                                                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_edit_project(project); }}
@@ -235,7 +445,7 @@ export default function ProjectsPage() {
                                                     </svg>
                                                 </button>
                                                 <button
-                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_show_delete_confirm(true); }}
+                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_delete_project_id(project.project_id); set_show_delete_confirm(true); }}
                                                     style={{
                                                         background: 'rgba(255,255,255,0.85)',
                                                         border: '1px solid #ddd',
@@ -274,11 +484,11 @@ export default function ProjectsPage() {
                                                 textOverflow: 'ellipsis',
                                                 whiteSpace: 'nowrap',
                                             }}>
-                                                {project.title}
+                                                {project.name}
                                             </h3>
                                             <span style={{
-                                                background: status_color.bg,
-                                                color: status_color.text,
+                                                background: status_display.bg,
+                                                color: status_display.text,
                                                 padding: '6px 20px',
                                                 borderRadius: '20px',
                                                 fontSize: 14,
@@ -286,7 +496,7 @@ export default function ProjectsPage() {
                                                 fontFamily: 'Poppins',
                                                 whiteSpace: 'nowrap',
                                             }}>
-                                                {project.status}
+                                                {status_display.label}
                                             </span>
                                         </div>
                                         <div style={{
@@ -298,14 +508,14 @@ export default function ProjectsPage() {
                                             textOverflow: 'ellipsis',
                                             whiteSpace: 'nowrap',
                                         }}>
-                                            {project.client}
+                                            {project.client_name ?? 'No contact'}
                                         </div>
                                     </div>
 
                                     {/* Status Accent Line */}
                                     <div style={{
                                         height: '3px',
-                                        background: status_color.bg,
+                                        background: status_display.bg,
                                         margin: '12px 18px 0 18px',
                                     }} />
 
@@ -331,7 +541,7 @@ export default function ProjectsPage() {
                                                 fontWeight: '600',
                                                 fontFamily: 'Poppins',
                                             }}>
-                                                {get_initials(project.owner)}
+                                                {get_initials(project.owner_name ?? '?')}
                                             </div>
                                             <span style={{
                                                 fontSize: 13,
@@ -343,7 +553,7 @@ export default function ProjectsPage() {
                                                 whiteSpace: 'nowrap',
                                                 maxWidth: '100px',
                                             }}>
-                                                {project.owner}
+                                                {project.owner_name ?? 'Unassigned'}
                                             </span>
                                         </div>
 
@@ -359,7 +569,7 @@ export default function ProjectsPage() {
                                                 color: '#999',
                                                 fontFamily: 'Poppins',
                                             }}>
-                                                Due {format_date(project.due_date)}
+                                                Due {project.end_date ? format_date(project.end_date) : 'N/A'}
                                             </span>
                                             <span style={{
                                                 fontSize: 12,
@@ -375,9 +585,10 @@ export default function ProjectsPage() {
                         );
                     })}
                 </div>
+                )}
 
-                {/* Empty state */}
-                {filtered_projects.length === 0 && (
+                {/* Filter empty state — projects exist but none match filters */}
+                {!loading && projects.length > 0 && filtered_projects.length === 0 && (
                     <div style={{
                         textAlign: 'center',
                         padding: '60px 20px',
@@ -452,7 +663,7 @@ export default function ProjectsPage() {
                             {/* Row 1: Project Name */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
-                                <input type="text" placeholder="Enter project name" style={{
+                                <input type="text" placeholder="Enter project name" value={create_form.name} onChange={(e) => update_create('name', e.target.value)} style={{
                                     padding: '10px 14px',
                                     borderRadius: '12px',
                                     border: '1px solid #ddd',
@@ -465,8 +676,8 @@ export default function ProjectsPage() {
                             {/* Row 2: Vendor + Owner */}
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Vendor</label>
-                                    <select style={{
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
+                                    <select value={create_form.client_id} onChange={(e) => update_create('client_id', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -476,18 +687,13 @@ export default function ProjectsPage() {
                                         background: 'white',
                                         cursor: 'pointer',
                                     }}>
-                                        <option value="">Select vendor</option>
-                                        <option>Nike</option>
-                                        <option>Acme Corporation</option>
-                                        <option>Tech Solutions Inc</option>
-                                        <option>Digital Marketing Co</option>
-                                        <option>Startup Ventures</option>
-                                        <option>Creative Agency</option>
+                                        <option value="">Select contact</option>
+                                        {clients_list.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
                                     </select>
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <select style={{
+                                    <select value={create_form.owner_id} onChange={(e) => update_create('owner_id', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -498,11 +704,7 @@ export default function ProjectsPage() {
                                         cursor: 'pointer',
                                     }}>
                                         <option value="">Select owner</option>
-                                        <option>Isaac</option>
-                                        <option>Jez</option>
-                                        <option>Matthew</option>
-                                        <option>Forrest</option>
-                                        <option>Ashley</option>
+                                        {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -511,26 +713,18 @@ export default function ProjectsPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
-                                    <select style={{
+                                    <input type="text" placeholder="Enter service type" value={create_form.service_type} onChange={(e) => update_create('service_type', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
                                         fontSize: 14,
                                         fontFamily: 'Poppins',
-                                        color: '#666',
-                                        background: 'white',
-                                        cursor: 'pointer',
-                                    }}>
-                                        <option value="">Select type</option>
-                                        <option>Design</option>
-                                        <option>Content</option>
-                                        <option>Branding</option>
-                                        <option>Research</option>
-                                    </select>
+                                        outline: 'none',
+                                    }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
-                                    <select style={{
+                                    <select value={create_form.status} onChange={(e) => update_create('status', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -541,11 +735,9 @@ export default function ProjectsPage() {
                                         cursor: 'pointer',
                                     }}>
                                         <option value="">Select status</option>
-                                        <option>Open</option>
-                                        <option>In Progress</option>
-                                        <option>Completed</option>
-                                        <option>On Hold</option>
-                                        <option>Cancelled</option>
+                                        <option value="open">On Track</option>
+                                        <option value="in_progress">At Risk</option>
+                                        <option value="behind">Behind</option>
                                     </select>
                                 </div>
                             </div>
@@ -554,7 +746,7 @@ export default function ProjectsPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Start Date</label>
-                                    <input type="date" style={{
+                                    <input type="date" value={create_form.start_date} onChange={(e) => update_create('start_date', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -565,7 +757,7 @@ export default function ProjectsPage() {
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
-                                    <input type="date" style={{
+                                    <input type="date" value={create_form.end_date} onChange={(e) => update_create('end_date', e.target.value)} style={{
                                         padding: '10px 14px',
                                         borderRadius: '12px',
                                         border: '1px solid #ddd',
@@ -590,7 +782,7 @@ export default function ProjectsPage() {
                                         color: '#888',
                                         pointerEvents: 'none',
                                     }}>$</span>
-                                    <input type="number" placeholder="0.00" style={{
+                                    <input type="number" placeholder="0.00" value={create_form.budget} onChange={(e) => update_create('budget', e.target.value)} style={{
                                         width: '100%',
                                         padding: '10px 14px 10px 28px',
                                         borderRadius: '12px',
@@ -606,7 +798,7 @@ export default function ProjectsPage() {
                             {/* Row 6: Description */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
-                                <textarea placeholder="Describe the project..." rows={4} style={{
+                                <textarea placeholder="Describe the project..." rows={4} value={create_form.description} onChange={(e) => update_create('description', e.target.value)} style={{
                                     padding: '10px 14px',
                                     borderRadius: '12px',
                                     border: '1px solid #ddd',
@@ -640,7 +832,8 @@ export default function ProjectsPage() {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => set_show_modal(false)}
+                                    onClick={handle_create_submit}
+                                    disabled={submitting}
                                     onMouseEnter={() => set_create_hover(true)}
                                     onMouseLeave={() => set_create_hover(false)}
                                     style={{
@@ -652,10 +845,11 @@ export default function ProjectsPage() {
                                         fontSize: 14,
                                         fontFamily: 'Poppins',
                                         fontWeight: '600',
-                                        cursor: 'pointer',
+                                        cursor: submitting ? 'not-allowed' : 'pointer',
                                         transition: 'background 0.2s ease',
+                                        opacity: submitting ? 0.7 : 1,
                                     }}>
-                                    Create Project
+                                    {submitting ? 'Creating...' : 'Create Project'}
                                 </button>
                             </div>
                         </div>
@@ -696,28 +890,22 @@ export default function ProjectsPage() {
                         <div style={{ padding: '20px 28px 28px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
-                                <input type="text" defaultValue={edit_project.title} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
+                                <input type="text" value={edit_form.name} onChange={(e) => update_edit('name', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Vendor</label>
-                                    <select defaultValue={edit_project.client} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Nike</option>
-                                        <option>Acme Corporation</option>
-                                        <option>Tech Solutions Inc</option>
-                                        <option>Digital Marketing Co</option>
-                                        <option>Startup Ventures</option>
-                                        <option>Creative Agency</option>
-                                        <option>Some jit</option>
-                                        <option>Global Systems Ltd</option>
-                                        <option>StartUp Ventures</option>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
+                                    <select value={edit_form.client_id} onChange={(e) => update_edit('client_id', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select contact</option>
+                                        {clients_list.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
                                     </select>
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <select defaultValue={edit_project.owner} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        {OWNERS.map(o => <option key={o}>{o}</option>)}
+                                    <select value={edit_form.owner_id} onChange={(e) => update_edit('owner_id', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select owner</option>
+                                        {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
                                     </select>
                                 </div>
                             </div>
@@ -725,21 +913,18 @@ export default function ProjectsPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
-                                    <select style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Design</option>
-                                        <option>Content</option>
-                                        <option>Branding</option>
-                                        <option>Research</option>
-                                    </select>
+                                    <input type="text" placeholder="Enter service type" value={edit_form.service_type} onChange={(e) => update_edit('service_type', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
-                                    <select defaultValue={edit_project.status} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option>Open</option>
-                                        <option>In Progress</option>
-                                        <option>Completed</option>
-                                        <option>On Hold</option>
-                                        <option>Cancelled</option>
+                                    <select value={edit_form.status} onChange={(e) => update_edit('status', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select status</option>
+                                        <option value="open">On Track</option>
+                                        <option value="in_progress">At Risk</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="on_hold">On Hold</option>
+                                        <option value="behind">Behind</option>
+                                        <option value="cancelled">Cancelled</option>
                                     </select>
                                 </div>
                             </div>
@@ -747,11 +932,11 @@ export default function ProjectsPage() {
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Start Date</label>
-                                    <input type="date" style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
+                                    <input type="date" value={edit_form.start_date} onChange={(e) => update_edit('start_date', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
-                                    <input type="date" defaultValue={edit_project.due_date} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
+                                    <input type="date" value={edit_form.end_date} onChange={(e) => update_edit('end_date', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
                                 </div>
                             </div>
 
@@ -759,29 +944,30 @@ export default function ProjectsPage() {
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Budget</label>
                                 <div style={{ position: 'relative' }}>
                                     <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: 14, fontFamily: 'Poppins', color: '#888', pointerEvents: 'none' }}>$</span>
-                                    <input type="number" placeholder="0.00" style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', boxSizing: 'border-box' }} />
+                                    <input type="number" placeholder="0.00" value={edit_form.budget} onChange={(e) => update_edit('budget', e.target.value)} style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', boxSizing: 'border-box' }} />
                                 </div>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
-                                <textarea placeholder="Describe the project..." rows={4} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', resize: 'vertical' }} />
+                                <textarea placeholder="Describe the project..." rows={4} value={edit_form.description} onChange={(e) => update_edit('description', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', resize: 'vertical' }} />
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
                                 <button
-                                    onClick={() => set_show_delete_confirm(true)}
+                                    onClick={() => { set_delete_project_id(edit_project.project_id); set_show_delete_confirm(true); }}
                                     style={{ background: 'none', border: '1px solid #DC2626', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#DC2626', cursor: 'pointer' }}>
                                     Delete Project
                                 </button>
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <button onClick={() => { set_edit_project(null); set_edit_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
                                     <button
-                                        onClick={() => { set_edit_project(null); set_edit_save_hover(false); }}
+                                        onClick={handle_edit_submit}
+                                        disabled={submitting}
                                         onMouseEnter={() => set_edit_save_hover(true)}
                                         onMouseLeave={() => set_edit_save_hover(false)}
-                                        style={{ background: edit_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: 'pointer', transition: 'background 0.2s ease' }}>
-                                        Save
+                                        style={{ background: edit_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease', opacity: submitting ? 0.7 : 1 }}>
+                                        {submitting ? 'Saving...' : 'Save'}
                                     </button>
                                 </div>
                             </div>
@@ -853,16 +1039,18 @@ export default function ProjectsPage() {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); set_edit_project(null); set_edit_save_hover(false); }}
+                                    onClick={handle_delete_submit}
+                                    disabled={submitting}
                                     onMouseEnter={() => set_delete_hover(true)}
                                     onMouseLeave={() => set_delete_hover(false)}
                                     style={{
                                         background: delete_hover ? '#B91C1C' : '#DC2626',
                                         color: 'white', border: 'none', borderRadius: '12px',
                                         padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
-                                        cursor: 'pointer', transition: 'background 0.2s ease',
+                                        cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease',
+                                        opacity: submitting ? 0.7 : 1,
                                     }}>
-                                    Delete
+                                    {submitting ? 'Deleting...' : 'Delete'}
                                 </button>
                             </div>
                         </div>

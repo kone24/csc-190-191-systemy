@@ -10,6 +10,7 @@ import { WebhookModule } from './webhook/webhook.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -25,6 +26,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ProjectsModule,
     WebhookModule,
     AnalyticsModule,
+    ProjectsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
