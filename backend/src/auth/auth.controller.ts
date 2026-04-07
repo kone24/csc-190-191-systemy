@@ -7,31 +7,6 @@ import { JwtAuthGuard } from './jwt.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
-  @Post('login')
-  async login(
-    @Body() body: { username: string; password: string },
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    console.log('login body:', body); // TEMP: see what we receive
-    const { username, password } = body ?? {};
-
-    const result = await this.authService.login(username, password);
-
-    if (result?.token) {
-      res.cookie('access_token', result.token, {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 1000 * 60 * 20, // 20 minutes
-        path: '/',
-      });
-      return { ok: true, user: result.user };
-    }
-
-    // return { ok: false, message: result.message };
-    return { ok: false, message: result?.message ?? 'Invalid credentials' };
-  }
-
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
     console.log('User logging out, clearing session cookie');
