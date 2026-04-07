@@ -1,8 +1,7 @@
 import { Body, Controller, Get, Query, Post, Patch, Delete, Param, UseGuards, HttpCode, Req, ForbiddenException, BadRequestException } from '@nestjs/common';
 import type { Request } from 'express';
 import { ClientsSupabaseService } from './clients.supabase.service';
-import { ClientProfileDto } from './dto/client-profile.dto';
-import { CreateClientDto } from './dto/create-client.dto';
+ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientTagsDto } from './dto/update-client-tags.dto';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 
@@ -19,7 +18,15 @@ export class ClientsController {
   @Post()
   @HttpCode(201)
   async create(@Body() body: CreateClientDto) {
-    const saved = await this.clientsService.create(body);
+    const { _contactCheck, ...rest } = body as any;
+    const clientData = {
+      ...rest,
+      last_name: body.last_name ?? '',
+      email: body.email ?? '',
+      phone_number: body.phone_number ?? '',
+      business_name: body.business_name ?? '',
+    };
+    const saved = await this.clientsService.create(clientData);
     return {
       ok: true,
       message: 'Client Info Saved Successfully',

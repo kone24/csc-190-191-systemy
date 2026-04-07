@@ -12,11 +12,21 @@ interface Client {
     last_name: string;
     email: string;
     business_name: string;
+    company?: string;
     phone_number: string;
     additional_info: string;
+    title?: string;
+    relationship_owner?: string;
+    status?: string;
+    contact_medium?: string;
+    date_of_contact?: string;
+    where_met?: string;
+    chat_summary?: string;
+    outcome?: string;
+    relationship_status?: string;
     tags: string[];
-    createdAt?: string;
-    updatedAt?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 // Tags stored as "label|#color"; plain strings fall back to default purple.
@@ -77,6 +87,8 @@ export default function ClientsPage() {
             setLoading(true);
             setError(null);
 
+            const q = searchQuery.trim().toLowerCase();
+
             fetch(`http://localhost:3001/clients/search?q=${encodeURIComponent(searchQuery)}`, {
                 credentials: 'include',
             })
@@ -84,7 +96,15 @@ export default function ClientsPage() {
                     if (!res.ok) throw new Error(`Error: ${res.status}`);
                     return res.json();
                 })
-                .then((data) => setSearchResults(data))
+                .then((data: Client[]) => {
+                    // Also match clients whose ID starts with or contains the query
+                    const idMatches = allClients.filter((c) => c.id?.toLowerCase().includes(q));
+                    const merged = [...data];
+                    for (const c of idMatches) {
+                        if (!merged.some((m) => m.id === c.id)) merged.push(c);
+                    }
+                    setSearchResults(merged);
+                })
                 .catch((err) => { console.error('Search failed:', err); setError(err.message); })
                 .finally(() => setLoading(false));
         }, 300);
@@ -106,21 +126,35 @@ export default function ClientsPage() {
                 sorted.sort((a, b) => `${b.first_name ?? ''} ${b.last_name ?? ''}`.localeCompare(`${a.first_name ?? ''} ${a.last_name ?? ''}`));
                 break;
             case 'company-asc':
-                sorted.sort((a, b) => (a.business_name ?? '').localeCompare(b.business_name ?? ''));
+                sorted.sort((a, b) => (a.company || a.business_name || '').localeCompare(b.company || b.business_name || ''));
                 break;
             case 'company-desc':
-                sorted.sort((a, b) => (b.business_name ?? '').localeCompare(a.business_name ?? ''));
+                sorted.sort((a, b) => (b.company || b.business_name || '').localeCompare(a.company || a.business_name || ''));
                 break;
             case 'date-created':
-                sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                sorted.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
                 break;
             case 'date-updated':
-                sorted.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+                sorted.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
                 break;
         }
 
         return sorted;
     }, [isSearching, searchResults, allClients, sortBy]);
+
+    // Compute the minimum prefix length that uniquely identifies each client's ID
+    const shortIdMap = useMemo(() => {
+        const ids = displayedClients.map((c) => c.id ?? '');
+        const map: Record<string, string> = {};
+        for (const id of ids) {
+            let len = 4;
+            while (len < id.length && ids.some((other) => other !== id && other.startsWith(id.slice(0, len)))) {
+                len++;
+            }
+            map[id] = id.slice(0, len);
+        }
+        return map;
+    }, [displayedClients]);
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -130,11 +164,13 @@ export default function ClientsPage() {
             {/* Main Content Area */}
             <div style={{
                 flex: 1,
+                minWidth: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'rgba(217, 217, 217, 0.15)',
                 padding: '20px 20px 20px 30px',
-                gap: '20px'
+                gap: '20px',
+                overflowX: 'hidden'
             }}>
                 {/* Top Bar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -308,72 +344,20 @@ export default function ClientsPage() {
                             }}>
                                 <thead style={{ position: 'sticky', top: 0, background: 'rgba(255, 158, 77, 0.20)' }}>
                                     <tr>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Name
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Email
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Company
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Phone
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Notes
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Tags
-                                        </th>
+                                        {['Name', 'Company', 'Title', 'ID', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Relationship Status', 'Tags'].map((header) => (
+                                            <th key={header} style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                textAlign: 'left',
+                                                fontFamily: 'Poppins',
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: '#FF5900',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {header}
+                                            </th>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -406,7 +390,7 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.email}
+                                                {client.company || client.business_name}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -415,7 +399,17 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.business_name}
+                                                {client.title}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {shortIdMap[client.id] ?? client.id.slice(0, 4)}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -424,7 +418,44 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.phone_number}
+                                                {client.relationship_owner}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)'
+                                            }}>
+                                                {client.status}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)'
+                                            }}>
+                                                {client.contact_medium}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {client.date_of_contact}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)'
+                                            }}>
+                                                {client.where_met}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -437,7 +468,29 @@ export default function ClientsPage() {
                                                 textOverflow: 'ellipsis',
                                                 whiteSpace: 'nowrap'
                                             }}>
-                                                {client.additional_info}
+                                                {client.chat_summary}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)',
+                                                maxWidth: 200,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {client.outcome}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)'
+                                            }}>
+                                                {client.relationship_status}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',

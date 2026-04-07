@@ -121,7 +121,7 @@ interface ClientData {
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [client, setClient] = useState<ClientData | null>(null);
+  const [client, setClient]     = useState<Client | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -157,7 +157,7 @@ export default function ClientProfilePage() {
       .then(res => { if (!res.ok) throw new Error(`Error ${res.status}`); return res.json(); })
       .then(data => {
         if (!data.client) throw new Error('Unexpected response shape');
-        const c: ClientData = data.client;
+        const c: Client = data.client;
         setClient(c);
         setTags((c.tags ?? []).map(parseTag));
       })
@@ -396,7 +396,7 @@ export default function ClientProfilePage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-                    {[client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
+                    {[client.company || client.business_name, client.title, client.email, client.phone_number, client.industry].filter(Boolean).map((v, i) => (
                       <span key={i} style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(0,0,0,0.60)' }}>{v}</span>
                     ))}
                   </div>
@@ -856,6 +856,73 @@ export default function ClientProfilePage() {
                   Failed to save: {saveError}
                 </p>
               )}
+            </div>
+
+            {/* CRM Info */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>CRM Info</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="Company" value={client.company || client.business_name} />
+                <Field label="Title" value={client.title} />
+                <Field label="Relationship Owner" value={client.relationship_owner} />
+                <Field label="Status" value={client.status} />
+                <Field label="Contact Medium" value={client.contact_medium} />
+                <Field label="Date of Contact" value={client.date_of_contact} />
+                <Field label="Relationship Status" value={client.relationship_status} />
+              </div>
+            </div>
+
+            {/* Interaction Details */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Interaction Details</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="Where Met" value={client.where_met} />
+                <Field label="Chat Summary" value={client.chat_summary} />
+                <Field label="Outcome" value={client.outcome} />
+              </div>
+            </div>
+
+            {/* Address */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Address</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="Street" value={client.address?.street} />
+                <Field label="City" value={client.address?.city} />
+                <Field label="State" value={client.address?.state} />
+                <Field label="Country" value={client.address?.country} />
+                <Field label="Postal Code" value={client.address?.zip_code} />
+                <Field label="Additional Info" value={client.address?.additional_info} />
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Social Links</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px 32px' }}>
+                <Field label="LinkedIn" value={client.social_links?.linkedin} />
+                <Field label="Twitter" value={client.social_links?.twitter} />
+                <Field label="Facebook" value={client.social_links?.facebook} />
+                <Field label="Instagram" value={client.social_links?.instagram} />
+                <Field label="Website" value={client.website} />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div style={cardStyle}>
+              <div style={sectionTitle}>Notes</div>
+              <div style={{
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                color: client.notes?.trim() ? 'black' : 'rgba(0,0,0,0.35)',
+                background: 'rgba(217, 217, 217, 0.15)',
+                borderRadius: 12,
+                padding: '16px 20px',
+                minHeight: 80,
+                lineHeight: 1.6,
+                whiteSpace: 'pre-wrap',
+              }}>
+                {client.notes?.trim() || '—'}
+              </div>
             </div>
           </>
         )}
