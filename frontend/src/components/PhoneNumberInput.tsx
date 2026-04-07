@@ -1,11 +1,24 @@
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
+import PhoneInput, { parsePhoneNumber } from 'react-phone-number-input';
 import type { E164Number } from 'libphonenumber-js';
 
 interface PhoneNumberInputProps {
   value: string;
   onChange: (value: string | undefined) => void;
   error?: string;
+}
+
+function toE164(raw: string): E164Number | undefined {
+  if (!raw) return undefined;
+  // Already E.164
+  if (/^\+\d+$/.test(raw)) return raw as E164Number;
+  // Try to parse as-is (may work if number includes country code without +)
+  try {
+    const parsed = parsePhoneNumber(raw, 'US');
+    if (parsed?.isValid()) return parsed.number as E164Number;
+  } catch {
+    // fall through
+  }
+  return undefined;
 }
 
 export function PhoneNumberInput({ value, onChange, error }: PhoneNumberInputProps) {
@@ -15,7 +28,7 @@ export function PhoneNumberInput({ value, onChange, error }: PhoneNumberInputPro
         international
         countrySelectProps={{ unicodeFlags: true }}
         defaultCountry="US"
-        value={value}
+        value={toE164(value)}
         onChange={(value: E164Number | undefined) => onChange(value?.toString())}
         style={{
           marginTop: '4px',
