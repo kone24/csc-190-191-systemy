@@ -116,12 +116,42 @@ interface ClientData {
     facebook?: string;
     instagram?: string;
   };
+  company?: string;
+  notes?: string;
+}
+
+const cardStyle: React.CSSProperties = {
+  background: 'white',
+  borderRadius: 20,
+  boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+  padding: '24px 30px',
+};
+
+const sectionTitle: React.CSSProperties = {
+  fontFamily: 'Poppins',
+  fontSize: 18,
+  fontWeight: '600',
+  color: 'rgba(255, 89, 0, 0.80)',
+  marginBottom: 20,
+};
+
+function Field({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div>
+      <div style={{ fontFamily: 'Poppins', fontSize: 11, fontWeight: '600', color: 'rgba(0,0,0,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: 'Poppins', fontSize: 14, color: value?.trim() ? 'black' : 'rgba(0,0,0,0.30)' }}>
+        {value?.trim() || '—'}
+      </div>
+    </div>
+  );
 }
 
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [client, setClient]     = useState<Client | null>(null);
+  const [client, setClient] = useState<ClientData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -157,7 +187,7 @@ export default function ClientProfilePage() {
       .then(res => { if (!res.ok) throw new Error(`Error ${res.status}`); return res.json(); })
       .then(data => {
         if (!data.client) throw new Error('Unexpected response shape');
-        const c: Client = data.client;
+        const c: ClientData = data.client;
         setClient(c);
         setTags((c.tags ?? []).map(parseTag));
       })
