@@ -7,6 +7,7 @@ import {
     IsEmail,
     IsObject,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateClientTagsDto {
     @IsOptional()
@@ -46,6 +47,46 @@ export class UpdateClientTagsDto {
     @IsOptional()
     @IsString()
     additional_info?: string;
+
+    @IsOptional()
+    @IsObject()
+    address?: Record<string, unknown>;
+
+    @IsOptional()
+    @IsObject()
+    social_links?: Record<string, unknown>;
+
+    @IsOptional()
+    @IsString()
+    relationship_owner?: string;
+
+    @IsOptional()
+    @IsString()
+    status?: string;
+
+    @IsOptional()
+    @IsString()
+    contact_medium?: string;
+
+    @IsOptional()
+    @Transform(({ value }) => value ? new Date(value) : undefined)
+    date_of_contact?: Date;
+
+    @IsOptional()
+    @IsString()
+    where_met?: string;
+
+    @IsOptional()
+    @IsString()
+    chat_summary?: string;
+
+    @IsOptional()
+    @IsString()
+    outcome?: string;
+
+    @IsOptional()
+    @IsString()
+    relationship_status?: string;
 
     @IsOptional()
     @IsArray()

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Select from 'react-select';
 import Sidebar from '@/components/Sidebar';
-import type { Client } from '@/types/client';
-
-type ClientData = Client;
+import { PhoneNumberInput } from '@/components/PhoneNumberInput';
+import { COUNTRIES, STATES_BY_COUNTRY } from '@/constants/location-data';
+import type { Country, State } from '@/types/location';
 
 //  Tag encoding 
 const DEFAULT_COLOR = '#8A38F5';
@@ -80,7 +81,45 @@ function TagPill({ tag, onRemove }: { tag: Tag; onRemove?: () => void }) {
   );
 }
 
-// Shared card style
+// Client data shape based on backend API
+interface ClientData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  business_name: string;
+  title?: string;
+  industry?: string;
+  website?: string;
+  additional_info?: string;
+  tags?: string[];
+  relationship_owner?: string;
+  status?: string;
+  contact_medium?: string;
+  date_of_contact?: string;
+  where_met?: string;
+  chat_summary?: string;
+  outcome?: string;
+  relationship_status?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    country?: string;
+    additional_info?: string;
+  };
+  social_links?: {
+    linkedin?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+  };
+  company?: string;
+  notes?: string;
+}
+
 const cardStyle: React.CSSProperties = {
   background: 'white',
   borderRadius: 20,
@@ -96,26 +135,15 @@ const sectionTitle: React.CSSProperties = {
   marginBottom: 20,
 };
 
-const fieldLabel: React.CSSProperties = {
-  fontFamily: 'Poppins',
-  fontSize: 13,
-  fontWeight: '600',
-  color: 'rgba(0, 0, 0, 0.45)',
-  marginBottom: 4,
-};
-
-const fieldValue: React.CSSProperties = {
-  fontFamily: 'Poppins',
-  fontSize: 15,
-  fontWeight: '500',
-  color: 'black',
-};
-
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div style={{ minWidth: 0 }}>
-      <div style={fieldLabel}>{label}</div>
-      <div style={fieldValue}>{value?.trim() ? value : '—'}</div>
+    <div>
+      <div style={{ fontFamily: 'Poppins', fontSize: 11, fontWeight: '600', color: 'rgba(0,0,0,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: 'Poppins', fontSize: 14, color: value?.trim() ? 'black' : 'rgba(0,0,0,0.30)' }}>
+        {value?.trim() || '—'}
+      </div>
     </div>
   );
 }
@@ -123,7 +151,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 export default function ClientProfilePage() {
   const { id } = useParams<{ id: string }>();
 
-  const [client, setClient]     = useState<Client | null>(null);
+  const [client, setClient] = useState<ClientData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -147,13 +175,19 @@ export default function ClientProfilePage() {
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [selectedEditCountry, setSelectedEditCountry] = useState<Country | null>(null);
+  const availableEditStates = useMemo(
+    () => (selectedEditCountry ? STATES_BY_COUNTRY[selectedEditCountry.code] || [] : []),
+    [selectedEditCountry],
+  );
+
   // Fetch client
   useEffect(() => {
     fetch(`http://localhost:3001/clients/${id}`, { credentials: 'include' })
       .then(res => { if (!res.ok) throw new Error(`Error ${res.status}`); return res.json(); })
       .then(data => {
         if (!data.client) throw new Error('Unexpected response shape');
-        const c: Client = data.client;
+        const c: ClientData = data.client;
         setClient(c);
         setTags((c.tags ?? []).map(parseTag));
       })
@@ -199,6 +233,8 @@ export default function ClientProfilePage() {
 
   const startEditing = () => {
     if (!client) return;
+    const matchedCountry = COUNTRIES.find(c => c.name === client.address?.country) ?? null;
+    setSelectedEditCountry(matchedCountry);
     setEditForm({
       first_name: client.first_name,
       last_name: client.last_name,
@@ -209,6 +245,28 @@ export default function ClientProfilePage() {
       industry: client.industry || '',
       website: client.website || '',
       additional_info: client.additional_info || '',
+      relationship_owner: client.relationship_owner || '',
+      status: client.status || '',
+      contact_medium: client.contact_medium || '',
+      date_of_contact: client.date_of_contact || '',
+      where_met: client.where_met || '',
+      chat_summary: client.chat_summary || '',
+      outcome: client.outcome || '',
+      relationship_status: client.relationship_status || '',
+      address: {
+        street: client.address?.street || '',
+        city: client.address?.city || '',
+        state: client.address?.state || '',
+        zip_code: client.address?.zip_code || '',
+        country: client.address?.country || '',
+        additional_info: client.address?.additional_info || '',
+      },
+      social_links: {
+        linkedin: client.social_links?.linkedin || '',
+        twitter: client.social_links?.twitter || '',
+        facebook: client.social_links?.facebook || '',
+        instagram: client.social_links?.instagram || '',
+      },
     });
     setEditError(null);
     setEditing(true);
@@ -258,6 +316,14 @@ export default function ClientProfilePage() {
 
   const editField = (field: keyof ClientData, value: string) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const editAddressField = (field: string, value: string) => {
+    setEditForm(prev => ({ ...prev, address: { ...(prev.address ?? {}), [field]: value } }));
+  };
+
+  const editSocialField = (field: string, value: string) => {
+    setEditForm(prev => ({ ...prev, social_links: { ...(prev.social_links ?? {}), [field]: value } }));
   };
 
   const handleDelete = async () => {
@@ -367,66 +433,328 @@ export default function ClientProfilePage() {
                 </>
               ) : (
                 <>
-                  <div style={{ fontFamily: 'Poppins', fontSize: 18, fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: 16 }}>
+                  <div style={{ fontFamily: 'Poppins', fontSize: 18, fontWeight: '600', color: 'rgba(255, 89, 0, 0.80)', marginBottom: 20 }}>
                     Edit Contact
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    {([
-                      ['first_name', 'First Name'],
-                      ['last_name', 'Last Name'],
-                      ['email', 'Email'],
-                      ['phone_number', 'Phone'],
-                      ['business_name', 'Company'],
-                      ['title', 'Title'],
-                      ['industry', 'Industry'],
-                      ['website', 'Website'],
-                    ] as const).map(([field, label]) => (
-                      <div key={field}>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                    {/* Basic Info */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div>
                         <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
-                          {label}
+                          First Name <span style={{ color: '#ef4444' }}>*</span>
                         </label>
                         <input
-                          value={(editForm as any)[field] ?? ''}
-                          onChange={(e) => editField(field, e.target.value)}
-                          style={{
-                            width: '100%',
-                            height: 38,
-                            padding: '0 12px',
-                            borderRadius: 8,
-                            border: '1.5px solid rgba(0,0,0,0.15)',
-                            fontFamily: 'Poppins',
-                            fontSize: 14,
-                            color: 'black',
-                            outline: 'none',
-                            background: 'white',
-                            boxSizing: 'border-box',
-                          }}
+                          value={editForm.first_name ?? ''}
+                          onChange={(e) => editField('first_name', e.target.value)}
+                          placeholder="John"
+                          style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
                         />
                       </div>
-                    ))}
+                      <div>
+                        <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Last Name</label>
+                        <input
+                          value={editForm.last_name ?? ''}
+                          onChange={(e) => editField('last_name', e.target.value)}
+                          placeholder="Doe"
+                          style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Email</label>
+                      <input
+                        type="email"
+                        value={editForm.email ?? ''}
+                        onChange={(e) => editField('email', e.target.value)}
+                        placeholder="john@example.com"
+                        style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Phone</label>
+                      <PhoneNumberInput
+                        value={editForm.phone_number ?? ''}
+                        onChange={(value) => editField('phone_number', value || '')}
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div>
+                        <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Company</label>
+                        <input
+                          value={editForm.business_name ?? ''}
+                          onChange={(e) => editField('business_name', e.target.value)}
+                          placeholder="Company Name"
+                          style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Title</label>
+                        <input
+                          value={editForm.title ?? ''}
+                          onChange={(e) => editField('title', e.target.value)}
+                          placeholder="e.g. VP of Engineering"
+                          style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* CRM Details */}
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 16, marginTop: 4 }}>
+                      <div style={{ fontFamily: 'Poppins', fontSize: 12, fontWeight: '600', color: 'rgba(0,0,0,0.35)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>CRM Details</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Relationship Owner</label>
+                            <input
+                              value={editForm.relationship_owner ?? ''}
+                              onChange={(e) => editField('relationship_owner', e.target.value)}
+                              placeholder="Team member managing this contact"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Status</label>
+                            <input
+                              value={editForm.status ?? ''}
+                              onChange={(e) => editField('status', e.target.value)}
+                              placeholder="e.g. Active, Inactive"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Contact Medium</label>
+                            <select
+                              value={editForm.contact_medium ?? ''}
+                              onChange={(e) => editField('contact_medium', e.target.value)}
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            >
+                              <option value="">Select a contact medium</option>
+                              <option value="Email">Email</option>
+                              <option value="Phone">Phone</option>
+                              <option value="LinkedIn">LinkedIn</option>
+                              <option value="DM">DM</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Date of Contact</label>
+                            <input
+                              type="date"
+                              value={editForm.date_of_contact ?? ''}
+                              onChange={(e) => editField('date_of_contact', e.target.value)}
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Where Met</label>
+                            <input
+                              value={editForm.where_met ?? ''}
+                              onChange={(e) => editField('where_met', e.target.value)}
+                              placeholder="e.g. Tech Conference 2026"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Outcome</label>
+                            <input
+                              value={editForm.outcome ?? ''}
+                              onChange={(e) => editField('outcome', e.target.value)}
+                              placeholder="e.g. Follow-up scheduled"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Relationship Status</label>
+                            <input
+                              value={editForm.relationship_status ?? ''}
+                              onChange={(e) => editField('relationship_status', e.target.value)}
+                              placeholder="e.g. Warm, Cold, Hot"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Chat Summary</label>
+                          <textarea
+                            value={editForm.chat_summary ?? ''}
+                            onChange={(e) => editField('chat_summary', e.target.value)}
+                            rows={3}
+                            placeholder="Summary of what was discussed..."
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                          />
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 16, marginTop: 4 }}>
+                      <div style={{ fontFamily: 'Poppins', fontSize: 12, fontWeight: '600', color: 'rgba(0,0,0,0.35)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Address</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Street</label>
+                            <input
+                              value={editForm.address?.street ?? ''}
+                              onChange={(e) => editAddressField('street', e.target.value)}
+                              placeholder="123 Main St"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>City</label>
+                            <input
+                              value={editForm.address?.city ?? ''}
+                              onChange={(e) => editAddressField('city', e.target.value)}
+                              placeholder="City"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Country</label>
+                            <Select<Country>
+                              instanceId="edit-country"
+                              options={COUNTRIES}
+                              value={selectedEditCountry}
+                              onChange={(selected) => {
+                                setSelectedEditCountry(selected);
+                                setEditForm(prev => ({
+                                  ...prev,
+                                  address: { ...(prev.address ?? {}), country: selected?.name ?? '', state: '' },
+                                }));
+                              }}
+                              getOptionLabel={(o) => o.name}
+                              getOptionValue={(o) => o.code}
+                              placeholder="Select a country"
+                              styles={{
+                                control: (base: any) => ({ ...base, borderRadius: 8, borderColor: 'rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, minHeight: 38 }),
+                                menu: (base: any) => ({ ...base, fontFamily: 'Poppins', fontSize: 14 }),
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>State / Province</label>
+                            <Select<State>
+                              instanceId="edit-state"
+                              options={availableEditStates}
+                              value={availableEditStates.find(s => s.name === editForm.address?.state) ?? null}
+                              onChange={(selected) => editAddressField('state', selected?.name ?? '')}
+                              getOptionLabel={(o) => o.name}
+                              getOptionValue={(o) => o.code}
+                              placeholder="Select a state"
+                              isDisabled={!selectedEditCountry}
+                              styles={{
+                                control: (base: any, state: any) => ({ ...base, borderRadius: 8, borderColor: 'rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, minHeight: 38, opacity: state.isDisabled ? 0.5 : 1 }),
+                                menu: (base: any) => ({ ...base, fontFamily: 'Poppins', fontSize: 14 }),
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Postal Code</label>
+                            <input
+                              value={editForm.address?.zip_code ?? ''}
+                              onChange={(e) => editAddressField('zip_code', e.target.value)}
+                              placeholder="Postal Code"
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Additional Info</label>
+                            <input
+                              value={editForm.address?.additional_info ?? ''}
+                              onChange={(e) => editAddressField('additional_info', e.target.value)}
+                              placeholder="Apt, suite, etc."
+                              style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                            />
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Social Links */}
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 16, marginTop: 4 }}>
+                      <div style={{ fontFamily: 'Poppins', fontSize: 12, fontWeight: '600', color: 'rgba(0,0,0,0.35)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Social Links</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                        <div>
+                          <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>LinkedIn</label>
+                          <input
+                            type="url"
+                            value={editForm.social_links?.linkedin ?? ''}
+                            onChange={(e) => editSocialField('linkedin', e.target.value)}
+                            placeholder="https://linkedin.com/in/username"
+                            style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Twitter</label>
+                          <input
+                            type="url"
+                            value={editForm.social_links?.twitter ?? ''}
+                            onChange={(e) => editSocialField('twitter', e.target.value)}
+                            placeholder="https://twitter.com/username"
+                            style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Facebook</label>
+                          <input
+                            type="url"
+                            value={editForm.social_links?.facebook ?? ''}
+                            onChange={(e) => editSocialField('facebook', e.target.value)}
+                            placeholder="https://facebook.com/username"
+                            style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Instagram</label>
+                          <input
+                            type="url"
+                            value={editForm.social_links?.instagram ?? ''}
+                            onChange={(e) => editSocialField('instagram', e.target.value)}
+                            placeholder="https://instagram.com/username"
+                            style={{ width: '100%', height: 38, padding: '0 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', background: 'white', boxSizing: 'border-box' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notes */}
+                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.08)', paddingTop: 16, marginTop: 4 }}>
+                      <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>Notes</label>
+                      <textarea
+                        value={editForm.additional_info ?? ''}
+                        onChange={(e) => editField('additional_info', e.target.value)}
+                        rows={4}
+                        placeholder="Additional notes about the contact..."
+                        style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid rgba(0,0,0,0.15)', fontFamily: 'Poppins', fontSize: 14, color: 'black', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+                      />
+                    </div>
+
                   </div>
-                  <div style={{ marginTop: 12 }}>
-                    <label style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.50)', marginBottom: 4, display: 'block' }}>
-                      Notes
-                    </label>
-                    <textarea
-                      value={editForm.additional_info ?? ''}
-                      onChange={(e) => editField('additional_info', e.target.value)}
-                      rows={3}
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        borderRadius: 8,
-                        border: '1.5px solid rgba(0,0,0,0.15)',
-                        fontFamily: 'Poppins',
-                        fontSize: 14,
-                        color: 'black',
-                        outline: 'none',
-                        resize: 'vertical',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
+
                   {editError && (
                     <p style={{ fontFamily: 'Poppins', fontSize: 13, color: '#ef4444', marginTop: 8 }}>
                       {editError}
