@@ -51,12 +51,12 @@ interface Project {
 
 // Maps API status values → display label + badge colors
 const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: string }> = {
-    'open':        { label: 'On Track',   bg: '#22C55E', text: 'black' },
-    'in_progress': { label: 'At Risk',    bg: '#F59E0B', text: 'black' },
-    'completed':   { label: 'Completed',  bg: '#9CA3AF', text: 'white' },
-    'on_hold':     { label: 'On Hold',    bg: '#FF5900', text: 'white' },
-    'cancelled':   { label: 'Cancelled',  bg: '#EF4444', text: 'white' },
-    'behind':      { label: 'Behind',     bg: '#EF4444', text: 'white' },
+    'open': { label: 'On Track', bg: '#22C55E', text: 'black' },
+    'in_progress': { label: 'At Risk', bg: '#F59E0B', text: 'black' },
+    'completed': { label: 'Completed', bg: '#9CA3AF', text: 'white' },
+    'on_hold': { label: 'On Hold', bg: '#FF5900', text: 'white' },
+    'cancelled': { label: 'Cancelled', bg: '#EF4444', text: 'white' },
+    'behind': { label: 'Behind', bg: '#EF4444', text: 'white' },
 };
 
 const DEFAULT_PROJECT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white' };
@@ -81,19 +81,19 @@ const COLUMN_COLORS = [
 
 // Priority badge colors (keyed by API integer values)
 const PRIORITY_STYLES: Record<number, { label: string; bg: string; text: string }> = {
-    1: { label: 'High',   bg: '#FF0000', text: 'white' },
+    1: { label: 'High', bg: '#FF0000', text: 'white' },
     2: { label: 'Medium', bg: '#FFF631', text: 'black' },
-    3: { label: 'Low',    bg: '#28CC95', text: 'white' },
+    3: { label: 'Low', bg: '#28CC95', text: 'white' },
 };
 const DEFAULT_PRIORITY = { label: 'N/A', bg: '#9CA3AF', text: 'white' };
 const get_priority = (p: number | null) => PRIORITY_STYLES[p ?? 0] ?? DEFAULT_PRIORITY;
 
 // Task status styles (keyed by API string values)
 const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }> = {
-    'todo':        { label: 'Todo',        bg: '#9CA3AF', text: 'white' },
+    'todo': { label: 'Todo', bg: '#9CA3AF', text: 'white' },
     'in_progress': { label: 'In Progress', bg: '#3B82F6', text: 'white' },
-    'review':      { label: 'Review',      bg: '#8B5CF6', text: 'white' },
-    'done':        { label: 'Done',        bg: '#22C55E', text: 'white' },
+    'review': { label: 'Review', bg: '#8B5CF6', text: 'white' },
+    'done': { label: 'Done', bg: '#22C55E', text: 'white' },
 };
 const DEFAULT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white' };
 const get_status = (s: string | null) => STATUS_STYLES[s ?? ''] ?? DEFAULT_STATUS;
@@ -141,20 +141,20 @@ export default function ProjectDetailPage() {
         async function load() {
             try {
                 // Fetch project details from the list endpoint
-                const projRes = await fetch('http://localhost:3001/projects', { credentials: 'include' });
+                const projRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' });
                 const projJson = await projRes.json();
                 const proj = (projJson.items as Project[]).find(p => p.project_id === project_id) ?? null;
                 set_project(proj);
 
                 // Fetch phases
-                const phasesRes = await fetch(`http://localhost:3001/projects/${project_id}/phases`, { credentials: 'include' });
+                const phasesRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects/${project_id}/phases`, { credentials: 'include' });
                 const phasesJson = await phasesRes.json();
                 const apiPhases = phasesJson.items as { phase_id: string; project_id: string; name: string; order_index: number; assignee_id: string | null; assignee_name: string | null }[];
 
                 // Fetch tasks for each phase in parallel
                 const phasesWithTasks: Phase[] = await Promise.all(
                     apiPhases.map(async (ph) => {
-                        const tasksRes = await fetch(`http://localhost:3001/phases/${ph.phase_id}/tasks`, { credentials: 'include' });
+                        const tasksRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/phases/${ph.phase_id}/tasks`, { credentials: 'include' });
                         const tasksJson = await tasksRes.json();
                         return {
                             phase_id: ph.phase_id,
@@ -178,7 +178,7 @@ export default function ProjectDetailPage() {
     useEffect(() => {
         const fetch_users = async () => {
             try {
-                const res = await fetch('http://localhost:3001/users', { credentials: 'include' });
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, { credentials: 'include' });
                 const json = await res.json();
                 set_users_list(json.items ?? []);
             } catch (err) {
@@ -237,7 +237,7 @@ export default function ProjectDetailPage() {
                 body.assigned_to = task_form.assignees[0];
             }
 
-            const res = await fetch(`http://localhost:3001/phases/${phase.phase_id}/tasks`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/phases/${phase.phase_id}/tasks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -283,7 +283,7 @@ export default function ProjectDetailPage() {
                 return;
             }
 
-            const res = await fetch(`http://localhost:3001/tasks/${t.task_id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks/${t.task_id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -311,7 +311,7 @@ export default function ProjectDetailPage() {
         const { task, phase_index } = detail_task;
         set_submitting(true);
         try {
-            const res = await fetch(`http://localhost:3001/tasks/${task.task_id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks/${task.task_id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -347,7 +347,7 @@ export default function ProjectDetailPage() {
             // Persist phase change to the backend
             if (source.droppableId !== destination.droppableId) {
                 const new_phase_id = dst_col.phase_id;
-                fetch(`http://localhost:3001/tasks/${moved.task_id}`, {
+                fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks/${moved.task_id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -382,305 +382,305 @@ export default function ProjectDetailPage() {
                         <span style={{ fontSize: 16, color: '#999', fontFamily: 'Poppins' }}>Project not found.</span>
                     </div>
                 ) : (<>
-                {/* Page Header */}
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                    borderBottom: '1px solid #E5E5E5',
-                    paddingBottom: '16px',
-                }}>
-                    {/* Line 1: Back, Name, Status, Edit */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        <Link href="/dashboard/projects" style={{
-                            color: '#FF5900',
-                            fontSize: 14,
-                            fontFamily: 'Poppins',
-                            textDecoration: 'none',
-                            fontWeight: '500',
-                        }}>
-                            &larr; Back
-                        </Link>
-
-                        <h1 style={{
-                            fontSize: 24,
-                            fontWeight: '700',
-                            fontFamily: 'Poppins',
-                            color: 'black',
-                            margin: 0,
-                        }}>
-                            {project.name}
-                        </h1>
-
-                        <span style={{
-                            background: get_project_status_display(project.status ?? '').bg,
-                            color: get_project_status_display(project.status ?? '').text,
-                            padding: '6px 20px',
-                            borderRadius: '20px',
-                            fontSize: 14,
-                            fontWeight: '600',
-                            fontFamily: 'Poppins',
-                            whiteSpace: 'nowrap',
-                        }}>
-                            {get_project_status_display(project.status ?? '').label}
-                        </span>
-
-                    </div>
-
-                    {/* Line 2: Project details inline */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
-                        {[
-                            { label: 'Contact', value: project.client_name ?? 'N/A' },
-                            { label: 'Owner', value: project.owner_name ?? 'Unassigned' },
-                            { label: 'Service Type', value: project.service_type ?? 'N/A' },
-                            { label: 'Start Date', value: project.start_date ? format_date(project.start_date) : 'N/A' },
-                            { label: 'End Date', value: project.end_date ? format_date(project.end_date) : 'N/A' },
-                            { label: 'Budget', value: project.budget != null ? format_currency(project.budget) : 'N/A' },
-                        ].map(item => (
-                            <div key={item.label} style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ fontSize: 10, color: '#999', fontFamily: 'Poppins', fontWeight: '500' }}>
-                                    {item.label}
-                                </span>
-                                <span style={{ fontSize: 15, color: 'black', fontFamily: 'Poppins', fontWeight: '700' }}>
-                                    {item.value}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Line 3: Description */}
-                    <p style={{
-                        fontSize: 13,
-                        color: '#444',
-                        fontFamily: 'Poppins',
-                        margin: '-4px 0 0 0',
-                        lineHeight: 1.4,
+                    {/* Page Header */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '10px',
+                        borderBottom: '1px solid #E5E5E5',
+                        paddingBottom: '16px',
                     }}>
-                        {project.description ?? ''}
-                    </p>
-                </div>
-
-                {/* Kanban Board */}
-                <DragDropContext onDragEnd={on_drag_end}>
-                <div style={{
-                    display: 'flex',
-                    gap: '20px',
-                    overflowX: 'auto',
-                    flex: 1,
-                    alignItems: 'flex-start',
-                    paddingBottom: '10px',
-                }}>
-                    {phases.map((phase, index) => {
-                        const col_color = COLUMN_COLORS[index % COLUMN_COLORS.length];
-                        return (
-                            <div key={phase.name} style={{
-                                background: col_color,
-                                borderRadius: '20px',
-                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
-                                padding: '18px',
-                                minWidth: '280px',
-                                flex: '1 0 280px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '10px',
+                        {/* Line 1: Back, Name, Status, Edit */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                            <Link href="/dashboard/projects" style={{
+                                color: '#FF5900',
+                                fontSize: 14,
+                                fontFamily: 'Poppins',
+                                textDecoration: 'none',
+                                fontWeight: '500',
                             }}>
-                                {/* Column Header */}
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                }}>
-                                    <span style={{
-                                        fontSize: 16,
-                                        fontWeight: '700',
-                                        fontFamily: 'Poppins',
-                                        color: 'black',
-                                    }}>
-                                        {phase.name}
+                                &larr; Back
+                            </Link>
+
+                            <h1 style={{
+                                fontSize: 24,
+                                fontWeight: '700',
+                                fontFamily: 'Poppins',
+                                color: 'black',
+                                margin: 0,
+                            }}>
+                                {project.name}
+                            </h1>
+
+                            <span style={{
+                                background: get_project_status_display(project.status ?? '').bg,
+                                color: get_project_status_display(project.status ?? '').text,
+                                padding: '6px 20px',
+                                borderRadius: '20px',
+                                fontSize: 14,
+                                fontWeight: '600',
+                                fontFamily: 'Poppins',
+                                whiteSpace: 'nowrap',
+                            }}>
+                                {get_project_status_display(project.status ?? '').label}
+                            </span>
+
+                        </div>
+
+                        {/* Line 2: Project details inline */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)' }}>
+                            {[
+                                { label: 'Contact', value: project.client_name ?? 'N/A' },
+                                { label: 'Owner', value: project.owner_name ?? 'Unassigned' },
+                                { label: 'Service Type', value: project.service_type ?? 'N/A' },
+                                { label: 'Start Date', value: project.start_date ? format_date(project.start_date) : 'N/A' },
+                                { label: 'End Date', value: project.end_date ? format_date(project.end_date) : 'N/A' },
+                                { label: 'Budget', value: project.budget != null ? format_currency(project.budget) : 'N/A' },
+                            ].map(item => (
+                                <div key={item.label} style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: 10, color: '#999', fontFamily: 'Poppins', fontWeight: '500' }}>
+                                        {item.label}
                                     </span>
-                                    <button
-                                        onClick={() => set_active_modal_phase(index)}
-                                        style={{
-                                            background: 'rgba(255,255,255,0.75)',
-                                            border: '1px solid rgba(0,0,0,0.1)',
-                                            borderRadius: '8px',
-                                            padding: '4px 12px',
-                                            fontSize: 13,
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '500',
-                                            cursor: 'pointer',
-                                            color: 'black',
-                                        }}>
-                                        + Add Task
-                                    </button>
+                                    <span style={{ fontSize: 15, color: 'black', fontFamily: 'Poppins', fontWeight: '700' }}>
+                                        {item.value}
+                                    </span>
                                 </div>
+                            ))}
+                        </div>
 
-                                <span style={{
-                                    fontSize: 12,
-                                    color: 'rgba(0,0,0,0.5)',
-                                    fontFamily: 'Poppins',
-                                }}>
-                                    {phase.tasks.length} tasks
-                                </span>
+                        {/* Line 3: Description */}
+                        <p style={{
+                            fontSize: 13,
+                            color: '#444',
+                            fontFamily: 'Poppins',
+                            margin: '-4px 0 0 0',
+                            lineHeight: 1.4,
+                        }}>
+                            {project.description ?? ''}
+                        </p>
+                    </div>
 
-                                {/* Task Cards */}
-                                <Droppable droppableId={String(index)}>
-                                    {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
-                                        <div
-                                            ref={provided.innerRef}
-                                            {...provided.droppableProps}
-                                            style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '10px',
-                                                minHeight: '40px',
-                                                borderRadius: '12px',
-                                                padding: snapshot.isDraggingOver ? '6px' : '0px',
-                                                background: snapshot.isDraggingOver ? 'rgba(255,255,255,0.35)' : 'transparent',
-                                                border: snapshot.isDraggingOver ? '2px dashed rgba(0,0,0,0.15)' : '2px dashed transparent',
-                                                transition: 'background 200ms ease, border 200ms ease, padding 200ms ease',
+                    {/* Kanban Board */}
+                    <DragDropContext onDragEnd={on_drag_end}>
+                        <div style={{
+                            display: 'flex',
+                            gap: '20px',
+                            overflowX: 'auto',
+                            flex: 1,
+                            alignItems: 'flex-start',
+                            paddingBottom: '10px',
+                        }}>
+                            {phases.map((phase, index) => {
+                                const col_color = COLUMN_COLORS[index % COLUMN_COLORS.length];
+                                return (
+                                    <div key={phase.name} style={{
+                                        background: col_color,
+                                        borderRadius: '20px',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+                                        padding: '18px',
+                                        minWidth: '280px',
+                                        flex: '1 0 280px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '10px',
+                                    }}>
+                                        {/* Column Header */}
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}>
+                                            <span style={{
+                                                fontSize: 16,
+                                                fontWeight: '700',
+                                                fontFamily: 'Poppins',
+                                                color: 'black',
                                             }}>
-                                            {[...phase.tasks]
-                                                .map((task, original_index) => ({ task, original_index }))
-                                                .sort((a, b) => {
-                                                    if (a.task.status === 'done' && b.task.status !== 'done') return 1;
-                                                    if (a.task.status !== 'done' && b.task.status === 'done') return -1;
-                                                    return 0;
-                                                })
-                                                .map(({ task, original_index }) => {
-                                                const pstyle = get_priority(task.priority);
-                                                const sstyle = get_status(task.status);
-                                                const is_done = task.status === 'done';
-                                                const display_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
-                                                return (
-                                                    <Draggable key={task.task_id} draggableId={task.task_id} index={original_index}>
-                                                        {(drag_provided, drag_snapshot) => (
-                                                            <div
-                                                                ref={drag_provided.innerRef}
-                                                                {...drag_provided.draggableProps}
-                                                                {...drag_provided.dragHandleProps}
-                                                                onClick={() => set_detail_task({ task, phase_index: index })}
-                                                                style={{
-                                                                    background: is_done ? '#f0f0f0' : 'white',
-                                                                    borderRadius: '20px',
-                                                                    padding: '18px 20px 20px 20px',
-                                                                    display: 'flex',
-                                                                    flexDirection: 'column',
-                                                                    gap: '10px',
-                                                                    cursor: 'pointer',
-                                                                    boxShadow: drag_snapshot.isDragging
-                                                                        ? '0 8px 20px rgba(0,0,0,0.18)'
-                                                                        : '0 2px 6px rgba(0,0,0,0.08)',
-                                                                    opacity: is_done ? 0.5 : (drag_snapshot.isDragging ? 0.95 : 1),
-                                                                    ...drag_provided.draggableProps.style,
-                                                                }}>
-                                                                {/* Title + Priority */}
-                                                                <div style={{
-                                                                    display: 'flex',
-                                                                    justifyContent: 'space-between',
-                                                                    alignItems: 'flex-start',
-                                                                    gap: '8px',
-                                                                }}>
-                                                                    <span style={{
-                                                                        fontSize: 14,
-                                                                        fontWeight: '500',
-                                                                        fontFamily: 'Poppins',
-                                                                        color: is_done ? '#999' : 'black',
-                                                                        flex: 1,
-                                                                        textDecoration: is_done ? 'line-through' : 'none',
-                                                                    }}>
-                                                                        {task.title}
-                                                                    </span>
-                                                                    <span style={{
-                                                                        background: pstyle.bg,
-                                                                        color: pstyle.text,
-                                                                        padding: '3px 12px',
-                                                                        borderRadius: '12px',
-                                                                        fontSize: 11,
-                                                                        fontWeight: '600',
-                                                                        fontFamily: 'Poppins',
-                                                                        whiteSpace: 'nowrap',
-                                                                    }}>
-                                                                        {pstyle.label}
-                                                                    </span>
-                                                                </div>
-
-                                                                {/* Assignees */}
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                                        {display_names.map((name, ai) => (
-                                                                            <div key={ai} style={{
-                                                                                width: 26,
-                                                                                height: 26,
-                                                                                borderRadius: '50%',
-                                                                                background: '#999',
-                                                                                display: 'flex',
-                                                                                alignItems: 'center',
-                                                                                justifyContent: 'center',
-                                                                                color: 'white',
-                                                                                fontSize: 11,
-                                                                                fontWeight: '600',
-                                                                                fontFamily: 'Poppins',
-                                                                                flexShrink: 0,
-                                                                                marginLeft: ai > 0 ? '-8px' : '0px',
-                                                                                border: '2px solid white',
-                                                                                boxSizing: 'content-box',
-                                                                                zIndex: display_names.length - ai,
-                                                                                position: 'relative',
-                                                                            }}>
-                                                                                {get_initials(name)}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                    <span style={{
-                                                                        fontSize: 12,
-                                                                        color: '#666',
-                                                                        fontFamily: 'Poppins',
-                                                                    }}>
-                                                                        {display_names.length > 0 ? display_names.join(', ') : 'Unassigned'}
-                                                                    </span>
-                                                                </div>
-
-                                                                {/* Due Date + Status */}
-                                                                <div style={{
-                                                                    display: 'flex',
-                                                                    justifyContent: 'space-between',
-                                                                    alignItems: 'center',
-                                                                }}>
-                                                                    <span style={{
-                                                                        fontSize: 11,
-                                                                        color: '#999',
-                                                                        fontFamily: 'Poppins',
-                                                                    }}>
-                                                                        {task.due_date ? format_date(task.due_date) : 'No date'}
-                                                                    </span>
-                                                                    <span style={{
-                                                                        background: sstyle.bg,
-                                                                        color: sstyle.text,
-                                                                        padding: '2px 10px',
-                                                                        borderRadius: '10px',
-                                                                        fontSize: 10,
-                                                                        fontWeight: '600',
-                                                                        fontFamily: 'Poppins',
-                                                                        whiteSpace: 'nowrap',
-                                                                    }}>
-                                                                        {sstyle.label}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </Draggable>
-                                                );
-                                            })}
-                                            {provided.placeholder}
+                                                {phase.name}
+                                            </span>
+                                            <button
+                                                onClick={() => set_active_modal_phase(index)}
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.75)',
+                                                    border: '1px solid rgba(0,0,0,0.1)',
+                                                    borderRadius: '8px',
+                                                    padding: '4px 12px',
+                                                    fontSize: 13,
+                                                    fontFamily: 'Poppins',
+                                                    fontWeight: '500',
+                                                    cursor: 'pointer',
+                                                    color: 'black',
+                                                }}>
+                                                + Add Task
+                                            </button>
                                         </div>
-                                    )}
-                                </Droppable>
-                            </div>
-                        );
-                    })}
-                </div>
-                </DragDropContext>
+
+                                        <span style={{
+                                            fontSize: 12,
+                                            color: 'rgba(0,0,0,0.5)',
+                                            fontFamily: 'Poppins',
+                                        }}>
+                                            {phase.tasks.length} tasks
+                                        </span>
+
+                                        {/* Task Cards */}
+                                        <Droppable droppableId={String(index)}>
+                                            {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.droppableProps}
+                                                    style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '10px',
+                                                        minHeight: '40px',
+                                                        borderRadius: '12px',
+                                                        padding: snapshot.isDraggingOver ? '6px' : '0px',
+                                                        background: snapshot.isDraggingOver ? 'rgba(255,255,255,0.35)' : 'transparent',
+                                                        border: snapshot.isDraggingOver ? '2px dashed rgba(0,0,0,0.15)' : '2px dashed transparent',
+                                                        transition: 'background 200ms ease, border 200ms ease, padding 200ms ease',
+                                                    }}>
+                                                    {[...phase.tasks]
+                                                        .map((task, original_index) => ({ task, original_index }))
+                                                        .sort((a, b) => {
+                                                            if (a.task.status === 'done' && b.task.status !== 'done') return 1;
+                                                            if (a.task.status !== 'done' && b.task.status === 'done') return -1;
+                                                            return 0;
+                                                        })
+                                                        .map(({ task, original_index }) => {
+                                                            const pstyle = get_priority(task.priority);
+                                                            const sstyle = get_status(task.status);
+                                                            const is_done = task.status === 'done';
+                                                            const display_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
+                                                            return (
+                                                                <Draggable key={task.task_id} draggableId={task.task_id} index={original_index}>
+                                                                    {(drag_provided, drag_snapshot) => (
+                                                                        <div
+                                                                            ref={drag_provided.innerRef}
+                                                                            {...drag_provided.draggableProps}
+                                                                            {...drag_provided.dragHandleProps}
+                                                                            onClick={() => set_detail_task({ task, phase_index: index })}
+                                                                            style={{
+                                                                                background: is_done ? '#f0f0f0' : 'white',
+                                                                                borderRadius: '20px',
+                                                                                padding: '18px 20px 20px 20px',
+                                                                                display: 'flex',
+                                                                                flexDirection: 'column',
+                                                                                gap: '10px',
+                                                                                cursor: 'pointer',
+                                                                                boxShadow: drag_snapshot.isDragging
+                                                                                    ? '0 8px 20px rgba(0,0,0,0.18)'
+                                                                                    : '0 2px 6px rgba(0,0,0,0.08)',
+                                                                                opacity: is_done ? 0.5 : (drag_snapshot.isDragging ? 0.95 : 1),
+                                                                                ...drag_provided.draggableProps.style,
+                                                                            }}>
+                                                                            {/* Title + Priority */}
+                                                                            <div style={{
+                                                                                display: 'flex',
+                                                                                justifyContent: 'space-between',
+                                                                                alignItems: 'flex-start',
+                                                                                gap: '8px',
+                                                                            }}>
+                                                                                <span style={{
+                                                                                    fontSize: 14,
+                                                                                    fontWeight: '500',
+                                                                                    fontFamily: 'Poppins',
+                                                                                    color: is_done ? '#999' : 'black',
+                                                                                    flex: 1,
+                                                                                    textDecoration: is_done ? 'line-through' : 'none',
+                                                                                }}>
+                                                                                    {task.title}
+                                                                                </span>
+                                                                                <span style={{
+                                                                                    background: pstyle.bg,
+                                                                                    color: pstyle.text,
+                                                                                    padding: '3px 12px',
+                                                                                    borderRadius: '12px',
+                                                                                    fontSize: 11,
+                                                                                    fontWeight: '600',
+                                                                                    fontFamily: 'Poppins',
+                                                                                    whiteSpace: 'nowrap',
+                                                                                }}>
+                                                                                    {pstyle.label}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            {/* Assignees */}
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                                                    {display_names.map((name, ai) => (
+                                                                                        <div key={ai} style={{
+                                                                                            width: 26,
+                                                                                            height: 26,
+                                                                                            borderRadius: '50%',
+                                                                                            background: '#999',
+                                                                                            display: 'flex',
+                                                                                            alignItems: 'center',
+                                                                                            justifyContent: 'center',
+                                                                                            color: 'white',
+                                                                                            fontSize: 11,
+                                                                                            fontWeight: '600',
+                                                                                            fontFamily: 'Poppins',
+                                                                                            flexShrink: 0,
+                                                                                            marginLeft: ai > 0 ? '-8px' : '0px',
+                                                                                            border: '2px solid white',
+                                                                                            boxSizing: 'content-box',
+                                                                                            zIndex: display_names.length - ai,
+                                                                                            position: 'relative',
+                                                                                        }}>
+                                                                                            {get_initials(name)}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                                <span style={{
+                                                                                    fontSize: 12,
+                                                                                    color: '#666',
+                                                                                    fontFamily: 'Poppins',
+                                                                                }}>
+                                                                                    {display_names.length > 0 ? display_names.join(', ') : 'Unassigned'}
+                                                                                </span>
+                                                                            </div>
+
+                                                                            {/* Due Date + Status */}
+                                                                            <div style={{
+                                                                                display: 'flex',
+                                                                                justifyContent: 'space-between',
+                                                                                alignItems: 'center',
+                                                                            }}>
+                                                                                <span style={{
+                                                                                    fontSize: 11,
+                                                                                    color: '#999',
+                                                                                    fontFamily: 'Poppins',
+                                                                                }}>
+                                                                                    {task.due_date ? format_date(task.due_date) : 'No date'}
+                                                                                </span>
+                                                                                <span style={{
+                                                                                    background: sstyle.bg,
+                                                                                    color: sstyle.text,
+                                                                                    padding: '2px 10px',
+                                                                                    borderRadius: '10px',
+                                                                                    fontSize: 10,
+                                                                                    fontWeight: '600',
+                                                                                    fontFamily: 'Poppins',
+                                                                                    whiteSpace: 'nowrap',
+                                                                                }}>
+                                                                                    {sstyle.label}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            );
+                                                        })}
+                                                    {provided.placeholder}
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </DragDropContext>
                 </>)}
             </div>
 

@@ -56,7 +56,7 @@ export default function LoginPage() {
 
         {/* Google Sign In Button */}
         <button
-          onClick={() => { window.location.href = "http://localhost:3001/auth/google/"; }}
+          onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google/`; }}
           style={{
             width: '100%',
             height: 60,

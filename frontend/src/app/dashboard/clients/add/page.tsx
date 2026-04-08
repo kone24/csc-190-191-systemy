@@ -208,7 +208,7 @@ export default function AddClientPage() {
       };
 
       // Call your NestJS backend (correct port: 3001)
-      const res = await fetch("http://localhost:3001/clients", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(clientData),
