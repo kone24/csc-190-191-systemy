@@ -175,30 +175,6 @@ export default function DashboardPage() {
             }} />
           </div>
 
-          {/* Menu Dots */}
-          <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-            <div style={{
-              width: 8,
-              height: 8,
-              background: '#666',
-              borderRadius: '50%',
-              cursor: 'pointer'
-            }} />
-            <div style={{
-              width: 8,
-              height: 8,
-              background: '#666',
-              borderRadius: '50%',
-              cursor: 'pointer'
-            }} />
-            <div style={{
-              width: 8,
-              height: 8,
-              background: '#666',
-              borderRadius: '50%',
-              cursor: 'pointer'
-            }} />
-          </div>
         </div>
 
         {/* KPI Tiles — full width row */}
@@ -318,10 +294,9 @@ export default function DashboardPage() {
               padding: '20px',
             }}>
               <div style={{ color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', marginBottom: '20px' }}>Manage Projects</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 140px 90px 100px', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #eee', marginBottom: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 90px 100px', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #eee', marginBottom: '10px' }}>
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Project</div>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Task</div>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Assignee</div>
+                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Owner</div>
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Due Date</div>
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Status</div>
               </div>
@@ -334,7 +309,7 @@ export default function DashboardPage() {
                     onMouseLeave={() => setHoveredRow(null)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '1fr 1fr 140px 90px 100px',
+                      gridTemplateColumns: '1fr 140px 90px 100px',
                       gap: '10px',
                       alignItems: 'center',
                       padding: '12px 0',
@@ -345,7 +320,6 @@ export default function DashboardPage() {
                     }}
                   >
                     <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
-                    <div style={{ color: 'black', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500' }}>{row.task}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
                       <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
@@ -490,15 +464,14 @@ export default function DashboardPage() {
               padding: '20px',
             }}>
               <div style={{ color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', marginBottom: '20px' }}>Manage Projects</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 140px 90px 100px', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #eee', marginBottom: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 90px 100px', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #eee', marginBottom: '10px' }}>
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Project</div>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Task</div>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Assignee</div>
+                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Owner</div>
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Due Date</div>
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Status</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {projectRows.map((row, i) => (
+                {projectRows.slice(0, 5).map((row, i) => (
                   <div
                     key={i}
                     onClick={() => { window.location.href = '/dashboard/projects'; }}
@@ -506,7 +479,7 @@ export default function DashboardPage() {
                     onMouseLeave={() => setHoveredRow(null)}
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '1fr 1fr 140px 90px 100px',
+                      gridTemplateColumns: '1fr 140px 90px 100px',
                       gap: '10px',
                       alignItems: 'center',
                       padding: '12px 0',
@@ -517,7 +490,6 @@ export default function DashboardPage() {
                     }}
                   >
                     <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
-                    <div style={{ color: 'black', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500' }}>{row.task}</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
                       <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>

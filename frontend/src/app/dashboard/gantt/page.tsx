@@ -468,14 +468,6 @@ export default function GanttPage() {
                 {/* Top bar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <SearchBar placeholder="Search projects..." onSearch={() => {}} />
-                    <div style={{ display: 'flex', gap: 6 }}>
-                        {[0, 1, 2].map(i => (
-                            <div key={i} style={{
-                                width: 8, height: 8, borderRadius: '50%',
-                                background: 'rgba(0,0,0,0.3)',
-                            }} />
-                        ))}
-                    </div>
                 </div>
 
                 {/* Page title */}
