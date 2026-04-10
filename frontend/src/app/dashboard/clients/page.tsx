@@ -56,7 +56,7 @@ export default function ClientsPage() {
         const fetchAllClients = async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`http://localhost:3001/clients`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
                     credentials: 'include',
                 });
                 if (!res.ok) throw new Error(`Error: ${res.status}`);
@@ -89,7 +89,7 @@ export default function ClientsPage() {
 
             const q = searchQuery.trim().toLowerCase();
 
-            fetch(`http://localhost:3001/clients/search?q=${encodeURIComponent(searchQuery)}`, {
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients/search?q=${encodeURIComponent(searchQuery)}`, {
                 credentials: 'include',
             })
                 .then((res) => {

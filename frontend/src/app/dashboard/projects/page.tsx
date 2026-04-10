@@ -35,12 +35,12 @@ interface User {
 
 // Maps API status values → display label + badge colors
 const STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
-    'open':        { label: 'On Track',   bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)'   },
-    'in_progress': { label: 'At Risk',    bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)'  },
-    'completed':   { label: 'Completed',  bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
-    'on_hold':     { label: 'On Hold',    bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)'    },
-    'cancelled':   { label: 'Cancelled',  bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
-    'behind':      { label: 'Behind',     bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
+    'open': { label: 'On Track', bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)' },
+    'in_progress': { label: 'At Risk', bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)' },
+    'completed': { label: 'Completed', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
+    'on_hold': { label: 'On Hold', bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)' },
+    'cancelled': { label: 'Cancelled', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)' },
+    'behind': { label: 'Behind', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)' },
 };
 
 const DEFAULT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' };
@@ -77,7 +77,7 @@ export default function ProjectsPage() {
     useEffect(() => {
         const fetch_projects = async () => {
             try {
-                const res = await fetch('http://localhost:3001/projects', { credentials: 'include' });
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' });
                 const json = await res.json();
                 set_projects(json.items ?? []);
             } catch (err) {
@@ -95,8 +95,8 @@ export default function ProjectsPage() {
         const fetch_options = async () => {
             try {
                 const [clients_res, users_res] = await Promise.all([
-                    fetch('http://localhost:3001/clients', { credentials: 'include' }),
-                    fetch('http://localhost:3001/users', { credentials: 'include' }),
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, { credentials: 'include' }),
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, { credentials: 'include' }),
                 ]);
                 const clients_json = await clients_res.json();
                 const users_json = await users_res.json();
@@ -151,7 +151,7 @@ export default function ProjectsPage() {
             if (create_form.budget) body.budget = Number(create_form.budget);
             if (create_form.description) body.description = create_form.description;
 
-            const res = await fetch('http://localhost:3001/projects', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -192,7 +192,7 @@ export default function ProjectsPage() {
                 return;
             }
 
-            const res = await fetch(`http://localhost:3001/projects/${edit_project.project_id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects/${edit_project.project_id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -215,7 +215,7 @@ export default function ProjectsPage() {
         if (!target_id) return;
         set_submitting(true);
         try {
-            const res = await fetch(`http://localhost:3001/projects/${target_id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects/${target_id}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });
@@ -391,200 +391,200 @@ export default function ProjectsPage() {
 
                 {/* Project Cards Grid */}
                 {!loading && projects.length > 0 && (
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: '20px',
-                }}>
-                    {filtered_projects.map((project) => {
-                        const status_display = get_status_display(project.status);
-                        return (
-                            <Link
-                                key={project.project_id}
-                                href={`/dashboard/projects/${project.project_id}`}
-                                style={{ textDecoration: 'none', color: 'inherit' }}
-                            >
-                                <div
-                                    onMouseEnter={() => set_hovered_card(project.project_id)}
-                                    onMouseLeave={() => set_hovered_card(null)}
-                                    style={{
-                                        background: 'white',
-                                        borderRadius: '15px',
-                                        boxShadow: hovered_card === project.project_id
-                                            ? `0px 4px 10px 0px ${status_display.shadow}`
-                                            : '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                                        overflow: 'hidden',
-                                        cursor: 'pointer',
-                                        transition: 'box-shadow 300ms ease',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        height: '190px',
-                                    }}>
-                                    {/* Top Section */}
-                                    <div style={{ padding: '18px 18px 0 18px', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
-                                        {/* Edit pencil + Delete trash icons — visible on card hover */}
-                                        {hovered_card === project.project_id && (
-                                            <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px', zIndex: 2 }}>
-                                                <button
-                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_edit_project(project); }}
-                                                    style={{
-                                                        background: 'rgba(255,255,255,0.85)',
-                                                        border: '1px solid #ddd',
-                                                        borderRadius: '6px',
-                                                        width: 28,
-                                                        height: 28,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        cursor: 'pointer',
-                                                        padding: 0,
-                                                    }}>
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                                    </svg>
-                                                </button>
-                                                <button
-                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_delete_project_id(project.project_id); set_show_delete_confirm(true); }}
-                                                    style={{
-                                                        background: 'rgba(255,255,255,0.85)',
-                                                        border: '1px solid #ddd',
-                                                        borderRadius: '6px',
-                                                        width: 28,
-                                                        height: 28,
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        cursor: 'pointer',
-                                                        padding: 0,
-                                                    }}>
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <polyline points="3 6 5 6 21 6" />
-                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                                        <line x1="10" y1="11" x2="10" y2="17" />
-                                                        <line x1="14" y1="11" x2="14" y2="17" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        )}
-                                        <div style={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'flex-start',
-                                            gap: '10px',
-                                        }}>
-                                            <h3 style={{
-                                                fontSize: 16,
-                                                fontWeight: '600',
-                                                color: 'black',
-                                                fontFamily: 'Poppins',
-                                                margin: 0,
-                                                flex: 1,
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                            }}>
-                                                {project.name}
-                                            </h3>
-                                            <span style={{
-                                                background: status_display.bg,
-                                                color: status_display.text,
-                                                padding: '6px 20px',
-                                                borderRadius: '20px',
-                                                fontSize: 14,
-                                                fontWeight: '600',
-                                                fontFamily: 'Poppins',
-                                                whiteSpace: 'nowrap',
-                                            }}>
-                                                {status_display.label}
-                                            </span>
-                                        </div>
-                                        <div style={{
-                                            fontSize: 13,
-                                            color: '#888',
-                                            fontFamily: 'Poppins',
-                                            marginTop: '4px',
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                        gap: '20px',
+                    }}>
+                        {filtered_projects.map((project) => {
+                            const status_display = get_status_display(project.status);
+                            return (
+                                <Link
+                                    key={project.project_id}
+                                    href={`/dashboard/projects/${project.project_id}`}
+                                    style={{ textDecoration: 'none', color: 'inherit' }}
+                                >
+                                    <div
+                                        onMouseEnter={() => set_hovered_card(project.project_id)}
+                                        onMouseLeave={() => set_hovered_card(null)}
+                                        style={{
+                                            background: 'white',
+                                            borderRadius: '15px',
+                                            boxShadow: hovered_card === project.project_id
+                                                ? `0px 4px 10px 0px ${status_display.shadow}`
+                                                : '0px 4px 6px rgba(0, 0, 0, 0.1)',
                                             overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap',
-                                        }}>
-                                            {project.client_name ?? 'No contact'}
-                                        </div>
-                                    </div>
-
-                                    {/* Status Accent Line */}
-                                    <div style={{
-                                        height: '3px',
-                                        background: status_display.bg,
-                                        margin: '12px 18px 0 18px',
-                                    }} />
-
-                                    {/* Bottom Section */}
-                                    <div style={{
-                                        padding: '12px 18px 16px 18px',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                    }}>
-                                        {/* Owner */}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{
-                                                width: 32,
-                                                height: 32,
-                                                borderRadius: '50%',
-                                                background: '#999',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: 'white',
-                                                fontSize: 12,
-                                                fontWeight: '600',
-                                                fontFamily: 'Poppins',
-                                            }}>
-                                                {get_initials(project.owner_name ?? '?')}
-                                            </div>
-                                            <span style={{
-                                                fontSize: 13,
-                                                color: '#555',
-                                                fontFamily: 'Poppins',
-                                                fontWeight: '500',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                                maxWidth: '100px',
-                                            }}>
-                                                {project.owner_name ?? 'Unassigned'}
-                                            </span>
-                                        </div>
-
-                                        {/* Due date + task count */}
-                                        <div style={{
+                                            cursor: 'pointer',
+                                            transition: 'box-shadow 300ms ease',
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            alignItems: 'flex-end',
-                                            gap: '2px',
+                                            height: '190px',
                                         }}>
-                                            <span style={{
-                                                fontSize: 12,
-                                                color: '#999',
-                                                fontFamily: 'Poppins',
+                                        {/* Top Section */}
+                                        <div style={{ padding: '18px 18px 0 18px', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+                                            {/* Edit pencil + Delete trash icons — visible on card hover */}
+                                            {hovered_card === project.project_id && (
+                                                <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px', zIndex: 2 }}>
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_edit_project(project); }}
+                                                        style={{
+                                                            background: 'rgba(255,255,255,0.85)',
+                                                            border: '1px solid #ddd',
+                                                            borderRadius: '6px',
+                                                            width: 28,
+                                                            height: 28,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            cursor: 'pointer',
+                                                            padding: 0,
+                                                        }}>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_delete_project_id(project.project_id); set_show_delete_confirm(true); }}
+                                                        style={{
+                                                            background: 'rgba(255,255,255,0.85)',
+                                                            border: '1px solid #ddd',
+                                                            borderRadius: '6px',
+                                                            width: 28,
+                                                            height: 28,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            cursor: 'pointer',
+                                                            padding: 0,
+                                                        }}>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polyline points="3 6 5 6 21 6" />
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                            <line x1="10" y1="11" x2="10" y2="17" />
+                                                            <line x1="14" y1="11" x2="14" y2="17" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'flex-start',
+                                                gap: '10px',
                                             }}>
-                                                Due {project.end_date ? format_date(project.end_date) : 'N/A'}
-                                            </span>
-                                            <span style={{
-                                                fontSize: 12,
-                                                color: '#999',
+                                                <h3 style={{
+                                                    fontSize: 16,
+                                                    fontWeight: '600',
+                                                    color: 'black',
+                                                    fontFamily: 'Poppins',
+                                                    margin: 0,
+                                                    flex: 1,
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    {project.name}
+                                                </h3>
+                                                <span style={{
+                                                    background: status_display.bg,
+                                                    color: status_display.text,
+                                                    padding: '6px 20px',
+                                                    borderRadius: '20px',
+                                                    fontSize: 14,
+                                                    fontWeight: '600',
+                                                    fontFamily: 'Poppins',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    {status_display.label}
+                                                </span>
+                                            </div>
+                                            <div style={{
+                                                fontSize: 13,
+                                                color: '#888',
                                                 fontFamily: 'Poppins',
+                                                marginTop: '4px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
                                             }}>
-                                                {project.task_count} tasks
-                                            </span>
+                                                {project.client_name ?? 'No contact'}
+                                            </div>
+                                        </div>
+
+                                        {/* Status Accent Line */}
+                                        <div style={{
+                                            height: '3px',
+                                            background: status_display.bg,
+                                            margin: '12px 18px 0 18px',
+                                        }} />
+
+                                        {/* Bottom Section */}
+                                        <div style={{
+                                            padding: '12px 18px 16px 18px',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}>
+                                            {/* Owner */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    borderRadius: '50%',
+                                                    background: '#999',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white',
+                                                    fontSize: 12,
+                                                    fontWeight: '600',
+                                                    fontFamily: 'Poppins',
+                                                }}>
+                                                    {get_initials(project.owner_name ?? '?')}
+                                                </div>
+                                                <span style={{
+                                                    fontSize: 13,
+                                                    color: '#555',
+                                                    fontFamily: 'Poppins',
+                                                    fontWeight: '500',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    maxWidth: '100px',
+                                                }}>
+                                                    {project.owner_name ?? 'Unassigned'}
+                                                </span>
+                                            </div>
+
+                                            {/* Due date + task count */}
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'flex-end',
+                                                gap: '2px',
+                                            }}>
+                                                <span style={{
+                                                    fontSize: 12,
+                                                    color: '#999',
+                                                    fontFamily: 'Poppins',
+                                                }}>
+                                                    Due {project.end_date ? format_date(project.end_date) : 'N/A'}
+                                                </span>
+                                                <span style={{
+                                                    fontSize: 12,
+                                                    color: '#999',
+                                                    fontFamily: 'Poppins',
+                                                }}>
+                                                    {project.task_count} tasks
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </Link>
-                        );
-                    })}
-                </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
                 )}
 
                 {/* Filter empty state — projects exist but none match filters */}

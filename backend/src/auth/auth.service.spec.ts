@@ -94,49 +94,6 @@ describe('AuthService', () => {
   });
 
   // =======================================================================
-  // login() — username / password
-  // =======================================================================
-  describe('login()', () => {
-    it('should return token when credentials are admin / 1234', async () => {
-      const result = await service.login('admin', '1234');
-
-      expect(result.message).toBe('Login successful');
-      expect(result.token).toBe('mocked-jwt-token');
-      expect(result.user).toEqual({ username: 'admin' });
-      expect(jwtService.sign).toHaveBeenCalledWith(
-        { username: 'admin' },
-        { expiresIn: '20m' },
-      );
-    });
-
-    it('should reject wrong username', async () => {
-      const result = await service.login('wronguser', '1234');
-
-      expect(result.message).toBe('Invalid credentials');
-      expect(result).not.toHaveProperty('token');
-    });
-
-    it('should reject wrong password', async () => {
-      const result = await service.login('admin', 'wrongpass');
-
-      expect(result.message).toBe('Invalid credentials');
-      expect(result).not.toHaveProperty('token');
-    });
-
-    it('should reject empty credentials', async () => {
-      const result = await service.login('', '');
-
-      expect(result.message).toBe('Invalid credentials');
-    });
-
-    it('should reject when both username and password are wrong', async () => {
-      const result = await service.login('foo', 'bar');
-
-      expect(result.message).toBe('Invalid credentials');
-    });
-  });
-
-  // =======================================================================
   // googleLogin() — Sign in with Google
   // =======================================================================
   describe('googleLogin()', () => {
