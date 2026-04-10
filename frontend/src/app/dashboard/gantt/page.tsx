@@ -15,16 +15,23 @@ const COLORS: Record<string, { bg: string; text: string }> = {
     blue:   { bg: '#93c5fd', text: '#1f2937' },  // dusty blue pastel
     yellow: { bg: '#fdba74', text: '#1f2937' },  // peach pastel
     pink:   { bg: '#f9a8d4', text: '#1f2937' },  // soft pink pastel
+    mint:   { bg: '#6ee7b7', text: '#1f2937' },  // mint / emerald pastel
+    indigo: { bg: '#a5b4fc', text: '#1f2937' },  // indigo pastel
+    amber:  { bg: '#fde68a', text: '#1f2937' },  // amber pastel
+    lime:   { bg: '#d9f99d', text: '#1f2937' },  // lime pastel
+    cyan:   { bg: '#a5f3fc', text: '#1f2937' },  // cyan pastel
+    mauve:  { bg: '#e9d5ff', text: '#1f2937' },  // mauve / light violet pastel
+    blush:  { bg: '#fecdd3', text: '#1f2937' },  // blush / light rose pastel
 };
 
-const COLOR_KEYS = ['red', 'teal', 'purple', 'green', 'blue', 'yellow', 'pink'] as const;
+const COLOR_KEYS = ['red', 'teal', 'purple', 'green', 'blue', 'yellow', 'pink', 'mint', 'indigo', 'amber', 'lime', 'cyan', 'mauve', 'blush'] as const;
 
 // ── Layout constants ────────────────────────────────────────────────────────
 const WEEK_COUNT = 8;
-const LEFT_COL_WIDTH = 280;
+const LEFT_COL_WIDTH = 200;
 const NAV_BTN_WIDTH = 28;
-const LANE_HEIGHT = 32;
-const LANE_GAP = 4;
+const LANE_HEIGHT = 28;
+const LANE_GAP = 2;
 const BAR_HEIGHT = 28;
 const BAR_H_PAD = 4;
 const HEADER_HEIGHT = 44;
@@ -35,7 +42,9 @@ function projectRowHeight(laneCount: number): number {
     const n = Math.max(laneCount, 1);
     // +1 extra lane at the bottom for the "add new" row
     const total = n + 1;
-    return total * LANE_HEIGHT + (total - 1) * LANE_GAP + 8;
+    const natural = total * LANE_HEIGHT + (total - 1) * LANE_GAP + 8;
+    // Floor ensures single-bar rows have consistent breathing room
+    return Math.max(natural, 72);
 }
 
 // ── Date helpers ────────────────────────────────────────────────────────────
@@ -191,13 +200,20 @@ function buildInitialData(): ClientGroup[] {
 }
 
 const LEGEND_ITEMS = [
-    { color: 'red', label: 'Red' },
-    { color: 'teal', label: 'Teal' },
+    { color: 'red',    label: 'Red'    },
+    { color: 'teal',   label: 'Teal'   },
     { color: 'purple', label: 'Purple' },
-    { color: 'green', label: 'Green' },
-    { color: 'blue', label: 'Blue' },
+    { color: 'green',  label: 'Green'  },
+    { color: 'blue',   label: 'Blue'   },
     { color: 'yellow', label: 'Yellow' },
-    { color: 'pink', label: 'Pink' },
+    { color: 'pink',   label: 'Pink'   },
+    { color: 'mint',   label: 'Mint'   },
+    { color: 'indigo', label: 'Indigo' },
+    { color: 'amber',  label: 'Amber'  },
+    { color: 'lime',   label: 'Lime'   },
+    { color: 'cyan',   label: 'Cyan'   },
+    { color: 'mauve',  label: 'Mauve'  },
+    { color: 'blush',  label: 'Blush'  },
 ];
 
 // ── Resize handle CSS (injected once) ───────────────────────────────────────
@@ -520,7 +536,7 @@ export default function GanttPage() {
                                 width: LEFT_COL_WIDTH, flexShrink: 0,
                                 height: HEADER_HEIGHT,
                                 background: '#f8f9fa', color: '#374151',
-                                fontWeight: 600, fontSize: 14,
+                                fontWeight: 500, fontSize: 12,
                                 padding: '0 16px',
                                 display: 'flex', alignItems: 'center',
                                 position: 'sticky', left: 0, zIndex: 4,
@@ -598,8 +614,8 @@ export default function GanttPage() {
                                 <div style={{
                                     width: '100%',
                                     height: CLIENT_ROW_HEIGHT,
-                                    background: '#e5e7eb', color: '#374151',
-                                    fontWeight: 700, fontSize: 14,
+                                    background: '#e5e7eb', color: '#1f2937',
+                                    fontWeight: 600, fontSize: 14,
                                     padding: '0 16px', letterSpacing: 1,
                                     display: 'flex', alignItems: 'center',
                                     position: 'sticky', left: 0, zIndex: 2,
@@ -1001,8 +1017,8 @@ export default function GanttPage() {
                                         onMouseEnter={() => setSaveHover(true)}
                                         onMouseLeave={() => setSaveHover(false)}
                                         style={{
-                                            background: saveHover ? '#2563eb' : '#3b82f6',
-                                            color: 'white', border: 'none',
+                                            background: COLORS[formColor]?.bg ?? '#93c5fd',
+                                            color: COLORS[formColor]?.text ?? '#1f2937', border: 'none',
                                             borderRadius: 12,
                                             padding: '8px 16px',
                                             fontSize: 13, fontFamily: 'Poppins', fontWeight: 600,
