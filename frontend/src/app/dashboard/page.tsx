@@ -6,6 +6,17 @@ import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { useUser } from '@/contexts/UserContext';
 
+// Copied from projects/page.tsx — maps raw DB project status values to display label + badge colors
+const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
+  'open':        { label: 'On Track',  bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)'   },
+  'in_progress': { label: 'At Risk',   bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)'  },
+  'completed':   { label: 'Completed', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
+  'on_hold':     { label: 'On Hold',   bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)'    },
+  'cancelled':   { label: 'Cancelled', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
+  'behind':      { label: 'Behind',    bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
+};
+const PROJECT_STATUS_DEFAULT = { label: 'Unknown', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' };
+
 export default function DashboardPage() {
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
@@ -14,9 +25,24 @@ export default function DashboardPage() {
   const { user } = useUser();
   const isAdminOrManager = user?.role === 'Administrator' || user?.role === 'Manager';
   const [taskView, setTaskView] = useState<'my' | 'company'>('my');
+  const [activeProjectsCount, setActiveProjectsCount] = useState<number | null>(null);
+  const [activeContactsCount, setActiveContactsCount] = useState<number | null>(null);
+
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
   }, [isAdminOrManager]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setActiveProjectsCount(Array.isArray(data.items) ? data.items.length : 0))
+      .catch(() => setActiveProjectsCount(0));
+
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setActiveContactsCount(Array.isArray(data.items) ? data.items.length : 0))
+      .catch(() => setActiveContactsCount(0));
+  }, []);
 
   const tileStyle = (index: number, borderColor: string, shadowColor: string): React.CSSProperties => ({
     minHeight: 140,
@@ -82,23 +108,15 @@ export default function DashboardPage() {
     Low:  { bg: '#00F5A0',                  text: 'black' },
   };
 
-  const projectStatusColors: Record<string, { bg: string; text: string }> = {
-    'On Track':  { bg: '#22C55E', text: 'black' },
-    'At Risk':   { bg: '#F59E0B', text: 'black' },
-    'On Hold':   { bg: '#FF5900', text: 'white' },
-    'Behind':    { bg: '#EF4444', text: 'white' },
-    'Completed': { bg: '#9CA3AF', text: 'white' },
-    'Cancelled': { bg: '#EF4444', text: 'white' },
-  };
-
   const projectRows = [
-    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.',    assigneeInitials: 'JK', assigneeBg: '#f97316', due: 'Dec 31', status: 'On Track' },
-    { project: 'Q1 Campaign',     task: 'Research',      assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Jan 10', status: 'On Hold' },
-    { project: 'App Launch',      task: 'Build',         assignee: 'Matthew T.',assigneeInitials: 'MT', assigneeBg: '#00C980', due: 'Jan 20', status: 'At Risk' },
-    { project: 'Brand Refresh',   task: 'Strategy',      assignee: 'Ashley S.', assigneeInitials: 'AS', assigneeBg: '#537FF1', due: 'Feb 5',  status: 'Behind' },
-    { project: 'Case Study',      task: 'Copywriting',   assignee: 'Xavier M.', assigneeInitials: 'XM', assigneeBg: '#FF928A', due: 'Mar 1',  status: 'On Track' },
-    { project: 'App Launch',      task: 'QA Testing',    assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Mar 15', status: 'Completed' },
+    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.',    assigneeInitials: 'JK', assigneeBg: '#f97316', due: 'Dec 31', status: 'open'        },
+    { project: 'Q1 Campaign',     task: 'Research',      assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Jan 10', status: 'on_hold'     },
+    { project: 'App Launch',      task: 'Build',         assignee: 'Matthew T.',assigneeInitials: 'MT', assigneeBg: '#00C980', due: 'Jan 20', status: 'in_progress' },
+    { project: 'Brand Refresh',   task: 'Strategy',      assignee: 'Ashley S.', assigneeInitials: 'AS', assigneeBg: '#537FF1', due: 'Feb 5',  status: 'behind'      },
+    { project: 'Case Study',      task: 'Copywriting',   assignee: 'Xavier M.', assigneeInitials: 'XM', assigneeBg: '#FF928A', due: 'Mar 1',  status: 'open'        },
+    { project: 'App Launch',      task: 'QA Testing',    assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Mar 15', status: 'completed'   },
   ];
+  const [liveProjectRows, setLiveProjectRows] = useState<typeof projectRows | null>(null);
 
   const adminMyTasks = [
     { name: 'Send Campaign debrief', priority: 'High', due: 'Oct 3', sortKey: 3 },
@@ -154,6 +172,48 @@ export default function DashboardPage() {
     { name: 'Ashley S.', initials: 'AS', avatarBg: '#537FF1', bars: [{ label: 'Brand Refresh', start: 0, end: 4, color: '#FFAC80' }] },
     { name: 'Xavier M.', initials: 'XM', avatarBg: '#FF928A', bars: [{ label: 'OOO', start: 0, end: 1, color: '#d1d5db' }, { label: 'Case Study', start: 2, end: 4, color: 'rgba(255, 246, 66, 0.6)' }] },
   ];
+
+  const avatarPalette = ['#f97316', '#8979FF', '#00C980', '#537FF1', '#FF928A', '#FFAC80'];
+  const formatProjectDate = (dateStr: string | null) => {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  const getOwnerInitials = (name: string | null) => {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    return (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : parts[0].slice(0, 2)).toUpperCase();
+  };
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data.items) || data.items.length === 0) {
+          setLiveProjectRows(projectRows);
+          return;
+        }
+        const sorted = [...data.items].sort((a, b) => {
+          const da = a.start_date ? new Date(a.start_date).getTime() : 0;
+          const db = b.start_date ? new Date(b.start_date).getTime() : 0;
+          return db - da;
+        });
+        const rows = sorted.slice(0, 4).map((p, i) => ({
+          project: p.name ?? '—',
+          task: '',
+          assignee: p.owner_name ?? (p.owner_id ? String(p.owner_id) : '—'),
+          assigneeInitials: getOwnerInitials(p.owner_name ?? null),
+          assigneeBg: avatarPalette[i % avatarPalette.length],
+          due: formatProjectDate(p.end_date ?? null),
+          status: p.status ?? 'On Track',
+        }));
+        setLiveProjectRows(rows);
+      })
+      .catch(() => setLiveProjectRows(projectRows));
+  }, []);
+
+  const displayProjectRows = liveProjectRows ?? projectRows;
+
   return (
     <div style={{ width: '100%', height: '100vh', display: 'flex', background: 'white', overflow: 'hidden' }}>
       {/* Development Role Switcher */}
@@ -187,7 +247,7 @@ export default function DashboardPage() {
           <div style={tileStyle(0, kpiColors.activeProjects.border, kpiColors.activeProjects.shadow)} onMouseEnter={() => setHoveredTile(0)} onMouseLeave={() => setHoveredTile(null)}>
             <div style={{ ...tileTopZone, background: '#FFAC80', borderBottom: '1px solid #f97316' }}><span style={{ ...tileLabelStyle, color: '#7c2d12' }}>Active Projects</span></div>
             <div style={tileBodyZone}>
-              <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>67</div>
+              <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{activeProjectsCount === null ? '...' : activeProjectsCount}</div>
             </div>
           </div>
 
@@ -197,7 +257,7 @@ export default function DashboardPage() {
               <div style={tileStyle(1, kpiColors.activeContacts.border, kpiColors.activeContacts.shadow)} onMouseEnter={() => setHoveredTile(1)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: '#00F5A0', borderBottom: '1px solid #00C980' }}><span style={{ ...tileLabelStyle, color: '#065f46' }}>Active Contacts</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>28</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{activeContactsCount === null ? '...' : activeContactsCount}</div>
                 </div>
               </div>
 
@@ -301,33 +361,39 @@ export default function DashboardPage() {
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Status</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {projectRows.map((row, i) => (
-                  <div
-                    key={i}
-                    onClick={() => { window.location.href = '/dashboard/projects'; }}
-                    onMouseEnter={() => setHoveredRow(i)}
-                    onMouseLeave={() => setHoveredRow(null)}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 140px 90px 100px',
-                      gap: '10px',
-                      alignItems: 'center',
-                      padding: '12px 0',
-                      borderBottom: '1px solid #f0f0f0',
-                      cursor: 'pointer',
-                      background: hoveredRow === i ? '#fafafa' : 'transparent',
-                      transition: 'background 150ms ease',
-                    }}
-                  >
-                    <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
-                      <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
-                    </div>
-                    <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
-                    <div><span style={{ ...badgeStyle(projectStatusColors[row.status].bg, projectStatusColors[row.status].text), padding: '6px 10px' }}>{row.status}</span></div>
-                  </div>
-                ))}
+                {liveProjectRows === null
+                  ? <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+                  : displayProjectRows.map((row, i) => {
+                    const s = PROJECT_STATUS_MAP[row.status] ?? PROJECT_STATUS_DEFAULT;
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => { window.location.href = '/dashboard/projects'; }}
+                        onMouseEnter={() => setHoveredRow(i)}
+                        onMouseLeave={() => setHoveredRow(null)}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 140px 90px 100px',
+                          gap: '10px',
+                          alignItems: 'center',
+                          padding: '12px 0',
+                          borderBottom: '1px solid #f0f0f0',
+                          cursor: 'pointer',
+                          background: hoveredRow === i ? '#fafafa' : 'transparent',
+                          transition: 'background 150ms ease',
+                        }}
+                      >
+                        <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
+                          <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
+                        </div>
+                        <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
+                        <div><span style={{ ...badgeStyle(s.bg, s.text), padding: '6px 10px' }}>{s.label}</span></div>
+                      </div>
+                    );
+                  })
+                }
               </div>
             </div>
           </div>
@@ -471,33 +537,39 @@ export default function DashboardPage() {
                 <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Status</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {projectRows.slice(0, 5).map((row, i) => (
-                  <div
-                    key={i}
-                    onClick={() => { window.location.href = '/dashboard/projects'; }}
-                    onMouseEnter={() => setHoveredRow(i)}
-                    onMouseLeave={() => setHoveredRow(null)}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 140px 90px 100px',
-                      gap: '10px',
-                      alignItems: 'center',
-                      padding: '12px 0',
-                      borderBottom: '1px solid #f0f0f0',
-                      cursor: 'pointer',
-                      background: hoveredRow === i ? '#fafafa' : 'transparent',
-                      transition: 'background 150ms ease',
-                    }}
-                  >
-                    <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
-                      <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
-                    </div>
-                    <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
-                    <div><span style={{ ...badgeStyle(projectStatusColors[row.status].bg, projectStatusColors[row.status].text), padding: '6px 10px' }}>{row.status}</span></div>
-                  </div>
-                ))}
+                {liveProjectRows === null
+                  ? <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+                  : displayProjectRows.slice(0, 5).map((row, i) => {
+                    const s = PROJECT_STATUS_MAP[row.status] ?? PROJECT_STATUS_DEFAULT;
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => { window.location.href = '/dashboard/projects'; }}
+                        onMouseEnter={() => setHoveredRow(i)}
+                        onMouseLeave={() => setHoveredRow(null)}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 140px 90px 100px',
+                          gap: '10px',
+                          alignItems: 'center',
+                          padding: '12px 0',
+                          borderBottom: '1px solid #f0f0f0',
+                          cursor: 'pointer',
+                          background: hoveredRow === i ? '#fafafa' : 'transparent',
+                          transition: 'background 150ms ease',
+                        }}
+                      >
+                        <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
+                          <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
+                        </div>
+                        <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
+                        <div><span style={{ ...badgeStyle(s.bg, s.text), padding: '6px 10px' }}>{s.label}</span></div>
+                      </div>
+                    );
+                  })
+                }
               </div>
             </div>
           </div>

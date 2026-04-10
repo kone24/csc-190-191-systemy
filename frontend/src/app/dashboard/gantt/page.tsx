@@ -8,13 +8,13 @@ import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 
 // ── Color palette ───────────────────────────────────────────────────────────
 const COLORS: Record<string, { bg: string; text: string }> = {
-    red:    { bg: '#ef4444', text: '#fff' },
-    teal:   { bg: '#14b8a6', text: '#fff' },
-    purple: { bg: '#a855f7', text: '#fff' },
-    green:  { bg: '#22c55e', text: '#fff' },
-    blue:   { bg: '#3b82f6', text: '#fff' },
-    yellow: { bg: '#eab308', text: '#000' },
-    pink:   { bg: '#ec4899', text: '#fff' },
+    red:    { bg: '#fca5a5', text: '#1f2937' },  // rose pastel
+    teal:   { bg: '#7dd3fc', text: '#1f2937' },  // sky pastel
+    purple: { bg: '#c4b5fd', text: '#1f2937' },  // lavender pastel
+    green:  { bg: '#86efac', text: '#1f2937' },  // sage pastel
+    blue:   { bg: '#93c5fd', text: '#1f2937' },  // dusty blue pastel
+    yellow: { bg: '#fdba74', text: '#1f2937' },  // peach pastel
+    pink:   { bg: '#f9a8d4', text: '#1f2937' },  // soft pink pastel
 };
 
 const COLOR_KEYS = ['red', 'teal', 'purple', 'green', 'blue', 'yellow', 'pink'] as const;
@@ -219,7 +219,7 @@ const RESIZE_CSS = `
 .gantt-bar .react-resizable-handle::after { display: none !important; }
 .gantt-bar:hover .react-resizable-handle { opacity: 1; }
 .gantt-cell { transition: background 0.12s; }
-.gantt-cell:hover { background: rgba(249, 115, 22, 0.08) !important; }
+.gantt-cell:hover { background: rgba(59, 130, 246, 0.06) !important; }
 `;
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -519,12 +519,12 @@ export default function GanttPage() {
                             <div style={{
                                 width: LEFT_COL_WIDTH, flexShrink: 0,
                                 height: HEADER_HEIGHT,
-                                background: '#FF5900', color: 'white',
+                                background: '#f8f9fa', color: '#374151',
                                 fontWeight: 600, fontSize: 14,
                                 padding: '0 16px',
                                 display: 'flex', alignItems: 'center',
                                 position: 'sticky', left: 0, zIndex: 4,
-                                borderBottom: '2px solid #e0e0e0',
+                                borderBottom: '1px solid #e5e7eb',
                                 boxSizing: 'border-box',
                             }}>
                                 Client / Project
@@ -536,12 +536,12 @@ export default function GanttPage() {
                                 style={{
                                     width: NAV_BTN_WIDTH, flexShrink: 0,
                                     height: HEADER_HEIGHT,
-                                    background: '#FF5900', color: 'white',
+                                    background: '#f8f9fa', color: '#374151',
                                     border: 'none', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: 16, fontWeight: 700, fontFamily: 'Poppins',
-                                    borderBottom: '2px solid #e0e0e0',
-                                    borderLeft: '1px solid rgba(255,255,255,0.3)',
+                                    borderBottom: '1px solid #e5e7eb',
+                                    borderLeft: '1px solid #e5e7eb',
                                     boxSizing: 'border-box',
                                     padding: 0,
                                 }}
@@ -555,14 +555,14 @@ export default function GanttPage() {
                                     <div key={i} style={{
                                         flex: 1, minWidth: 0,
                                         height: HEADER_HEIGHT,
-                                        background: isCurrent ? '#e04e00' : '#FF5900',
-                                        color: 'white',
+                                        background: isCurrent ? '#fff7ed' : '#f8f9fa',
+                                        color: isCurrent ? '#c2410c' : '#374151',
                                         fontWeight: isCurrent ? 700 : 500,
                                         fontSize: 12,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        borderBottom: '2px solid #e0e0e0',
-                                        borderTop: isCurrent ? '3px solid #fff' : 'none',
-                                        borderLeft: '1px solid rgba(255,255,255,0.3)',
+                                        borderBottom: '1px solid #e5e7eb',
+                                        borderTop: isCurrent ? '2px solid #f97316' : 'none',
+                                        borderLeft: '1px solid #e5e7eb',
                                         whiteSpace: 'nowrap',
                                         boxSizing: 'border-box',
                                     }}>
@@ -577,12 +577,12 @@ export default function GanttPage() {
                                 style={{
                                     width: NAV_BTN_WIDTH, flexShrink: 0,
                                     height: HEADER_HEIGHT,
-                                    background: '#FF5900', color: 'white',
+                                    background: '#f8f9fa', color: '#374151',
                                     border: 'none', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     fontSize: 16, fontWeight: 700, fontFamily: 'Poppins',
-                                    borderBottom: '2px solid #e0e0e0',
-                                    borderLeft: '1px solid rgba(255,255,255,0.3)',
+                                    borderBottom: '1px solid #e5e7eb',
+                                    borderLeft: '1px solid #e5e7eb',
                                     boxSizing: 'border-box',
                                     padding: 0,
                                 }}
@@ -598,12 +598,12 @@ export default function GanttPage() {
                                 <div style={{
                                     width: '100%',
                                     height: CLIENT_ROW_HEIGHT,
-                                    background: '#1f2937', color: 'white',
+                                    background: '#e5e7eb', color: '#374151',
                                     fontWeight: 700, fontSize: 14,
                                     padding: '0 16px', letterSpacing: 1,
                                     display: 'flex', alignItems: 'center',
                                     position: 'sticky', left: 0, zIndex: 2,
-                                    borderLeft: '3px solid #f97316',
+                                    borderLeft: '3px solid #9ca3af',
                                 }}>
                                     {group.client}
                                 </div>
@@ -617,24 +617,24 @@ export default function GanttPage() {
                                             key={`${group.client}-${project.name}`}
                                             style={{
                                                 display: 'flex',
-                                                borderBottom: '1px solid #000',
+                                                borderBottom: '1px solid #e5e7eb',
                                             }}
                                         >
                                             <div style={{
                                                 width: LEFT_COL_WIDTH, flexShrink: 0,
                                                 height: rowH,
-                                                background: '#f5f5f5',
+                                                background: '#fafafa',
                                                 padding: '10px 16px 4px 32px',
-                                                fontWeight: 500, fontSize: 13, color: '#333',
+                                                fontWeight: 500, fontSize: 13, color: '#374151',
                                                 display: 'flex', alignItems: 'flex-start',
                                                 position: 'sticky', left: 0, zIndex: 2,
-                                                borderRight: '1px solid #e8e8e8',
+                                                borderRight: '1px solid #e5e7eb',
                                                 boxSizing: 'border-box',
                                             }}>
                                                 {project.name}
                                             </div>
 
-                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: '#f5f5f5' }} />
+                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: '#fafafa' }} />
 
                                             <div
                                                 style={{
@@ -642,7 +642,7 @@ export default function GanttPage() {
                                                     flex: 1,
                                                     minWidth: 0,
                                                     height: rowH,
-                                                    background: '#fafafa',
+                                                    background: 'white',
                                                     overflow: 'hidden',
                                                 }}
                                                 onClick={(e) => {
@@ -664,8 +664,8 @@ export default function GanttPage() {
                                                             top: 0,
                                                             width: colWidth,
                                                             height: rowH,
-                                                            borderLeft: wi > 0 ? '1px solid #ececec' : 'none',
-                                                            background: wi === currentWeekCol ? 'rgba(249, 115, 22, 0.08)' : 'transparent',
+                                                            borderLeft: wi > 0 ? '1px solid #e5e7eb' : 'none',
+                                                            background: wi === currentWeekCol ? 'rgba(249, 115, 22, 0.05)' : 'transparent',
                                                             boxSizing: 'border-box',
                                                             pointerEvents: 'none',
                                                         }}
@@ -781,7 +781,7 @@ export default function GanttPage() {
 
                                             </div>
 
-                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: '#f5f5f5' }} />
+                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: '#fafafa' }} />
                                         </div>
                                     );
                                 })}
@@ -819,7 +819,7 @@ export default function GanttPage() {
                     >
                         <div style={{
                             height: 4,
-                            background: COLORS[formColor]?.bg || '#FF5900',
+                            background: COLORS[formColor]?.bg || '#93c5fd',
                         }} />
 
                         <div style={{
@@ -1001,7 +1001,7 @@ export default function GanttPage() {
                                         onMouseEnter={() => setSaveHover(true)}
                                         onMouseLeave={() => setSaveHover(false)}
                                         style={{
-                                            background: saveHover ? '#e04e00' : '#FF5900',
+                                            background: saveHover ? '#2563eb' : '#3b82f6',
                                             color: 'white', border: 'none',
                                             borderRadius: 12,
                                             padding: '8px 16px',
