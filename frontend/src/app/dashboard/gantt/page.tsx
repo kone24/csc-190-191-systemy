@@ -96,6 +96,8 @@ function formatWeekHeader(date: Date): string {
 
 // ── Data types ──────────────────────────────────────────────────────────────
 interface LaneEntry {
+    /** Backend gantt_entry_id — undefined for unsaved / hardcoded entries */
+    id?: string;
     text: string;
     color: string;
     /** Monday of the start week, ISO string YYYY-MM-DD */
@@ -106,12 +108,107 @@ interface LaneEntry {
 
 interface ProjectRow {
     name: string;
+    /** project_id from backend (undefined for hardcoded fallback rows) */
+    projectId?: string;
     lanes: LaneEntry[][];
 }
 
 interface ClientGroup {
     client: string;
+    /** client_id from backend (undefined for hardcoded fallback rows) */
+    clientId?: string;
     projects: ProjectRow[];
+}
+
+/** Shape returned by GET /gantt-entries */
+interface GanttEntryApi {
+    gantt_entry_id: string;
+    client_id: string | null;
+    project_id: string | null;
+    title: string;
+    assignee: string | null;
+    color: string;
+    start_date: string;
+    end_date: string;
+    lane: number | null;
+}
+
+/** Shape returned by GET /projects items */
+interface ProjectApi {
+    project_id: string;
+    name: string;
+    client_id: string | null;
+    client_name: string | null;
+}
+
+const API = process.env.NEXT_PUBLIC_BACKEND_URL ?? '';
+
+// ── Transform flat API entries into nested ClientGroup[] ─────────────────────
+function transformApiData(
+    entries: GanttEntryApi[],
+    projectMap: Map<string, { name: string; clientId: string | null; clientName: string | null }>,
+): ClientGroup[] {
+    // Group entries by clientName → projectName
+    const clientBuckets = new Map<string, {
+        clientId: string | null;
+        projects: Map<string, { projectId: string | null; entries: GanttEntryApi[] }>;
+    }>();
+
+    for (const entry of entries) {
+        const pInfo = entry.project_id ? projectMap.get(entry.project_id) : undefined;
+        const clientName = pInfo?.clientName ?? (entry.client_id ?? 'Unassigned');
+        const clientId = pInfo?.clientId ?? entry.client_id;
+        const projectName = pInfo?.name ?? (entry.project_id ?? 'Unassigned');
+        const projectId = entry.project_id;
+
+        if (!clientBuckets.has(clientName)) {
+            clientBuckets.set(clientName, { clientId, projects: new Map() });
+        }
+        const bucket = clientBuckets.get(clientName)!;
+        if (!bucket.projects.has(projectName)) {
+            bucket.projects.set(projectName, { projectId, entries: [] });
+        }
+        bucket.projects.get(projectName)!.entries.push(entry);
+    }
+
+    const groups: ClientGroup[] = [];
+
+    for (const [clientName, bucket] of clientBuckets) {
+        const projects: ProjectRow[] = [];
+        for (const [projName, projBucket] of bucket.projects) {
+            // Pack entries into lanes using overlap logic
+            const lanes: LaneEntry[][] = [];
+            // Sort by start_date so packing is deterministic
+            const sorted = [...projBucket.entries].sort((a, b) => a.start_date.localeCompare(b.start_date));
+            for (const e of sorted) {
+                const le: LaneEntry = {
+                    id: e.gantt_entry_id,
+                    text: e.title,
+                    color: e.color,
+                    startDate: e.start_date,
+                    endDate: e.end_date,
+                };
+                // Find first lane without overlap
+                let placed = false;
+                for (let li = 0; li < lanes.length; li++) {
+                    const hasOverlap = lanes[li].some(existing =>
+                        datesOverlap(le.startDate, le.endDate, existing.startDate, existing.endDate),
+                    );
+                    if (!hasOverlap) {
+                        lanes[li].push(le);
+                        placed = true;
+                        break;
+                    }
+                }
+                if (!placed) lanes.push([le]);
+            }
+            if (lanes.length === 0) lanes.push([]);
+            projects.push({ name: projName, projectId: projBucket.projectId ?? undefined, lanes });
+        }
+        groups.push({ client: clientName, clientId: bucket.clientId ?? undefined, projects });
+    }
+
+    return groups;
 }
 
 // ── Popover target ──────────────────────────────────────────────────────────
@@ -243,17 +340,21 @@ export default function GanttPage() {
     const [windowStart, setWindowStart] = useState(() => getCurrentMonday());
 
     // ── Dynamic column width ─────────────────────────────────────────────
-    const containerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(0);
+    const roRef = useRef<ResizeObserver | null>(null);
 
-    useEffect(() => {
-        const el = containerRef.current;
-        if (!el) return;
-        const ro = new ResizeObserver(([entry]) => {
-            setContainerWidth(entry.contentRect.width);
-        });
-        ro.observe(el);
-        return () => ro.disconnect();
+    const containerRef = useCallback((el: HTMLDivElement | null) => {
+        if (roRef.current) {
+            roRef.current.disconnect();
+            roRef.current = null;
+        }
+        if (el) {
+            const ro = new ResizeObserver(([entry]) => {
+                setContainerWidth(entry.contentRect.width);
+            });
+            ro.observe(el);
+            roRef.current = ro;
+        }
     }, []);
 
     const colWidth = useMemo(() => {
@@ -275,7 +376,51 @@ export default function GanttPage() {
         return visibleWeekDates.findIndex(d => toIso(d) === cwIso);
     }, [visibleWeekDates]);
 
-    const [data, setData] = useState<ClientGroup[]>(() => buildInitialData());
+    const [data, setData] = useState<ClientGroup[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // ── Fetch gantt entries + projects on mount ──────────────────────────
+    useEffect(() => {
+        let cancelled = false;
+        async function load() {
+            try {
+                const [entriesRes, projectsRes] = await Promise.all([
+                    fetch(`${API}/gantt-entries`, { credentials: 'include' }),
+                    fetch(`${API}/projects`, { credentials: 'include' }),
+                ]);
+                if (!entriesRes.ok) throw new Error(`Entries fetch failed: ${entriesRes.status}`);
+                if (!projectsRes.ok) throw new Error(`Projects fetch failed: ${projectsRes.status}`);
+
+                const entriesJson = await entriesRes.json();
+                const projectsJson = await projectsRes.json();
+
+                const items: GanttEntryApi[] = Array.isArray(entriesJson.items) ? entriesJson.items : [];
+                const projects: ProjectApi[] = Array.isArray(projectsJson.items) ? projectsJson.items : [];
+
+                const projectMap = new Map<string, { name: string; clientId: string | null; clientName: string | null }>();
+                for (const p of projects) {
+                    projectMap.set(p.project_id, { name: p.name, clientId: p.client_id, clientName: p.client_name });
+                }
+
+                if (!cancelled) {
+                    setData(transformApiData(items, projectMap));
+                    setLoading(false);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    console.error('Failed to load gantt data:', err);
+                    setError('Failed to load gantt data. Showing sample data.');
+                    setData(buildInitialData());
+                    setLoading(false);
+                    // Auto-dismiss error after 5s
+                    setTimeout(() => setError(null), 5000);
+                }
+            }
+        }
+        load();
+        return () => { cancelled = true; };
+    }, []);
 
     // Popover state
     const [popover, setPopover] = useState<PopoverTarget | null>(null);
@@ -349,79 +494,160 @@ export default function GanttPage() {
 
     const closePopover = useCallback(() => setPopover(null), []);
 
-    // ── Save handler ────────────────────────────────────────────────────
-    const handleSave = useCallback(() => {
+    // ── Save handler (POST new / PATCH existing) ──────────────────────
+    const handleSave = useCallback(async () => {
         if (!popover || !formText.trim()) return;
         const start = formStartDate <= formEndDate ? formStartDate : formEndDate;
         const end = formStartDate <= formEndDate ? formEndDate : formStartDate;
 
-        setData(prev => {
-            const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
-            const project = next[popover.clientIdx].projects[popover.projectIdx];
+        const isEdit = popover.laneIdx !== undefined && popover.entryIdx !== undefined;
 
-            if (popover.laneIdx !== undefined && popover.entryIdx !== undefined) {
-                const entry = project.lanes[popover.laneIdx][popover.entryIdx];
-                entry.text = formText.trim();
-                entry.color = formColor;
-                entry.startDate = start;
-                entry.endDate = end;
+        try {
+            if (isEdit) {
+                // Find existing entry to get its id
+                const existingEntry = data[popover.clientIdx]?.projects[popover.projectIdx]
+                    ?.lanes[popover.laneIdx!]?.[popover.entryIdx!];
+                const entryId = existingEntry?.id;
 
-                const stillFits = !project.lanes[popover.laneIdx].some((e, ei) => {
-                    if (ei === popover.entryIdx) return false;
-                    return datesOverlap(start, end, e.startDate, e.endDate);
+                if (entryId) {
+                    const res = await fetch(`${API}/gantt-entries/${entryId}`, {
+                        method: 'PATCH',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: formText.trim(),
+                            color: formColor,
+                            start_date: start,
+                            end_date: end,
+                        }),
+                    });
+                    if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
+                }
+
+                // Update local state
+                setData(prev => {
+                    const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
+                    const project = next[popover.clientIdx].projects[popover.projectIdx];
+                    const entry = project.lanes[popover.laneIdx!][popover.entryIdx!];
+                    entry.text = formText.trim();
+                    entry.color = formColor;
+                    entry.startDate = start;
+                    entry.endDate = end;
+
+                    const stillFits = !project.lanes[popover.laneIdx!].some((e, ei) => {
+                        if (ei === popover.entryIdx) return false;
+                        return datesOverlap(start, end, e.startDate, e.endDate);
+                    });
+
+                    if (!stillFits) {
+                        project.lanes[popover.laneIdx!].splice(popover.entryIdx!, 1);
+                        const newLane = findAvailableLane(project, start, end);
+                        const movedEntry: LaneEntry = {
+                            id: entry.id, text: formText.trim(), color: formColor,
+                            startDate: start, endDate: end,
+                        };
+                        if (newLane < project.lanes.length) {
+                            project.lanes[newLane].push(movedEntry);
+                            project.lanes[newLane].sort((a, b) => a.startDate.localeCompare(b.startDate));
+                        } else {
+                            project.lanes.push([movedEntry]);
+                        }
+                        project.lanes = project.lanes.filter(l => l.length > 0);
+                        if (project.lanes.length === 0) project.lanes.push([]);
+                    }
+                    return next;
+                });
+            } else {
+                // New entry — POST to backend
+                const group = data[popover.clientIdx];
+                const project = group?.projects[popover.projectIdx];
+                const body: Record<string, unknown> = {
+                    title: formText.trim(),
+                    color: formColor,
+                    start_date: start,
+                    end_date: end,
+                };
+                if (group?.clientId) body.client_id = group.clientId;
+                if (project?.projectId) body.project_id = project.projectId;
+
+                const res = await fetch(`${API}/gantt-entries`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
                 });
 
-                if (!stillFits) {
-                    project.lanes[popover.laneIdx].splice(popover.entryIdx, 1);
-                    const newLane = findAvailableLane(project, start, end);
-                    const movedEntry: LaneEntry = {
-                        text: formText.trim(), color: formColor,
-                        startDate: start, endDate: end,
+                let newId: string | undefined;
+                if (res.ok) {
+                    const json = await res.json();
+                    newId = json.item?.gantt_entry_id;
+                }
+
+                // Update local state
+                setData(prev => {
+                    const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
+                    const proj = next[popover.clientIdx].projects[popover.projectIdx];
+                    const targetLane = findAvailableLane(proj, start, end);
+                    const newEntry: LaneEntry = {
+                        id: newId,
+                        text: formText.trim(),
+                        color: formColor,
+                        startDate: start,
+                        endDate: end,
                     };
-                    if (newLane < project.lanes.length) {
-                        project.lanes[newLane].push(movedEntry);
-                        project.lanes[newLane].sort((a, b) => a.startDate.localeCompare(b.startDate));
+                    if (targetLane < proj.lanes.length) {
+                        proj.lanes[targetLane].push(newEntry);
+                        proj.lanes[targetLane].sort((a, b) => a.startDate.localeCompare(b.startDate));
                     } else {
-                        project.lanes.push([movedEntry]);
+                        proj.lanes.push([newEntry]);
                     }
-                    project.lanes = project.lanes.filter(l => l.length > 0);
-                    if (project.lanes.length === 0) project.lanes.push([]);
-                }
-            } else {
-                const targetLane = findAvailableLane(project, start, end);
-                const newEntry: LaneEntry = {
-                    text: formText.trim(),
-                    color: formColor,
-                    startDate: start,
-                    endDate: end,
-                };
-                if (targetLane < project.lanes.length) {
-                    project.lanes[targetLane].push(newEntry);
-                    project.lanes[targetLane].sort((a, b) => a.startDate.localeCompare(b.startDate));
-                } else {
-                    project.lanes.push([newEntry]);
-                }
+                    return next;
+                });
             }
-            return next;
-        });
-        setPopover(null);
-    }, [popover, formText, formColor, formStartDate, formEndDate]);
+        } catch (err) {
+            console.error('Save failed:', err);
+            setError('Failed to save entry. Please try again.');
+            setTimeout(() => setError(null), 4000);
+        }
 
-    // ── Delete handler ──────────────────────────────────────────────────
-    const handleDelete = useCallback(() => {
+        setPopover(null);
+    }, [popover, formText, formColor, formStartDate, formEndDate, data]);
+
+    // ── Delete handler (DELETE from backend) ──────────────────────────
+    const handleDelete = useCallback(async () => {
         if (!popover || popover.laneIdx === undefined || popover.entryIdx === undefined) return;
-        setData(prev => {
-            const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
-            const project = next[popover.clientIdx].projects[popover.projectIdx];
-            project.lanes[popover.laneIdx!].splice(popover.entryIdx!, 1);
-            project.lanes = project.lanes.filter(l => l.length > 0);
-            if (project.lanes.length === 0) project.lanes.push([]);
-            return next;
-        });
-        setPopover(null);
-    }, [popover]);
 
-    // ── Resize stop handler ─────────────────────────────────────────────
+        const existingEntry = data[popover.clientIdx]?.projects[popover.projectIdx]
+            ?.lanes[popover.laneIdx]?.[popover.entryIdx];
+        const entryId = existingEntry?.id;
+
+        try {
+            if (entryId) {
+                const res = await fetch(`${API}/gantt-entries/${entryId}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                });
+                if (!res.ok) throw new Error(`DELETE failed: ${res.status}`);
+            }
+
+            setData(prev => {
+                const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
+                const project = next[popover.clientIdx].projects[popover.projectIdx];
+                project.lanes[popover.laneIdx!].splice(popover.entryIdx!, 1);
+                project.lanes = project.lanes.filter(l => l.length > 0);
+                if (project.lanes.length === 0) project.lanes.push([]);
+                return next;
+            });
+        } catch (err) {
+            console.error('Delete failed:', err);
+            setError('Failed to delete entry. Please try again.');
+            setTimeout(() => setError(null), 4000);
+        }
+
+        setPopover(null);
+    }, [popover, data]);
+
+    // ── Resize stop handler (PATCH end_date to backend) ────────────────
     const handleResizeStop = useCallback((
         clientIdx: number,
         projectIdx: number,
@@ -435,12 +661,30 @@ export default function GanttPage() {
         const startD = parseDate(entryStartDate);
         const newEndDate = toIso(addWeeks(startD, spanCols - 1));
 
+        const existingEntry = data[clientIdx]?.projects[projectIdx]?.lanes[laneIdx]?.[entryIdx];
+        const entryId = existingEntry?.id;
+
+        // Optimistic local update
         setData(prev => {
             const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
             next[clientIdx].projects[projectIdx].lanes[laneIdx][entryIdx].endDate = newEndDate;
             return next;
         });
-    }, [colWidth]);
+
+        // Persist to backend
+        if (entryId) {
+            fetch(`${API}/gantt-entries/${entryId}`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ end_date: newEndDate }),
+            }).catch(err => {
+                console.error('Resize PATCH failed:', err);
+                setError('Failed to save resize. Please refresh.');
+                setTimeout(() => setError(null), 4000);
+            });
+        }
+    }, [colWidth, data]);
 
     // ── Popover position clamped to viewport ────────────────────────────
     const popoverLeft = popover
@@ -481,6 +725,19 @@ export default function GanttPage() {
                 gap: 20,
                 overflow: 'hidden',
             }}>
+                {/* Error toast */}
+                {error && (
+                    <div style={{
+                        position: 'fixed', top: 20, right: 20, zIndex: 9999,
+                        background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA',
+                        borderRadius: 8, padding: '10px 16px',
+                        fontFamily: 'Poppins', fontSize: 13, fontWeight: 500,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    }}>
+                        {error}
+                    </div>
+                )}
+
                 {/* Top bar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <SearchBar placeholder="Search projects..." onSearch={() => {}} />
@@ -517,6 +774,15 @@ export default function GanttPage() {
                 </div>
 
                 {/* ── Gantt grid ─────────────────────────────────────────────── */}
+                {loading ? (
+                    <div style={{
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'white', borderRadius: 12,
+                        boxShadow: '0px 2px 8px rgba(0,0,0,0.10)',
+                    }}>
+                        <span style={{ fontFamily: 'Poppins', fontSize: 14, color: '#999' }}>Loading Gantt data...</span>
+                    </div>
+                ) : (
                 <div
                     ref={containerRef}
                     style={{
@@ -805,6 +1071,7 @@ export default function GanttPage() {
                         ))}
                     </div>
                 </div>
+                )}
             </div>
 
             {/* ── Popover ─────────────────────────────────────────────────────── */}
