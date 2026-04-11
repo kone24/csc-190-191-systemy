@@ -12,6 +12,9 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { LeadsModule } from './leads/leads.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UsersModule } from './users/users.module';
+import { RemindersModule } from './reminders/reminders.module';
+import { TestController } from './test.controller';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -21,6 +24,7 @@ import { UsersModule } from './users/users.module';
     }),
     ScheduleModule.forRoot(),
     NotificationsModule,
+    RemindersModule,
     AuthModule,
     ClientsModule,
     VendorsModule,
@@ -28,10 +32,10 @@ import { UsersModule } from './users/users.module';
     WebhookModule,
     LeadsModule,
     AnalyticsModule,
-    ProjectsModule,
     UsersModule,
+    MailModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, TestController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

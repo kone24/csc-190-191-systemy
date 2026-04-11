@@ -5,6 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import ReminderBanner from '@/components/dashboard/ReminderBanner';
 
 export default function DashboardPage() {
   const [clientCount, setClientCount] = useState<number | null>(null);
@@ -93,6 +94,8 @@ export default function DashboardPage() {
             }} />
           </div>
         </div>
+
+        <ReminderBanner />
 
         {/* Top Section - Stats Cards and Manage Projects */}
         <div style={{
