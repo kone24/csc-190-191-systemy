@@ -38,7 +38,7 @@ interface InvoiceStatus {
   cancelled: number;
 }
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 const RANGE_OPTIONS: { label: string; value: RangeOption }[] = [
   { label: '7 Days', value: '7d' },

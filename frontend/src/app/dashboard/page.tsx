@@ -27,7 +27,7 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    fetch('http://localhost:3001/clients', { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, { credentials: 'include' })
       .then((res) => {
         if (!res.ok) throw new Error(`Error: ${res.status}`);
         return res.json();
@@ -51,7 +51,7 @@ export default function DashboardPage() {
     <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
       {/* Development Role Switcher */}
       <DevRoleSwitcher />
-      
+
       {/* Sidebar */}
       <Sidebar activePage="dashboard" />
 
