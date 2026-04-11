@@ -5,6 +5,7 @@ import { ResizableBox } from 'react-resizable';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
+import { ManagerAndAbove } from '@/components/RoleGuard';
 
 // ── Color palette ───────────────────────────────────────────────────────────
 const COLORS: Record<string, { bg: string; text: string }> = {
@@ -100,6 +101,7 @@ interface LaneEntry {
     id?: string;
     text: string;
     color: string;
+    assignee?: string | null;
     /** Monday of the start week, ISO string YYYY-MM-DD */
     startDate: string;
     /** Monday of the end week, ISO string YYYY-MM-DD */
@@ -143,52 +145,49 @@ interface ProjectApi {
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL ?? '';
 
-// ── Transform flat API entries into nested ClientGroup[] ─────────────────────
-function transformApiData(
+// ── Build ClientGroup[] from real projects + gantt entries ───────────────────
+// Left-side structure (clients/projects) comes from the projects list.
+// Gantt entry bars are matched to their project row by project_id.
+function buildFromProjectsAndEntries(
+    projects: ProjectApi[],
     entries: GanttEntryApi[],
-    projectMap: Map<string, { name: string; clientId: string | null; clientName: string | null }>,
 ): ClientGroup[] {
-    // Group entries by clientName → projectName
-    const clientBuckets = new Map<string, {
-        clientId: string | null;
-        projects: Map<string, { projectId: string | null; entries: GanttEntryApi[] }>;
-    }>();
-
-    for (const entry of entries) {
-        const pInfo = entry.project_id ? projectMap.get(entry.project_id) : undefined;
-        const clientName = pInfo?.clientName ?? (entry.client_id ?? 'Unassigned');
-        const clientId = pInfo?.clientId ?? entry.client_id;
-        const projectName = pInfo?.name ?? (entry.project_id ?? 'Unassigned');
-        const projectId = entry.project_id;
-
-        if (!clientBuckets.has(clientName)) {
-            clientBuckets.set(clientName, { clientId, projects: new Map() });
-        }
-        const bucket = clientBuckets.get(clientName)!;
-        if (!bucket.projects.has(projectName)) {
-            bucket.projects.set(projectName, { projectId, entries: [] });
-        }
-        bucket.projects.get(projectName)!.entries.push(entry);
+    // 1. Index entries by project_id for fast lookup
+    const entryByProject = new Map<string, GanttEntryApi[]>();
+    for (const e of entries) {
+        if (!e.project_id) continue;
+        if (!entryByProject.has(e.project_id)) entryByProject.set(e.project_id, []);
+        entryByProject.get(e.project_id)!.push(e);
     }
 
-    const groups: ClientGroup[] = [];
+    // 2. Group projects by client name to build section headers
+    const clientBuckets = new Map<string, { clientId: string | null; projects: ProjectApi[] }>();
+    for (const p of projects) {
+        const clientName = p.client_name ?? p.client_id ?? 'Unassigned';
+        if (!clientBuckets.has(clientName)) {
+            clientBuckets.set(clientName, { clientId: p.client_id, projects: [] });
+        }
+        clientBuckets.get(clientName)!.projects.push(p);
+    }
 
+    // 3. Build ClientGroup[] — every project gets a row, bars come from entries
+    const groups: ClientGroup[] = [];
     for (const [clientName, bucket] of clientBuckets) {
-        const projects: ProjectRow[] = [];
-        for (const [projName, projBucket] of bucket.projects) {
-            // Pack entries into lanes using overlap logic
+        const projectRows: ProjectRow[] = [];
+        for (const p of bucket.projects) {
+            const projectEntries = entryByProject.get(p.project_id) ?? [];
+            const sorted = [...projectEntries].sort((a, b) => a.start_date.localeCompare(b.start_date));
             const lanes: LaneEntry[][] = [];
-            // Sort by start_date so packing is deterministic
-            const sorted = [...projBucket.entries].sort((a, b) => a.start_date.localeCompare(b.start_date));
             for (const e of sorted) {
                 const le: LaneEntry = {
                     id: e.gantt_entry_id,
                     text: e.title,
                     color: e.color,
+                    assignee: e.assignee,
                     startDate: e.start_date,
                     endDate: e.end_date,
                 };
-                // Find first lane without overlap
+                // Pack into first lane with no overlap
                 let placed = false;
                 for (let li = 0; li < lanes.length; li++) {
                     const hasOverlap = lanes[li].some(existing =>
@@ -203,9 +202,9 @@ function transformApiData(
                 if (!placed) lanes.push([le]);
             }
             if (lanes.length === 0) lanes.push([]);
-            projects.push({ name: projName, projectId: projBucket.projectId ?? undefined, lanes });
+            projectRows.push({ name: p.name, projectId: p.project_id, lanes });
         }
-        groups.push({ client: clientName, clientId: bucket.clientId ?? undefined, projects });
+        groups.push({ client: clientName, clientId: bucket.clientId ?? undefined, projects: projectRows });
     }
 
     return groups;
@@ -331,8 +330,21 @@ const RESIZE_CSS = `
 }
 .gantt-bar .react-resizable-handle::after { display: none !important; }
 .gantt-bar:hover .react-resizable-handle { opacity: 1; }
-.gantt-cell { transition: background 0.12s; }
-.gantt-cell:hover { background: rgba(59, 130, 246, 0.06) !important; }
+.gantt-cell { transition: background 0.12s; position: relative; }
+.gantt-cell:hover { background: rgba(59, 130, 246, 0.06) !important; box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.2); }
+.gantt-cell:hover::after {
+    content: '+';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(59, 130, 246, 0.35);
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: none;
+    line-height: 1;
+}
+.gantt-bar-inner { cursor: grab; user-select: none; }
+.gantt-bar-inner:active { cursor: grabbing; }
 `;
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -370,15 +382,115 @@ export default function GanttPage() {
     const windowEndIso = useMemo(() => toIso(addWeeks(windowStart, WEEK_COUNT - 1)), [windowStart]);
     const windowStartIso = useMemo(() => toIso(windowStart), [windowStart]);
 
+    const visibleRangeLabel = useMemo(() => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const start = windowStart;
+        const end = addWeeks(windowStart, WEEK_COUNT - 1);
+        const startStr = `${months[start.getMonth()]} ${start.getDate()}`;
+        const endStr = `${months[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+        return `${startStr} — ${endStr}`;
+    }, [windowStart]);
+
     // Index of the current week column within the visible window (-1 if not visible)
     const currentWeekCol = useMemo(() => {
         const cwIso = toIso(getCurrentMonday());
         return visibleWeekDates.findIndex(d => toIso(d) === cwIso);
     }, [visibleWeekDates]);
 
+    // Keep colWidth accessible inside stable window event listeners
+    const colWidthRef = useRef(colWidth);
+    useEffect(() => { colWidthRef.current = colWidth; }, [colWidth]);
+
+    // ── Drag-to-move state ───────────────────────────────────────────────
+    interface DragData {
+        clientIdx: number;
+        projectIdx: number;
+        laneIdx: number;
+        entryIdx: number;
+        rawStartCol: number;
+        origStartDate: string;
+        origEndDate: string;
+        entryId?: string;
+        startMouseX: number;
+    }
+    const draggingDataRef = useRef<DragData | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragKey, setDragKey] = useState('');
+    const [dragDeltaCol, setDragDeltaCol] = useState(0);
+
     const [data, setData] = useState<ClientGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Global flat index for each project row (used for alternating backgrounds)
+    const projectRowIndexMap = useMemo(() => {
+        const map = new Map<string, number>();
+        let idx = 0;
+        for (const group of data) {
+            for (const project of group.projects) {
+                map.set(`${group.client}-${project.name}`, idx++);
+            }
+        }
+        return map;
+    }, [data]);
+
+    // ── Filter state ─────────────────────────────────────────────────────
+    const [filterClient, setFilterClient] = useState('');
+    const [filterProject, setFilterProject] = useState('');
+
+    const clientOptions = useMemo(
+        () => data.map(g => g.client),
+        [data],
+    );
+
+    const projectOptions = useMemo(() => {
+        const source = filterClient
+            ? data.filter(g => g.client === filterClient)
+            : data;
+        const names: string[] = [];
+        for (const g of source) {
+            for (const p of g.projects) {
+                if (!names.includes(p.name)) names.push(p.name);
+            }
+        }
+        return names;
+    }, [data, filterClient]);
+
+    // Clear project filter when selected client changes and project no longer belongs to it
+    useEffect(() => {
+        if (filterProject && filterClient) {
+            const group = data.find(g => g.client === filterClient);
+            if (!group?.projects.some(p => p.name === filterProject)) {
+                setFilterProject('');
+            }
+        }
+    }, [filterClient, filterProject, data]);
+
+    const filteredData = useMemo((): ClientGroup[] => {
+        if (!filterClient && !filterProject) return data;
+        return data
+            .filter(g => !filterClient || g.client === filterClient)
+            .map(g => ({
+                ...g,
+                projects: filterProject
+                    ? g.projects.filter(p => p.name === filterProject)
+                    : g.projects,
+            }))
+            .filter(g => g.projects.length > 0);
+    }, [data, filterClient, filterProject]);
+
+    const filtersActive = filterClient !== '' || filterProject !== '';
+
+    const clearFilters = useCallback(() => {
+        setFilterClient('');
+        setFilterProject('');
+    }, []);
+
+    // Tooltip state
+    const [tooltip, setTooltip] = useState<{
+        x: number; y: number;
+        text: string; assignee?: string | null; color: string;
+    } | null>(null);
 
     // ── Fetch gantt entries + projects on mount ──────────────────────────
     useEffect(() => {
@@ -398,13 +510,8 @@ export default function GanttPage() {
                 const items: GanttEntryApi[] = Array.isArray(entriesJson.items) ? entriesJson.items : [];
                 const projects: ProjectApi[] = Array.isArray(projectsJson.items) ? projectsJson.items : [];
 
-                const projectMap = new Map<string, { name: string; clientId: string | null; clientName: string | null }>();
-                for (const p of projects) {
-                    projectMap.set(p.project_id, { name: p.name, clientId: p.client_id, clientName: p.client_name });
-                }
-
                 if (!cancelled) {
-                    setData(transformApiData(items, projectMap));
+                    setData(buildFromProjectsAndEntries(projects, items));
                     setLoading(false);
                 }
             } catch (err) {
@@ -425,6 +532,7 @@ export default function GanttPage() {
     // Popover state
     const [popover, setPopover] = useState<PopoverTarget | null>(null);
     const [formText, setFormText] = useState('');
+    const [formAssignee, setFormAssignee] = useState('');
     const [formColor, setFormColor] = useState('red');
     const [formStartDate, setFormStartDate] = useState('');
     const [formEndDate, setFormEndDate] = useState('');
@@ -438,6 +546,85 @@ export default function GanttPage() {
     // ── Week navigation ─────────────────────────────────────────────────
     const goPrev = useCallback(() => setWindowStart(ws => addWeeks(ws, -1)), []);
     const goNext = useCallback(() => setWindowStart(ws => addWeeks(ws, 1)), []);
+    const goToday = useCallback(() => setWindowStart(getCurrentMonday()), []);
+
+    // ── Bar drag: attach/detach global listeners when drag is active ─────
+    useEffect(() => {
+        if (!isDragging) return;
+
+        const onMove = (e: MouseEvent) => {
+            const d = draggingDataRef.current;
+            if (!d) return;
+            const delta = Math.round((e.clientX - d.startMouseX) / colWidthRef.current);
+            setDragDeltaCol(prev => (prev === delta ? prev : delta));
+        };
+
+        const onUp = (e: MouseEvent) => {
+            const d = draggingDataRef.current;
+            draggingDataRef.current = null;
+            setIsDragging(false);
+            setDragDeltaCol(0);
+            if (!d) return;
+
+            const delta = Math.round((e.clientX - d.startMouseX) / colWidthRef.current);
+            if (Math.abs(delta) === 0) return;
+
+            resizedRef.current = true;
+            const newStart = toIso(addWeeks(parseDate(d.origStartDate), delta));
+            const newEnd = toIso(addWeeks(parseDate(d.origEndDate), delta));
+
+            setData(prev => {
+                const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
+                next[d.clientIdx].projects[d.projectIdx].lanes[d.laneIdx][d.entryIdx].startDate = newStart;
+                next[d.clientIdx].projects[d.projectIdx].lanes[d.laneIdx][d.entryIdx].endDate = newEnd;
+                return next;
+            });
+
+            if (d.entryId) {
+                fetch(`${API}/gantt-entries/${d.entryId}`, {
+                    method: 'PATCH',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ start_date: newStart, end_date: newEnd }),
+                }).catch(() => {
+                    setError('Failed to save move. Please refresh.');
+                    setTimeout(() => setError(null), 4000);
+                });
+            }
+        };
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        return () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, [isDragging]);
+
+    // ── Start dragging a bar ─────────────────────────────────────────────
+    const handleBarMouseDown = useCallback((
+        e: React.MouseEvent,
+        clientIdx: number,
+        projectIdx: number,
+        laneIdx: number,
+        entryIdx: number,
+        entry: LaneEntry,
+    ) => {
+        e.preventDefault(); // prevent text selection during drag
+        setTooltip(null);
+        const rawStartCol = weeksBetween(windowStart, parseDate(entry.startDate));
+        draggingDataRef.current = {
+            clientIdx, projectIdx, laneIdx, entryIdx,
+            rawStartCol,
+            origStartDate: entry.startDate,
+            origEndDate: entry.endDate,
+            entryId: entry.id,
+            startMouseX: e.clientX,
+        };
+        setDragKey(`${clientIdx}-${projectIdx}-${laneIdx}-${entryIdx}`);
+        setDragDeltaCol(0);
+        setIsDragging(true);
+    }, [windowStart]);
 
     // ── Dropdown weeks (visible window ± 12 weeks) ──────────────────────
     const dropdownWeeks = useMemo(() => {
@@ -461,6 +648,7 @@ export default function GanttPage() {
         e.stopPropagation();
         setPopover({ x: clickX, y: clickY + 4, clientIdx, projectIdx, clickedWeek: weekIso });
         setFormText('');
+        setFormAssignee('');
         setFormColor('red');
         setFormStartDate(weekIso);
         setFormEndDate(weekIso);
@@ -485,6 +673,7 @@ export default function GanttPage() {
         const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
         setPopover({ x: rect.left, y: rect.bottom + 4, clientIdx, projectIdx, laneIdx, entryIdx });
         setFormText(entry.text);
+        setFormAssignee(entry.assignee ?? '');
         setFormColor(entry.color);
         setFormStartDate(entry.startDate);
         setFormEndDate(entry.endDate);
@@ -516,9 +705,11 @@ export default function GanttPage() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             title: formText.trim(),
+                            assignee: formAssignee.trim() || null,
                             color: formColor,
                             start_date: start,
                             end_date: end,
+                            lane: popover.laneIdx,
                         }),
                     });
                     if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
@@ -530,6 +721,7 @@ export default function GanttPage() {
                     const project = next[popover.clientIdx].projects[popover.projectIdx];
                     const entry = project.lanes[popover.laneIdx!][popover.entryIdx!];
                     entry.text = formText.trim();
+                    entry.assignee = formAssignee.trim() || null;
                     entry.color = formColor;
                     entry.startDate = start;
                     entry.endDate = end;
@@ -544,6 +736,7 @@ export default function GanttPage() {
                         const newLane = findAvailableLane(project, start, end);
                         const movedEntry: LaneEntry = {
                             id: entry.id, text: formText.trim(), color: formColor,
+                            assignee: formAssignee.trim() || null,
                             startDate: start, endDate: end,
                         };
                         if (newLane < project.lanes.length) {
@@ -561,11 +754,15 @@ export default function GanttPage() {
                 // New entry — POST to backend
                 const group = data[popover.clientIdx];
                 const project = group?.projects[popover.projectIdx];
+                // Compute target lane before the fetch so it can be sent in the body
+                const targetLane = project ? findAvailableLane(project, start, end) : 0;
                 const body: Record<string, unknown> = {
                     title: formText.trim(),
+                    assignee: formAssignee.trim() || null,
                     color: formColor,
                     start_date: start,
                     end_date: end,
+                    lane: targetLane,
                 };
                 if (group?.clientId) body.client_id = group.clientId;
                 if (project?.projectId) body.project_id = project.projectId;
@@ -587,17 +784,18 @@ export default function GanttPage() {
                 setData(prev => {
                     const next = JSON.parse(JSON.stringify(prev)) as ClientGroup[];
                     const proj = next[popover.clientIdx].projects[popover.projectIdx];
-                    const targetLane = findAvailableLane(proj, start, end);
+                    const lane = findAvailableLane(proj, start, end);
                     const newEntry: LaneEntry = {
                         id: newId,
                         text: formText.trim(),
+                        assignee: formAssignee.trim() || null,
                         color: formColor,
                         startDate: start,
                         endDate: end,
                     };
-                    if (targetLane < proj.lanes.length) {
-                        proj.lanes[targetLane].push(newEntry);
-                        proj.lanes[targetLane].sort((a, b) => a.startDate.localeCompare(b.startDate));
+                    if (lane < proj.lanes.length) {
+                        proj.lanes[lane].push(newEntry);
+                        proj.lanes[lane].sort((a, b) => a.startDate.localeCompare(b.startDate));
                     } else {
                         proj.lanes.push([newEntry]);
                     }
@@ -611,7 +809,7 @@ export default function GanttPage() {
         }
 
         setPopover(null);
-    }, [popover, formText, formColor, formStartDate, formEndDate, data]);
+    }, [popover, formText, formAssignee, formColor, formStartDate, formEndDate, data]);
 
     // ── Delete handler (DELETE from backend) ──────────────────────────
     const handleDelete = useCallback(async () => {
@@ -691,7 +889,7 @@ export default function GanttPage() {
         ? Math.min(popover.x, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 300)
         : 0;
     const popoverTop = popover
-        ? Math.min(popover.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 480)
+        ? Math.min(popover.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 540)
         : 0;
 
     const selectStyle: React.CSSProperties = {
@@ -709,6 +907,7 @@ export default function GanttPage() {
     };
 
     return (
+        <ManagerAndAbove>
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
             {/* Inject resize handle CSS */}
             <style dangerouslySetInnerHTML={{ __html: RESIZE_CSS }} />
@@ -744,12 +943,72 @@ export default function GanttPage() {
                 </div>
 
                 {/* Page title */}
-                <h1 style={{
-                    fontFamily: 'Poppins', fontWeight: 600, fontSize: 28,
-                    color: '#1a1a1a', margin: 0,
-                }}>
-                    Gantt Chart
-                </h1>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+                    <h1 style={{
+                        fontFamily: 'Poppins', fontWeight: 600, fontSize: 28,
+                        color: '#1a1a1a', margin: 0,
+                    }}>
+                        Gantt Chart
+                    </h1>
+                    <span style={{
+                        fontFamily: 'Poppins', fontWeight: 400, fontSize: 14,
+                        color: '#6b7280',
+                    }}>
+                        {visibleRangeLabel}
+                    </span>
+                </div>
+
+                {/* Filter bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <select
+                        value={filterClient}
+                        onChange={(e) => { setFilterClient(e.target.value); setFilterProject(''); }}
+                        style={{
+                            fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
+                            color: filterClient ? '#f97316' : '#374151',
+                            background: 'white',
+                            border: `1px solid ${filterClient ? '#f97316' : '#d1d5db'}`,
+                            borderRadius: 8, padding: '5px 10px',
+                            cursor: 'pointer', outline: 'none',
+                        }}
+                    >
+                        <option value="">Client: All</option>
+                        {clientOptions.map(c => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={filterProject}
+                        onChange={(e) => setFilterProject(e.target.value)}
+                        style={{
+                            fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
+                            color: filterProject ? '#f97316' : '#374151',
+                            background: 'white',
+                            border: `1px solid ${filterProject ? '#f97316' : '#d1d5db'}`,
+                            borderRadius: 8, padding: '5px 10px',
+                            cursor: 'pointer', outline: 'none',
+                        }}
+                    >
+                        <option value="">Project: All</option>
+                        {projectOptions.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                        ))}
+                    </select>
+
+                    {filtersActive && (
+                        <button
+                            onClick={clearFilters}
+                            style={{
+                                background: 'none', border: 'none',
+                                fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
+                                color: '#f97316', cursor: 'pointer', padding: '5px 4px',
+                            }}
+                        >
+                            Clear filters
+                        </button>
+                    )}
+                </div>
 
                 {/* Color legend */}
                 <div style={{
@@ -792,6 +1051,8 @@ export default function GanttPage() {
                     }}
                 >
                     <div style={{ width: '100%', fontFamily: 'Poppins' }}>
+                        {/* Global grabbing cursor while dragging */}
+                        {isDragging && <style>{`* { cursor: grabbing !important; user-select: none !important; }`}</style>}
 
                         {/* Header row */}
                         <div style={{
@@ -803,13 +1064,27 @@ export default function GanttPage() {
                                 height: HEADER_HEIGHT,
                                 background: '#f8f9fa', color: '#374151',
                                 fontWeight: 500, fontSize: 12,
-                                padding: '0 16px',
+                                padding: '0 8px 0 16px',
                                 display: 'flex', alignItems: 'center',
+                                justifyContent: 'space-between',
                                 position: 'sticky', left: 0, zIndex: 4,
                                 borderBottom: '1px solid #e5e7eb',
                                 boxSizing: 'border-box',
                             }}>
-                                Client / Project
+                                <span>Client / Project</span>
+                                <button
+                                    onClick={goToday}
+                                    title="Jump to current week"
+                                    style={{
+                                        fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
+                                        color: '#374151', background: 'none',
+                                        border: '1px solid #d1d5db', borderRadius: 6,
+                                        padding: '3px 8px', cursor: 'pointer',
+                                        lineHeight: 1.4, flexShrink: 0,
+                                    }}
+                                >
+                                    Today
+                                </button>
                             </div>
 
                             <button
@@ -875,7 +1150,7 @@ export default function GanttPage() {
                         </div>
 
                         {/* Body rows */}
-                        {data.map((group, clientIdx) => (
+                        {filteredData.map((group, clientIdx) => (
                             <React.Fragment key={`client-${group.client}`}>
                                 <div style={{
                                     width: '100%',
@@ -893,6 +1168,8 @@ export default function GanttPage() {
                                 {group.projects.map((project, projectIdx) => {
                                     const laneCount = Math.max(project.lanes.length, 1);
                                     const rowH = projectRowHeight(laneCount);
+                                    const rowIdx = projectRowIndexMap.get(`${group.client}-${project.name}`) ?? 0;
+                                    const rowBg = rowIdx % 2 === 0 ? '#fafafa' : 'white';
 
                                     return (
                                         <div
@@ -905,7 +1182,7 @@ export default function GanttPage() {
                                             <div style={{
                                                 width: LEFT_COL_WIDTH, flexShrink: 0,
                                                 height: rowH,
-                                                background: '#fafafa',
+                                                background: rowBg,
                                                 padding: '10px 16px 4px 32px',
                                                 fontWeight: 500, fontSize: 13, color: '#374151',
                                                 display: 'flex', alignItems: 'flex-start',
@@ -916,7 +1193,7 @@ export default function GanttPage() {
                                                 {project.name}
                                             </div>
 
-                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: '#fafafa' }} />
+                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: rowBg }} />
 
                                             <div
                                                 style={{
@@ -924,7 +1201,7 @@ export default function GanttPage() {
                                                     flex: 1,
                                                     minWidth: 0,
                                                     height: rowH,
-                                                    background: 'white',
+                                                    background: rowBg,
                                                     overflow: 'hidden',
                                                 }}
                                                 onClick={(e) => {
@@ -991,9 +1268,14 @@ export default function GanttPage() {
                                                         const rawStartCol = weeksBetween(windowStart, entryStart);
                                                         const rawEndCol = weeksBetween(windowStart, entryEnd);
 
+                                                        // Apply drag offset for the bar being dragged
+                                                        const barKey = `${clientIdx}-${projectIdx}-${laneIdx}-${entryIdx}`;
+                                                        const isThisBarDragging = isDragging && dragKey === barKey;
+                                                        const deltaCol = isThisBarDragging ? dragDeltaCol : 0;
+
                                                         // Clamp to visible window
-                                                        const startCol = Math.max(rawStartCol, 0);
-                                                        const endCol = Math.min(rawEndCol, WEEK_COUNT - 1);
+                                                        const startCol = Math.max(rawStartCol + deltaCol, 0);
+                                                        const endCol = Math.min(rawEndCol + deltaCol, WEEK_COUNT - 1);
 
                                                         const barLeft = startCol * colWidth + BAR_H_PAD;
                                                         const barWidth = (endCol - startCol + 1) * colWidth - BAR_H_PAD * 2;
@@ -1009,7 +1291,9 @@ export default function GanttPage() {
                                                                     position: 'absolute',
                                                                     left: barLeft,
                                                                     top: barTop,
-                                                                    zIndex: 1,
+                                                                    zIndex: isThisBarDragging ? 10 : 1,
+                                                                    opacity: isThisBarDragging ? 0.85 : 1,
+                                                                    transition: isThisBarDragging ? 'none' : undefined,
                                                                 }}
                                                             >
                                                                 <ResizableBox
@@ -1030,7 +1314,23 @@ export default function GanttPage() {
                                                                     }}
                                                                 >
                                                                     <div
-                                                                        title={entry.text}
+                                                                        className="gantt-bar-inner"
+                                                                        onMouseDown={(e) => handleBarMouseDown(
+                                                                            e, clientIdx, projectIdx,
+                                                                            laneIdx, entryIdx, entry,
+                                                                        )}
+                                                                        onMouseEnter={(e) => {
+                                                                            if (!isDragging) setTooltip({
+                                                                                x: e.clientX, y: e.clientY,
+                                                                                text: entry.text,
+                                                                                assignee: entry.assignee,
+                                                                                color: entry.color,
+                                                                            });
+                                                                        }}
+                                                                        onMouseMove={(e) => {
+                                                                            if (!isDragging) setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
+                                                                        }}
+                                                                        onMouseLeave={() => setTooltip(null)}
                                                                         onClick={(e) => handleEntryClick(
                                                                             e, clientIdx, projectIdx,
                                                                             laneIdx, entryIdx, entry,
@@ -1049,11 +1349,11 @@ export default function GanttPage() {
                                                                             whiteSpace: 'nowrap',
                                                                             overflow: 'hidden',
                                                                             textOverflow: 'ellipsis',
-                                                                            cursor: 'pointer',
                                                                             boxSizing: 'border-box',
+                                                                            boxShadow: isThisBarDragging ? '0 4px 12px rgba(0,0,0,0.18)' : undefined,
                                                                         }}
                                                                     >
-                                                                        {entry.text}
+                                                                        {entry.assignee ? `${entry.text} — ${entry.assignee}` : entry.text}
                                                                     </div>
                                                                 </ResizableBox>
                                                             </div>
@@ -1063,7 +1363,7 @@ export default function GanttPage() {
 
                                             </div>
 
-                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: '#fafafa' }} />
+                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: rowBg }} />
                                         </div>
                                     );
                                 })}
@@ -1148,6 +1448,32 @@ export default function GanttPage() {
                                     onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
                                     autoFocus
                                     placeholder="Enter content..."
+                                    style={{
+                                        padding: '10px 14px',
+                                        borderRadius: 12,
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        outline: 'none',
+                                        width: '100%',
+                                        boxSizing: 'border-box',
+                                    }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                <label style={{
+                                    fontSize: 12, color: '#888',
+                                    fontFamily: 'Poppins', fontWeight: 500,
+                                }}>
+                                    Assignee
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formAssignee}
+                                    onChange={(e) => setFormAssignee(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+                                    placeholder="Optional"
                                     style={{
                                         padding: '10px 14px',
                                         borderRadius: 12,
@@ -1302,5 +1628,39 @@ export default function GanttPage() {
                 </div>
             )}
         </div>
+
+        {/* ── Tooltip ─────────────────────────────────────────────────────── */}
+        {tooltip && (
+            <div style={{
+                position: 'fixed',
+                left: tooltip.x + 14,
+                top: tooltip.y - 12,
+                zIndex: 9000,
+                background: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: 8,
+                padding: '8px 12px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                fontFamily: 'Poppins',
+                fontSize: 12,
+                maxWidth: 240,
+                pointerEvents: 'none',
+            }}>
+                <div style={{ fontWeight: 600, color: '#1f2937', lineHeight: 1.4 }}>
+                    {tooltip.text}
+                </div>
+                {tooltip.assignee && (
+                    <div style={{ color: '#6b7280', marginTop: 4 }}>
+                        Assignee: {tooltip.assignee}
+                    </div>
+                )}
+                <div style={{
+                    width: 20, height: 4, borderRadius: 2,
+                    background: COLORS[tooltip.color]?.bg ?? '#93c5fd',
+                    marginTop: 6,
+                }} />
+            </div>
+        )}
+        </ManagerAndAbove>
     );
 }

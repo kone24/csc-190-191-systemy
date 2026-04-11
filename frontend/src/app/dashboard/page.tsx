@@ -17,6 +17,23 @@ const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: stri
 };
 const PROJECT_STATUS_DEFAULT = { label: 'Unknown', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' };
 
+// Matches the color keys used in the Gantt page
+const GANTT_COLORS: Record<string, string> = {
+  red: '#fca5a5', teal: '#7dd3fc', purple: '#c4b5fd', green: '#86efac',
+  blue: '#93c5fd', yellow: '#fdba74', pink: '#f9a8d4', mint: '#6ee7b7',
+  indigo: '#a5b4fc', amber: '#fde68a', lime: '#d9f99d', cyan: '#a5f3fc',
+  mauve: '#e9d5ff', blush: '#fecdd3',
+};
+
+interface GanttEntryPreview {
+  gantt_entry_id: string;
+  title: string;
+  assignee: string | null;
+  color: string;
+  start_date: string;
+  end_date: string;
+}
+
 export default function DashboardPage() {
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
@@ -27,6 +44,7 @@ export default function DashboardPage() {
   const [taskView, setTaskView] = useState<'my' | 'company'>('my');
   const [activeProjectsCount, setActiveProjectsCount] = useState<number | null>(null);
   const [activeContactsCount, setActiveContactsCount] = useState<number | null>(null);
+  const [ganttEntries, setGanttEntries] = useState<GanttEntryPreview[] | null>(null);
 
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
@@ -42,6 +60,11 @@ export default function DashboardPage() {
       .then(r => r.json())
       .then(data => setActiveContactsCount(Array.isArray(data.items) ? data.items.length : 0))
       .catch(() => setActiveContactsCount(0));
+
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/gantt-entries`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setGanttEntries(Array.isArray(data) ? data : []))
+      .catch(() => setGanttEntries([]));
   }, []);
 
   const tileStyle = (index: number, borderColor: string, shadowColor: string): React.CSSProperties => ({
@@ -165,6 +188,51 @@ export default function DashboardPage() {
     });
   }, []);
 
+  const avatarPalette = ['#f97316', '#8979FF', '#00C980', '#537FF1', '#FF928A', '#FFAC80'];
+
+  const liveGanttRows = useMemo(() => {
+    if (ganttEntries === null) return null;
+
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+    monday.setHours(0, 0, 0, 0);
+
+    const toIso = (d: Date) => d.toISOString().slice(0, 10);
+    const weekStart = toIso(monday);
+    const friday = new Date(monday);
+    friday.setDate(monday.getDate() + 4);
+    const weekEnd = toIso(friday);
+    const mondayMs = monday.getTime();
+
+    const weekEntries = ganttEntries.filter(e => e.start_date <= weekEnd && e.end_date >= weekStart);
+    if (weekEntries.length === 0) return [];
+
+    const byAssignee = new Map<string, GanttEntryPreview[]>();
+    weekEntries.forEach(e => {
+      const key = e.assignee ?? 'Unassigned';
+      if (!byAssignee.has(key)) byAssignee.set(key, []);
+      byAssignee.get(key)!.push(e);
+    });
+
+    return Array.from(byAssignee.entries()).map(([assignee, entries], idx) => {
+      const parts = assignee.trim().split(/\s+/);
+      const initials = assignee === 'Unassigned' ? '?'
+        : (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : parts[0].slice(0, 2)).toUpperCase();
+      const bg = avatarPalette[idx % avatarPalette.length];
+      const bars = entries.map(e => {
+        const startClamped = e.start_date < weekStart ? weekStart : e.start_date;
+        const endClamped = e.end_date > weekEnd ? weekEnd : e.end_date;
+        const startIdx = Math.max(0, Math.min(4, Math.round((new Date(startClamped).getTime() - mondayMs) / 86400000)));
+        const endIdx = Math.max(0, Math.min(4, Math.round((new Date(endClamped).getTime() - mondayMs) / 86400000)));
+        const color = GANTT_COLORS[e.color] ?? '#d1d5db';
+        return { label: e.title, start: startIdx, end: endIdx, color };
+      });
+      return { name: assignee, initials, avatarBg: bg, bars };
+    });
+  }, [ganttEntries]);
+
   const ganttRows = [
     { name: 'Jez K.', initials: 'JK', avatarBg: '#f97316', bars: [{ label: 'Website Rebrand', start: 0, end: 3, color: '#FFAC80' }] },
     { name: 'Rachel S.', initials: 'RS', avatarBg: '#8979FF', bars: [{ label: 'OOO', start: 1, end: 2, color: '#d1d5db' }, { label: 'Q1 Campaign', start: 3, end: 4, color: 'rgba(91, 66, 255, 0.4)' }] },
@@ -173,7 +241,8 @@ export default function DashboardPage() {
     { name: 'Xavier M.', initials: 'XM', avatarBg: '#FF928A', bars: [{ label: 'OOO', start: 0, end: 1, color: '#d1d5db' }, { label: 'Case Study', start: 2, end: 4, color: 'rgba(255, 246, 66, 0.6)' }] },
   ];
 
-  const avatarPalette = ['#f97316', '#8979FF', '#00C980', '#537FF1', '#FF928A', '#FFAC80'];
+  const displayGanttRows = liveGanttRows ?? ganttRows;
+
   const formatProjectDate = (dateStr: string | null) => {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
@@ -433,8 +502,12 @@ export default function DashboardPage() {
             </div>
 
             {/* Gantt rows */}
-            {ganttRows.map((row, ri) => (
-              <div key={ri} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center', borderBottom: ri < ganttRows.length - 1 ? '1px solid #f0f0f0' : 'none', padding: '10px 0' }}>
+            {ganttEntries === null ? (
+              <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+            ) : displayGanttRows.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 13, fontFamily: 'Poppins', padding: '20px 0' }}>No entries this week</div>
+            ) : displayGanttRows.map((row, ri) => (
+              <div key={ri} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center', borderBottom: ri < displayGanttRows.length - 1 ? '1px solid #f0f0f0' : 'none', padding: '10px 0' }}>
                 {/* Name cell */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
