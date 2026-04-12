@@ -41,9 +41,10 @@ export class AuthController {
     @Res() res: Response,
   ) {
     const code = req.query.code as string;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
     if (!code) {
-      return res.redirect('http://localhost:3000/login?error=oauth');
+      return res.redirect(`${frontendUrl}/login?error=oauth`);
     }
 
     const tokenResponse = await fetch(
@@ -64,7 +65,7 @@ export class AuthController {
     const tokenData = await tokenResponse.json() as { id_token?: string };
 
     if (!tokenData.id_token) {
-      return res.redirect('http://localhost:3000/login?error=oauth');
+      return res.redirect(`${frontendUrl}/login?error=oauth`);
     }
 
     const result = await this.authService.googleLogin(tokenData.id_token);
@@ -72,7 +73,7 @@ export class AuthController {
     if (!result.ok) {
       // Domain mismatch or token verification failure — block access.
       const errorParam = result.message.includes('restricted') ? 'domain' : 'oauth';
-      return res.redirect(`http://localhost:3000/login?error=${errorParam}`);
+      return res.redirect(`${frontendUrl}/login?error=${errorParam}`);
     }
 
     res.cookie('access_token', result.token, {
@@ -83,7 +84,7 @@ export class AuthController {
       path: '/',
     });
 
-    return res.redirect('http://localhost:3000/dashboard');
+    return res.redirect(`${frontendUrl}/dashboard`);
   }
 
   /**

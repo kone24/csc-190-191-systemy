@@ -183,7 +183,7 @@ export default function ClientProfilePage() {
 
   // Fetch client
   useEffect(() => {
-    fetch(`http://localhost:3001/clients/${id}`, { credentials: 'include' })
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients/${id}`, { credentials: 'include' })
       .then(res => { if (!res.ok) throw new Error(`Error ${res.status}`); return res.json(); })
       .then(data => {
         if (!data.client) throw new Error('Unexpected response shape');
@@ -200,7 +200,7 @@ export default function ClientProfilePage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients/${id}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -293,7 +293,7 @@ export default function ClientProfilePage() {
           cleaned[key] = val;
         }
       }
-      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients/${id}`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -330,7 +330,7 @@ export default function ClientProfilePage() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`http://localhost:3001/clients/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
