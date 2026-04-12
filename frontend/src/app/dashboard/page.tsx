@@ -63,7 +63,11 @@ export default function DashboardPage() {
 
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/gantt-entries`, { credentials: 'include' })
       .then(r => r.json())
-      .then(data => setGanttEntries(Array.isArray(data) ? data : []))
+      .then(data => {
+        console.log('[Gantt preview] raw API response:', data);
+        // API returns { items: [...] } — same shape as /projects and /clients
+        setGanttEntries(Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []));
+      })
       .catch(() => setGanttEntries([]));
   }, []);
 
@@ -176,16 +180,21 @@ export default function DashboardPage() {
     ? [...currentTasks].sort((a, b) => a.sortKey - b.sortKey)
     : currentTasks;
 
-  const weekDays = useMemo(() => {
+  const ganttWeekHeaders = useMemo(() => {
     const today = new Date();
     const day = today.getDay();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - ((day + 6) % 7));
-    return Array.from({ length: 5 }, (_, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return `${['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][i]} ${d.getMonth() + 1}/${d.getDate()}`;
-    });
+    const mon1 = new Date(today);
+    mon1.setDate(today.getDate() - ((day + 6) % 7));
+    mon1.setHours(0, 0, 0, 0);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const fmt = (d: Date) => `${months[d.getMonth()]} ${d.getDate()}`;
+    const fri1 = new Date(mon1); fri1.setDate(mon1.getDate() + 4);
+    const mon2 = new Date(mon1); mon2.setDate(mon1.getDate() + 7);
+    const fri2 = new Date(mon1); fri2.setDate(mon1.getDate() + 11);
+    return [
+      `Mon ${fmt(mon1)} — Fri ${fmt(fri1)}`,
+      `Mon ${fmt(mon2)} — Fri ${fmt(fri2)}`,
+    ];
   }, []);
 
   const avatarPalette = ['#f97316', '#8979FF', '#00C980', '#537FF1', '#FF928A', '#FFAC80'];
@@ -205,6 +214,15 @@ export default function DashboardPage() {
       const [y, mo, d] = iso.split('-').map(Number);
       return new Date(y, mo - 1, d).getTime();
     };
+    // Count Mon–Fri days between startMs and endMs inclusive
+    const countWorkdays = (startMs: number, endMs: number): number => {
+      let count = 0;
+      for (let d = startMs; d <= endMs; d += 86400000) {
+        const dow = new Date(d).getDay();
+        if (dow !== 0 && dow !== 6) count++;
+      }
+      return count;
+    };
 
     const today = new Date();
     const dayOfWeek = today.getDay();
@@ -212,26 +230,27 @@ export default function DashboardPage() {
     monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
     monday.setHours(0, 0, 0, 0);
 
-    const weekStart = toIso(monday);
-    const friday = new Date(monday);
-    friday.setDate(monday.getDate() + 4);
-    const weekEnd = toIso(friday);
+    const currentMonday = toIso(monday);
+    const nextFriday = new Date(monday); nextFriday.setDate(monday.getDate() + 11);
+    const nextFridayIso = toIso(nextFriday);
     const mondayMs = monday.getTime();
+    const nextFridayMs = parseLocalDate(nextFridayIso);
 
-    console.log('[Gantt preview] Monday:', weekStart, 'Friday:', weekEnd, 'total entries:', ganttEntries.length);
+    console.log('[Gantt preview] ganttEntries count:', ganttEntries.length, '| ganttEntries:', ganttEntries);
+    console.log('[Gantt preview] currentMonday:', currentMonday, '| nextFriday:', nextFridayIso);
 
     // Normalize dates to YYYY-MM-DD (slice off any time component like "T00:00:00.000Z")
-    const weekEntries = ganttEntries.filter(e => {
+    const twoWeekEntries = ganttEntries.filter(e => {
       const sd = e.start_date.slice(0, 10);
       const ed = e.end_date.slice(0, 10);
-      const pass = sd <= weekEnd && ed >= weekStart;
+      const pass = sd <= nextFridayIso && ed >= currentMonday;
       console.log('[Gantt preview]  entry:', e.title, '| start:', sd, '| end:', ed, '| pass:', pass);
       return pass;
     });
-    if (weekEntries.length === 0) return [];
+    if (twoWeekEntries.length === 0) return [];
 
     const byAssignee = new Map<string, GanttEntryPreview[]>();
-    weekEntries.forEach(e => {
+    twoWeekEntries.forEach(e => {
       const key = e.assignee ?? 'Unassigned';
       if (!byAssignee.has(key)) byAssignee.set(key, []);
       byAssignee.get(key)!.push(e);
@@ -245,26 +264,32 @@ export default function DashboardPage() {
       const bars = entries.map(e => {
         const sd = e.start_date.slice(0, 10);
         const ed = e.end_date.slice(0, 10);
-        const startClamped = sd < weekStart ? weekStart : sd;
-        const endClamped = ed > weekEnd ? weekEnd : ed;
-        const startIdx = Math.max(0, Math.min(4, Math.round((parseLocalDate(startClamped) - mondayMs) / 86400000)));
-        const endIdx = Math.max(0, Math.min(4, Math.round((parseLocalDate(endClamped) - mondayMs) / 86400000)));
+        // Clamp to window using ms — more explicit than string comparison
+        const overlapStartMs = Math.max(parseLocalDate(sd), mondayMs);
+        // end_date is stored as the Monday of the end week — add 4 days to get that Friday
+        const overlapEndMs   = Math.min(parseLocalDate(ed) + 4 * 86400000, nextFridayMs);
+        // Count Mon–Fri days the entry overlaps with the 10-day window
+        const overlapDays = overlapStartMs <= overlapEndMs ? countWorkdays(overlapStartMs, overlapEndMs) : 0;
+        // Width as a percentage of the 10-day window, clamped 0–100
+        const widthPct = Math.min(overlapDays / 10 * 100, 100);
+        // Left offset: working days from window start to the day before this bar
+        const startWd = overlapStartMs <= mondayMs ? 0 : countWorkdays(mondayMs, overlapStartMs - 86400000);
         const color = GANTT_COLORS[e.color] ?? '#d1d5db';
-        return { label: e.title, start: startIdx, end: endIdx, color };
+        return { label: e.title, startWd, widthPct, color };
       });
       return { name: assignee, initials, avatarBg: bg, bars };
     });
   }, [ganttEntries]);
 
   const ganttRows = [
-    { name: 'Jez K.', initials: 'JK', avatarBg: '#f97316', bars: [{ label: 'Website Rebrand', start: 0, end: 3, color: '#FFAC80' }] },
-    { name: 'Rachel S.', initials: 'RS', avatarBg: '#8979FF', bars: [{ label: 'OOO', start: 1, end: 2, color: '#d1d5db' }, { label: 'Q1 Campaign', start: 3, end: 4, color: 'rgba(91, 66, 255, 0.4)' }] },
-    { name: 'Matthew T.', initials: 'MT', avatarBg: '#00C980', bars: [{ label: 'App Launch', start: 0, end: 4, color: '#00F5A0' }] },
-    { name: 'Ashley S.', initials: 'AS', avatarBg: '#537FF1', bars: [{ label: 'Brand Refresh', start: 0, end: 4, color: '#FFAC80' }] },
-    { name: 'Xavier M.', initials: 'XM', avatarBg: '#FF928A', bars: [{ label: 'OOO', start: 0, end: 1, color: '#d1d5db' }, { label: 'Case Study', start: 2, end: 4, color: 'rgba(255, 246, 66, 0.6)' }] },
+    { name: 'Jez K.', initials: 'JK', avatarBg: '#f97316', bars: [{ label: 'Website Rebrand', startWd: 0, widthPct: 80, color: '#FFAC80' }] },
+    { name: 'Rachel S.', initials: 'RS', avatarBg: '#8979FF', bars: [{ label: 'OOO', startWd: 2, widthPct: 30, color: '#d1d5db' }, { label: 'Q1 Campaign', startWd: 5, widthPct: 50, color: 'rgba(91, 66, 255, 0.4)' }] },
+    { name: 'Matthew T.', initials: 'MT', avatarBg: '#00C980', bars: [{ label: 'App Launch', startWd: 0, widthPct: 100, color: '#00F5A0' }] },
+    { name: 'Ashley S.', initials: 'AS', avatarBg: '#537FF1', bars: [{ label: 'Brand Refresh', startWd: 1, widthPct: 80, color: '#FFAC80' }] },
+    { name: 'Xavier M.', initials: 'XM', avatarBg: '#FF928A', bars: [{ label: 'OOO', startWd: 0, widthPct: 20, color: '#d1d5db' }, { label: 'Case Study', startWd: 3, widthPct: 70, color: 'rgba(255, 246, 66, 0.6)' }] },
   ];
 
-  const displayGanttRows = liveGanttRows ?? ganttRows;
+  const displayGanttRows = (liveGanttRows ?? ganttRows).slice(0, 6);
 
   const formatProjectDate = (dateStr: string | null) => {
     if (!dateStr) return '—';
@@ -513,15 +538,16 @@ export default function DashboardPage() {
             </div>
 
             {/* Column headers */}
-            <div style={{ display: 'grid', gridTemplateColumns: '140px repeat(5, 1fr)', gap: 0 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 0 }}>
               <div />
-              {weekDays.map((d, i) => (
+              {ganttWeekHeaders.map((h, i) => (
                 <div key={i} style={{
                   textAlign: 'center', fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
                   color: 'rgba(0,0,0,0.5)', paddingBottom: 8,
                   borderBottom: '1px solid #e8e8e8',
+                  borderLeft: i === 1 ? '1px solid #e8e8e8' : 'none',
                 }}>
-                  {d}
+                  {h}
                 </div>
               ))}
             </div>
@@ -546,19 +572,15 @@ export default function DashboardPage() {
                 </div>
                 {/* Timeline area */}
                 <div style={{ position: 'relative', height: 32 }}>
-                  {/* Column gridlines */}
-                  <div style={{ position: 'absolute', inset: 0, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }}>
-                    {[0,1,2,3,4].map(c => (
-                      <div key={c} style={{ borderLeft: c > 0 ? '1px solid #e8e8e8' : 'none' }} />
-                    ))}
-                  </div>
+                  {/* Week divider at 50% */}
+                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', borderLeft: '1px solid #e8e8e8' }} />
                   {/* Bars */}
                   {row.bars.map((bar, bi) => (
                     <div key={bi} style={{
                       position: 'absolute',
                       top: 4, bottom: 4,
-                      left: `${(bar.start / 5) * 100}%`,
-                      width: `${((bar.end - bar.start + 1) / 5) * 100}%`,
+                      left: `${(bar.startWd / 10) * 100}%`,
+                      width: `${bar.widthPct}%`,
                       background: bar.color,
                       borderRadius: 6,
                       display: 'flex', alignItems: 'center', paddingLeft: 8,
