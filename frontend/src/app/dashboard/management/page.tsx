@@ -23,7 +23,11 @@ export default function ManagementPage() {
         const fetchUsers = async () => {
             try {
                 setLoading(true);
+<<<<<<< HEAD
+                const res = await fetch('http://localhost:3001/users', { credentials: 'include' });
+=======
                 const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, { credentials: 'include' });
+>>>>>>> 7fa1cbbdb929db8c7ef12008948515a7bc928ebe
                 if (!res.ok) throw new Error('Failed to fetch users');
                 const data = await res.json();
                 const mapped: UserData[] = (data.items ?? []).map((u: { user_id: string; name: string; email: string; role: string }) => ({
@@ -47,7 +51,11 @@ export default function ManagementPage() {
         setRoleUpdating(userId);
         setError(null);
         try {
+<<<<<<< HEAD
+            const res = await fetch(`http://localhost:3001/users/${userId}/role`, {
+=======
             const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/${userId}/role`, {
+>>>>>>> 7fa1cbbdb929db8c7ef12008948515a7bc928ebe
                 method: 'PATCH',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
