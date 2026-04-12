@@ -193,20 +193,41 @@ export default function DashboardPage() {
   const liveGanttRows = useMemo(() => {
     if (ganttEntries === null) return null;
 
+    // Use local date components to avoid UTC offset shifting the date
+    const toIso = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+    // Parse "YYYY-MM-DD" as local midnight (new Date("YYYY-MM-DD") parses as UTC which is wrong)
+    const parseLocalDate = (iso: string) => {
+      const [y, mo, d] = iso.split('-').map(Number);
+      return new Date(y, mo - 1, d).getTime();
+    };
+
     const today = new Date();
     const dayOfWeek = today.getDay();
     const monday = new Date(today);
     monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
     monday.setHours(0, 0, 0, 0);
 
-    const toIso = (d: Date) => d.toISOString().slice(0, 10);
     const weekStart = toIso(monday);
     const friday = new Date(monday);
     friday.setDate(monday.getDate() + 4);
     const weekEnd = toIso(friday);
     const mondayMs = monday.getTime();
 
-    const weekEntries = ganttEntries.filter(e => e.start_date <= weekEnd && e.end_date >= weekStart);
+    console.log('[Gantt preview] Monday:', weekStart, 'Friday:', weekEnd, 'total entries:', ganttEntries.length);
+
+    // Normalize dates to YYYY-MM-DD (slice off any time component like "T00:00:00.000Z")
+    const weekEntries = ganttEntries.filter(e => {
+      const sd = e.start_date.slice(0, 10);
+      const ed = e.end_date.slice(0, 10);
+      const pass = sd <= weekEnd && ed >= weekStart;
+      console.log('[Gantt preview]  entry:', e.title, '| start:', sd, '| end:', ed, '| pass:', pass);
+      return pass;
+    });
     if (weekEntries.length === 0) return [];
 
     const byAssignee = new Map<string, GanttEntryPreview[]>();
@@ -222,10 +243,12 @@ export default function DashboardPage() {
         : (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : parts[0].slice(0, 2)).toUpperCase();
       const bg = avatarPalette[idx % avatarPalette.length];
       const bars = entries.map(e => {
-        const startClamped = e.start_date < weekStart ? weekStart : e.start_date;
-        const endClamped = e.end_date > weekEnd ? weekEnd : e.end_date;
-        const startIdx = Math.max(0, Math.min(4, Math.round((new Date(startClamped).getTime() - mondayMs) / 86400000)));
-        const endIdx = Math.max(0, Math.min(4, Math.round((new Date(endClamped).getTime() - mondayMs) / 86400000)));
+        const sd = e.start_date.slice(0, 10);
+        const ed = e.end_date.slice(0, 10);
+        const startClamped = sd < weekStart ? weekStart : sd;
+        const endClamped = ed > weekEnd ? weekEnd : ed;
+        const startIdx = Math.max(0, Math.min(4, Math.round((parseLocalDate(startClamped) - mondayMs) / 86400000)));
+        const endIdx = Math.max(0, Math.min(4, Math.round((parseLocalDate(endClamped) - mondayMs) / 86400000)));
         const color = GANTT_COLORS[e.color] ?? '#d1d5db';
         return { label: e.title, start: startIdx, end: endIdx, color };
       });
@@ -373,13 +396,13 @@ export default function DashboardPage() {
         {/* Content Section — layout depends on role */}
         {isAdminOrManager ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
-          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', alignItems: 'stretch', minHeight: 0 }}>
+          <div style={{ height: 390, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
             {/* Upcoming Tasks Section */}
             <div style={{
               background: 'white',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               borderRadius: 20,
-              padding: '20px'
+              padding: '20px',
             }}>
               {/* Header: toggle + sort */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -404,7 +427,7 @@ export default function DashboardPage() {
               </div>
               {/* Task rows */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {displayTasks.map((task, i) => (
+                {displayTasks.slice(0, 6).map((task, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
                     <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.name}</div>
                     {'assignee' in task && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).assignee}</div>}
@@ -480,6 +503,8 @@ export default function DashboardPage() {
               cursor: 'pointer',
               border: hoveredGantt ? '1.5px solid #f97316' : '1.5px solid transparent',
               transition: 'border-color 200ms ease',
+              minHeight: 380,
+              marginTop: 16,
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>

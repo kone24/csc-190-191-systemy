@@ -350,6 +350,9 @@ const RESIZE_CSS = `
 // ── Component ───────────────────────────────────────────────────────────────
 export default function GanttPage() {
     const [windowStart, setWindowStart] = useState(() => getCurrentMonday());
+    // Re-compute on the client after hydration so we never display a stale
+    // server-rendered date (SSR runs new Date() at request/build time in UTC).
+    useEffect(() => { setWindowStart(getCurrentMonday()); }, []);
 
     // ── Dynamic column width ─────────────────────────────────────────────
     const [containerWidth, setContainerWidth] = useState(0);
