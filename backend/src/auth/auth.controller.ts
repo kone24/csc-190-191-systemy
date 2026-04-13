@@ -17,8 +17,14 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Req() req: Request) {
-    return req['user']; // payload: { username }
+  async me(@Req() req: Request) {
+    const payload = req['user'] as { sub: string; email: string; role: string };
+    const result = await this.authService.findUserByEmail(payload.email);
+    if (!result.ok) {
+      return { ok: false, message: 'User not found' };
+    }
+    const u = result.user as { user_id: string; name: string; email: string; role: string };
+    return { ok: true, user: { user_id: u.user_id, name: u.name, email: u.email, role: u.role } };
   }
 
   @Get('google')

@@ -134,7 +134,7 @@ export default function AccountPage() {
                             fontFamily: 'Poppins',
                             fontWeight: '600'
                         }}>
-                            {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                            {user.name.charAt(0).toUpperCase()}
                         </div>
 
                         {/* Profile Info */}
@@ -146,7 +146,7 @@ export default function AccountPage() {
                                 color: 'black',
                                 marginBottom: '5px'
                             }}>
-                                {user.firstName} {user.lastName}
+                                {user.name}
                             </div>
                             <div style={{
                                 fontSize: 16,
@@ -252,7 +252,7 @@ export default function AccountPage() {
                         gridTemplateColumns: 'repeat(2, 1fr)',
                         gap: '20px'
                     }}>
-                        {/* First Name */}
+                        {/* Name */}
                         <div>
                             <label style={{
                                 display: 'block',
@@ -262,42 +262,12 @@ export default function AccountPage() {
                                 color: 'rgba(0, 0, 0, 0.7)',
                                 marginBottom: '8px'
                             }}>
-                                First Name
+                                Name
                             </label>
                             <input
                                 type="text"
-                                value={isEditing ? tempProfile.firstName : user.firstName}
-                                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                                disabled={!isEditing}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px 15px',
-                                    border: '1px solid rgba(0, 0, 0, 0.2)',
-                                    borderRadius: 8,
-                                    fontSize: 16,
-                                    fontFamily: 'Poppins',
-                                    background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
-                                }}
-                            />
-                        </div>
-
-                        {/* Last Name */}
-                        <div>
-                            <label style={{
-                                display: 'block',
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                                fontWeight: '500',
-                                color: 'rgba(0, 0, 0, 0.7)',
-                                marginBottom: '8px'
-                            }}>
-                                Last Name
-                            </label>
-                            <input
-                                type="text"
-                                value={isEditing ? tempProfile.lastName : user.lastName}
-                                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                                value={isEditing ? tempProfile.name : user.name}
+                                onChange={(e) => handleInputChange('name', e.target.value)}
                                 disabled={!isEditing}
                                 style={{
                                     width: '100%',
@@ -326,9 +296,8 @@ export default function AccountPage() {
                             </label>
                             <input
                                 type="email"
-                                value={isEditing ? tempProfile.email : user.email}
-                                onChange={(e) => handleInputChange('email', e.target.value)}
-                                disabled={!isEditing}
+                                value={user.email}
+                                disabled
                                 style={{
                                     width: '100%',
                                     padding: '12px 15px',
@@ -336,68 +305,8 @@ export default function AccountPage() {
                                     borderRadius: 8,
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
-                                    background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
-                                }}
-                            />
-                        </div>
-
-                        {/* Phone */}
-                        <div>
-                            <label style={{
-                                display: 'block',
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                                fontWeight: '500',
-                                color: 'rgba(0, 0, 0, 0.7)',
-                                marginBottom: '8px'
-                            }}>
-                                Phone
-                            </label>
-                            <input
-                                type="tel"
-                                value={isEditing ? tempProfile.phone : user.phone}
-                                onChange={(e) => handleInputChange('phone', e.target.value)}
-                                disabled={!isEditing}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px 15px',
-                                    border: '1px solid rgba(0, 0, 0, 0.2)',
-                                    borderRadius: 8,
-                                    fontSize: 16,
-                                    fontFamily: 'Poppins',
-                                    background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
-                                }}
-                            />
-                        </div>
-
-                        {/* Company */}
-                        <div>
-                            <label style={{
-                                display: 'block',
-                                fontSize: 14,
-                                fontFamily: 'Poppins',
-                                fontWeight: '500',
-                                color: 'rgba(0, 0, 0, 0.7)',
-                                marginBottom: '8px'
-                            }}>
-                                Company
-                            </label>
-                            <input
-                                type="text"
-                                value={isEditing ? tempProfile.company : user.company}
-                                onChange={(e) => handleInputChange('company', e.target.value)}
-                                disabled={!isEditing}
-                                style={{
-                                    width: '100%',
-                                    padding: '12px 15px',
-                                    border: '1px solid rgba(0, 0, 0, 0.2)',
-                                    borderRadius: 8,
-                                    fontSize: 16,
-                                    fontFamily: 'Poppins',
-                                    background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    background: '#f5f5f5',
+                                    color: 'rgba(0, 0, 0, 0.7)'
                                 }}
                             />
                         </div>
@@ -414,10 +323,10 @@ export default function AccountPage() {
                             }}>
                                 Role
                             </label>
-                            <select
-                                value={isEditing ? tempProfile.role : user.role}
-                                onChange={(e) => handleInputChange('role', e.target.value)}
-                                disabled={!isEditing}
+                            <input
+                                type="text"
+                                value={user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                                disabled
                                 style={{
                                     width: '100%',
                                     padding: '12px 15px',
@@ -425,14 +334,10 @@ export default function AccountPage() {
                                     borderRadius: 8,
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
-                                    background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    background: '#f5f5f5',
+                                    color: 'rgba(0, 0, 0, 0.7)'
                                 }}
-                            >
-                                <option value="Administrator">Administrator</option>
-                                <option value="Manager">Manager</option>
-                                <option value="User">User</option>
-                            </select>
+                            />
                         </div>
                     </div>
                 </div>

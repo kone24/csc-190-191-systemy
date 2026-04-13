@@ -171,7 +171,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 />
 
                 <NavItem
-                    href=""
+                    href="/dashboard/settings"
                     icon="/images/icons/settings.png"
                     label="Settings"
                     isActive={activePage === 'settings'}

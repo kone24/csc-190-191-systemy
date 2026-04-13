@@ -2,14 +2,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface User {
-    id: string;
-    firstName: string;
-    lastName: string;
+    user_id: string;
+    name: string;
     email: string;
-    company: string;
-    phone: string;
-    role: 'Administrator' | 'Manager' | 'User';
-    avatar?: string;
+    role: 'admin' | 'manager' | 'staff';
 }
 
 interface UserContextType {
@@ -37,56 +33,39 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Initialize user from localStorage on mount
+    // Fetch the real user from the backend on mount
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
+        const fetchUser = async () => {
             try {
-                const parsedUser = JSON.parse(storedUser);
-                setUser(parsedUser);
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`,
+                    { credentials: 'include' },
+                );
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.ok && data.user) {
+                        setUser(data.user);
+                    }
+                }
             } catch (error) {
-                console.error('Error parsing stored user:', error);
-                localStorage.removeItem('user');
+                console.error('Failed to fetch user:', error);
+            } finally {
+                setLoading(false);
             }
-        } else {
-            // For demo purposes, set a default user
-            // Change role here to test different user types:
-            // 'Administrator' | 'Manager' | 'User'
-            // This part will be update later when we have the database and authentication flow in place
-            const defaultUser: User = {
-                id: '1',
-                firstName: 'Admin',
-                lastName: 'User',
-                email: 'admin@headword.com',
-                company: 'Headword Inc.',
-                phone: '+1 (555) 123-4567',
-                role: 'Administrator' // <-- Default to admin, use switcher to test other roles
-            };
-            setUser(defaultUser);
-            localStorage.setItem('user', JSON.stringify(defaultUser));
-        }
+        };
+        fetchUser();
     }, []);
-
-    // Update localStorage when user changes
-    useEffect(() => {
-        if (user) {
-            localStorage.setItem('user', JSON.stringify(user));
-        } else {
-            localStorage.removeItem('user');
-        }
-    }, [user]);
 
     const logout = () => {
         setUser(null);
-        localStorage.removeItem('user');
-        // Redirect to login page
         window.location.href = '/login';
     };
 
-    const isAuthenticated = !!user;
-    const isAdmin = user?.role === 'Administrator';
-    const isManager = user?.role === 'Manager' || isAdmin;
+    const isAuthenticated = !loading && !!user;
+    const isAdmin = user?.role === 'admin';
+    const isManager = user?.role === 'manager' || isAdmin;
 
     return (
         <UserContext.Provider

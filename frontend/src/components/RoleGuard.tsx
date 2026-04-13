@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 interface RoleGuardProps {
     children: React.ReactNode;
-    allowedRoles: ('Administrator' | 'Manager' | 'User')[];
+    allowedRoles: ('admin' | 'manager' | 'staff')[];
     fallback?: React.ReactNode;
     redirectTo?: string;
 }
@@ -99,7 +99,7 @@ export const AdminOnly: React.FC<{ children: React.ReactNode; fallback?: React.R
     children,
     fallback
 }) => (
-    <RoleGuard allowedRoles={['Administrator']} fallback={fallback}>
+    <RoleGuard allowedRoles={['admin']} fallback={fallback}>
         {children}
     </RoleGuard>
 );
@@ -108,7 +108,7 @@ export const ManagerAndAbove: React.FC<{ children: React.ReactNode; fallback?: R
     children,
     fallback
 }) => (
-    <RoleGuard allowedRoles={['Administrator', 'Manager']} fallback={fallback}>
+    <RoleGuard allowedRoles={['admin', 'manager']} fallback={fallback}>
         {children}
     </RoleGuard>
 );
@@ -117,11 +117,11 @@ export const ManagerAndAbove: React.FC<{ children: React.ReactNode; fallback?: R
 export const usePermissions = () => {
     const { user, isAdmin, isManager } = useUser();
     
-    const hasRole = (role: 'Administrator' | 'Manager' | 'User') => {
+    const hasRole = (role: 'admin' | 'manager' | 'staff') => {
         return user?.role === role;
     };
 
-    const hasAnyRole = (roles: ('Administrator' | 'Manager' | 'User')[]) => {
+    const hasAnyRole = (roles: ('admin' | 'manager' | 'staff')[]) => {
         return user ? roles.includes(user.role) : false;
     };
 

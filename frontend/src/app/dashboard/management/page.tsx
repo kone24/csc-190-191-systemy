@@ -115,7 +115,7 @@ export default function ManagementPage() {
                                 fontFamily: 'Poppins',
                                 fontWeight: '500'
                             }}>
-                                Welcome, {user?.firstName} {user?.lastName}
+                                Welcome, {user?.name}
                             </div>
                         </div>
                     </div>

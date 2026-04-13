@@ -57,7 +57,7 @@ export class AuthService {
     // Check if the user already exists in the users table.
     const { data: dbUser } = await this.supabase
       .from('users')
-      .select('email')
+      .select('user_id, email, name, role')
       .eq('email', info.email.toLowerCase())
       .single();
 
@@ -66,9 +66,17 @@ export class AuthService {
       // Non-dev users without an allowed domain are already rejected above,
       // so at this point the email is either allowed-domain or dev-allowlisted.
       const emailPrefix = info.email.split('@')[0];
+
+      // Check if this email should be auto-provisioned as admin
+      const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean);
+      const autoRole = adminEmails.includes(info.email.toLowerCase()) ? 'admin' : 'staff';
+
       const { error: insertError } = await this.supabase
         .from('users')
-        .insert({ email: info.email.toLowerCase(), name: emailPrefix, role: 'staff' });
+        .insert({ email: info.email.toLowerCase(), name: emailPrefix, role: autoRole });
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
@@ -79,8 +87,22 @@ export class AuthService {
       }
     }
 
-    const user = { email: info.email };
-    const token = this.jwtService.sign({ username: info.email }, { expiresIn: '20m' });
+    // Re-fetch the user to get the user_id and role (covers both existing and newly-created users)
+    const { data: finalUser } = await this.supabase
+      .from('users')
+      .select('user_id, email, name, role')
+      .eq('email', info.email.toLowerCase())
+      .single();
+
+    if (!finalUser) {
+      return { ok: false, message: 'Failed to retrieve user account.' };
+    }
+
+    const user = { email: finalUser.email };
+    const token = this.jwtService.sign(
+      { sub: finalUser.user_id, email: finalUser.email, role: finalUser.role },
+      { expiresIn: '20m' },
+    );
 
     return { ok: true, token, user };
   }

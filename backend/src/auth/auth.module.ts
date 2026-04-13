@@ -5,6 +5,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt'; // Needed for JSON tokens
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt.guard';
+import { RolesGuard } from './roles.guard';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -16,8 +17,8 @@ import { ConfigModule } from '@nestjs/config';
       signOptions: { expiresIn: '20m' }, // sign in only valid for 20 minutes of inactivity
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
   controllers: [AuthController],
-  exports: [AuthService, JwtAuthGuard],
+  exports: [AuthService, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule { }
