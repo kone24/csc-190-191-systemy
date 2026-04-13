@@ -13,8 +13,7 @@ export class NotificationsController {
   constructor(private readonly notifications: NotificationsService) {}
 
   @Get()
-  list(@Query() q: ListNotificationsQuery) {
-    if (!q.userId) return { notifications: [] };
-    return { notifications: this.notifications.listForUser(q.userId) };
+  listForUser(@Query('userId') userId: string) {
+    return this.notifications.listForUser(userId);
   }
 }
