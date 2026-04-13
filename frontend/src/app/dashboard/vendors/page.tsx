@@ -135,11 +135,6 @@ export default function VendorsPage() {
                         placeholder="Search vendors..."
                         onSearch={(value) => setSearchQuery(value)}
                     />
-                    <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-                        <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-                        <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-                        <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-                    </div>
                 </div>
 
                 {/* Loading and Error Messages */}

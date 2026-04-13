@@ -180,30 +180,6 @@ export default function ClientsPage() {
                         onSearch={(value) => setSearchQuery(value)}
                     />
 
-                    {/* Menu Dots */}
-                    <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                    </div>
                 </div>
 
                 {/* Loading and Error Messages */}
@@ -344,7 +320,7 @@ export default function ClientsPage() {
                             }}>
                                 <thead style={{ position: 'sticky', top: 0, background: 'rgba(255, 158, 77, 0.20)' }}>
                                     <tr>
-                                        {['Name', 'Company', 'Title', 'ID', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Relationship Status', 'Tags'].map((header) => (
+                                        {['Name', 'Company', 'Title', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Tags'].map((header) => (
                                             <th key={header} style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
@@ -400,16 +376,6 @@ export default function ClientsPage() {
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
                                                 {client.title}
-                                            </td>
-                                            <td style={{
-                                                border: '1px solid rgba(217, 217, 217, 0.30)',
-                                                padding: 15,
-                                                fontFamily: 'Poppins',
-                                                fontSize: 14,
-                                                color: 'rgba(26, 26, 26, 0.80)',
-                                                whiteSpace: 'nowrap'
-                                            }}>
-                                                {shortIdMap[client.id] ?? client.id.slice(0, 4)}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -482,15 +448,6 @@ export default function ClientsPage() {
                                                 whiteSpace: 'nowrap'
                                             }}>
                                                 {client.outcome}
-                                            </td>
-                                            <td style={{
-                                                border: '1px solid rgba(217, 217, 217, 0.30)',
-                                                padding: 15,
-                                                fontFamily: 'Poppins',
-                                                fontSize: 14,
-                                                color: 'rgba(26, 26, 26, 0.80)'
-                                            }}>
-                                                {client.relationship_status}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
