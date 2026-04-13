@@ -521,77 +521,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Lead Recommendations Panel */}
-            <div style={{
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              padding: '20px',
-              marginTop: '20px',
-            }}>
-              <div style={{
-                color: 'rgba(255, 89, 0, 0.80)',
-                fontSize: 20,
-                fontFamily: 'Poppins',
-                fontWeight: '600',
-                marginBottom: '20px'
-              }}>
-                Lead Recommendations
-              </div>
-
-              {recommendations === null ? (
-                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)' }}>...</div>
-              ) : recommendations.length === 0 ? (
-                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)' }}>
-                  No recommendations available
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {recommendations.slice(0, 5).map((item, i) => (
-                    <div key={i} style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 80px 120px',
-                      gap: '10px',
-                      padding: '10px 0',
-                      borderBottom: '1px solid #f0f0f0',
-                      alignItems: 'center'
-                    }}>
-                      <div style={{
-                        fontSize: 13,
-                        fontFamily: 'Poppins',
-                        fontWeight: 600
-                      }}>
-                        {item.clientName || item.clientId}
-                      </div>
-
-                      <div style={{
-                        fontSize: 13,
-                        fontFamily: 'Poppins',
-                        textAlign: 'center'
-                      }}>
-                        {item.score}
-                      </div>
-
-                      <div>
-                        <span style={{
-                          ...badgeStyle(
-                            item.details?.label === 'HIGH'
-                              ? '#22C55E'
-                              : item.details?.label === 'MEDIUM'
-                              ? '#F59E0B'
-                              : '#EF4444',
-                            'white'
-                          )
-                        }}>
-                          {item.details?.label}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
           {/* Traffic Management — mini Gantt preview */}
           <div
             onClick={() => { window.location.href = '/dashboard/gantt'; }}
@@ -672,6 +601,112 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+          {/* Lead Scoring Panel */}
+            <div style={{
+              background: 'white',
+              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+              borderRadius: 20,
+              padding: '20px',
+              marginTop: '20px',
+            }}>
+              <div style={{
+                color: 'rgba(255, 89, 0, 0.80)',
+                fontSize: 20,
+                fontFamily: 'Poppins',
+                fontWeight: '600',
+                marginBottom: '20px'
+              }}>
+                Lead Scoring
+              </div>
+
+              {recommendations === null ? (
+                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)' }}>...</div>
+              ) : recommendations.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)' }}>
+                  No recommendations available
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 80px 120px',
+                    gap: '10px',
+                    paddingBottom: '10px',
+                    borderBottom: '1px solid #eee',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{
+                      color: 'rgba(0, 0, 0, 0.75)',
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                      fontWeight: '600'
+                    }}>
+                      Contact Name
+                    </div>
+
+                    <div style={{
+                      color: 'rgba(0, 0, 0, 0.75)',
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                      fontWeight: '600',
+                      textAlign: 'center'
+                    }}>
+                      Score
+                    </div>
+
+                    <div style={{
+                      color: 'rgba(0, 0, 0, 0.75)',
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                      fontWeight: '600'
+                    }}>
+                      Success Potential
+                    </div>
+                  </div>
+                  {recommendations.slice(0, 5).map((item, i) => (
+                    <div key={i} style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 80px 120px',
+                      gap: '10px',
+                      padding: '10px 0',
+                      borderBottom: '1px solid #f0f0f0',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        fontWeight: 600
+                      }}>
+                        {item.clientName || item.clientId}
+                      </div>
+
+                      <div style={{
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        textAlign: 'center'
+                      }}>
+                        {item.score}
+                      </div>
+
+                      <div>
+                        <span style={{
+                          ...badgeStyle(
+                            item.details?.label === 'HIGH'
+                              ? '#22C55E'
+                              : item.details?.label === 'MEDIUM'
+                              ? '#F59E0B'
+                              : '#EF4444',
+                            'white'
+                          )
+                        }}>
+                          {item.details?.label}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
