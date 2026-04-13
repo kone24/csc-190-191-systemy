@@ -32,64 +32,64 @@ export default function LoginPage() {
     e.preventDefault();
     setMessage(null);
 
-  const trimmedUsername = username.trim();
-  const trimmedPassword = password.trim();
-  
-  // EXCEPTION SHOULD BE REMOVED LATER
-  if (trimmedUsername === "admin" && trimmedPassword === "1234") {
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:3001/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword }),
-      });
-      if (res.ok) {
-        setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
-        router.replace("/dashboard");
-      } else {
-        setMessage("Admin login failed. Is the backend running?");
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    // EXCEPTION SHOULD BE REMOVED LATER
+    if (trimmedUsername === "admin" && trimmedPassword === "1234") {
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:3001/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ username: trimmedUsername, password: trimmedPassword }),
+        });
+        if (res.ok) {
+          setMessage(`Welcome, ${trimmedUsername}! Redirecting...`);
+          router.replace("/dashboard");
+        } else {
+          setMessage("Admin login failed. Is the backend running?");
+        }
+      } catch {
+        setMessage("Could not reach the server.");
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      setMessage("Could not reach the server.");
-    } finally {
-      setLoading(false);
+      resetRecaptcha();
+      return;
     }
-    resetRecaptcha();
-    return; 
-  }
 
-  // Empty / whitespace only email
-  if (!trimmedUsername) {
-    setMessage("Please enter your email.");
-    return;
-  }
+    // Empty / whitespace only email
+    if (!trimmedUsername) {
+      setMessage("Please enter your email.");
+      return;
+    }
 
-  // Basic email format check 
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (!emailPattern.test(trimmedUsername)) {
-    setMessage("Please enter a valid email address.");
-    return;
-  }
+    // Basic email format check 
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(trimmedUsername)) {
+      setMessage("Please enter a valid email address.");
+      return;
+    }
 
-  // Empty whitespace only password
-  if (!trimmedPassword) {
-    setMessage("Please enter your password.");
-    return;
-  }
+    // Empty whitespace only password
+    if (!trimmedPassword) {
+      setMessage("Please enter your password.");
+      return;
+    }
 
-  //  Minimum password length which is 8
-  if (trimmedPassword.length < 8) {
-    setMessage("Password must be at least 8 characters.");
-    return;
-  }
+    //  Minimum password length which is 8
+    if (trimmedPassword.length < 8) {
+      setMessage("Password must be at least 8 characters.");
+      return;
+    }
 
-  //  Max length
-  if (trimmedUsername.length > 255 || trimmedPassword.length > 255) {
-    setMessage("Email or password is too long.");
-    return;
-  }
+    //  Max length
+    if (trimmedUsername.length > 255 || trimmedPassword.length > 255) {
+      setMessage("Email or password is too long.");
+      return;
+    }
 
     if (!recaptchaToken) {
       setMessage("Please complete the reCAPTCHA verification.");
@@ -117,17 +117,17 @@ export default function LoginPage() {
         router.replace("/dashboard");
       } else {
         let errorMessage = "Something went wrong. Please try again.";
-      if (data && typeof data.message === "string") {
-        errorMessage = data.message;
-      } else if (res.status === 400 || res.status === 401) {
-        errorMessage = "Email or password is incorrect.";
-      } else if (res.status === 429) {
-        errorMessage = "Too many login attempts. Please wait a bit and try again.";
-      } else if (res.status >= 500) {
-        errorMessage = "Server error. Please try again later.";
-      }
+        if (data && typeof data.message === "string") {
+          errorMessage = data.message;
+        } else if (res.status === 400 || res.status === 401) {
+          errorMessage = "Email or password is incorrect.";
+        } else if (res.status === 429) {
+          errorMessage = "Too many login attempts. Please wait a bit and try again.";
+        } else if (res.status >= 500) {
+          errorMessage = "Server error. Please try again later.";
+        }
         setMessage(errorMessage);
-        setPassword(""); 
+        setPassword("");
         resetRecaptcha(); // reset reCAPTCHA token on failure
       }
     } catch (err) {
@@ -269,23 +269,6 @@ export default function LoginPage() {
           </div>
         </form>
 
-        {/* reCAPTCHA */}
-        <div style={{
-          alignSelf: 'center',
-          marginTop: 30,
-          marginBottom: 30,
-          display: 'flex',
-          justifyContent: 'center',
-          width: '100%'
-        }}>
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
-            onChange={handleRecaptchaChange}
-            size="normal"
-            theme="light"
-          />
-        </div>
 
         {/* Login Button */}
         <button
@@ -308,7 +291,7 @@ export default function LoginPage() {
             } as any;
             handleSubmit(formEvent);
           }}
-          disabled={loading } // disable if loading or reCAPTCHA not completed
+          disabled={loading} // disable if loading or reCAPTCHA not completed
           style={{
             width: 450,
             height: 75,
@@ -367,21 +350,21 @@ export default function LoginPage() {
         </div>
         {/* Google Sign In Button */}
         <div
-        onClick={() => (window.location.href = "http://localhost:3001/auth/google/")}
-        style={{
-          width: 75,
-          height: 75,
-          padding: 15,
-          background: 'rgba(255, 102, 0, 0.20)',
-          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.50)',
-          borderRadius: 20,
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 10,
-          display: 'flex',
-          cursor: 'pointer',
-          marginBottom: 10
-        }}>
+          onClick={() => (window.location.href = "http://localhost:3001/auth/google/")}
+          style={{
+            width: 75,
+            height: 75,
+            padding: 15,
+            background: 'rgba(255, 102, 0, 0.20)',
+            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.50)',
+            borderRadius: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 10,
+            display: 'flex',
+            cursor: 'pointer',
+            marginBottom: 10
+          }}>
           <img style={{ width: 45, height: 45 }} src="/images/logos/google.png" />
         </div>
       </div>
