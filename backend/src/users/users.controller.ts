@@ -5,7 +5,7 @@ const VALID_ROLES = ['admin', 'staff', 'manager'] as const;
 
 @Controller('users')
 export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
+    constructor(private readonly usersService: UsersService) { }
 
     @Get()
     async list() {
@@ -19,6 +19,21 @@ export class UsersController {
             throw new BadRequestException(`Role must be one of: ${VALID_ROLES.join(', ')}`);
         }
         await this.usersService.updateRole(id, role);
+        return { ok: true };
+    }
+
+    @Get(':id/timezone')
+    async getTimezone(@Param('id') id: string) {
+        const timezone = await this.usersService.getTimezone(id);
+        return { ok: true, timezone };
+    }
+
+    @Patch(':id/timezone')
+    async updateTimezone(@Param('id') id: string, @Body('timezone') timezone: string) {
+        if (!timezone) {
+            throw new BadRequestException('timezone is required');
+        }
+        await this.usersService.updateTimezone(id, timezone);
         return { ok: true };
     }
 }

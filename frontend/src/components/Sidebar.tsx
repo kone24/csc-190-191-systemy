@@ -55,7 +55,7 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
 
 export default function Sidebar({ activePage }: SidebarProps) {
     const { isAdmin } = useUser();
-    
+
     return (
         <div style={{
             width: 320,
@@ -178,7 +178,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 />
 
                 <NavItem
-                    href=""
+                    href="/dashboard/settings"
                     icon="/images/icons/settings.png"
                     label="Settings"
                     isActive={activePage === 'settings'}
