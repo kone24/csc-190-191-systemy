@@ -34,32 +34,35 @@ npm -v    # should show 10.x.x or newer
 
 > **Note:** `npm install` will fail if your versions are too old — this is enforced via the `engines` field in `package.json`.
 
+
+## To run the project
+Clone the repository:
+- git clone https://github.com/kone24/csc-190-191-systemy.git
+
+Navigate to the root folder:
+- cd csc-190-191-systemy
+
+Install the backend and frontend dependencies
+- npm run install:all	
+
+
 ## FRONTEND
 Navigate to the frontend directory:
 - cd frontend
 
-Install dependencies (only needed once, or when packages change):
-- npm install
+Copy the env template and fill in your values:
+- cp .env.example .env
 
-Start the frontend dev server at http://localhost:3001/
+Start the frontend dev server:
 - npm run dev
 
 View in browser:
-- http://localhost:3001/
-Start running the frontend at http://localhost:3000/
-- npm run dev
-
-Can view the frontend in browser by navigating to:
 - http://localhost:3000/
 
 ## BACKEND
 Navigate to the backend directory:
 - cd backend
 
-Install dependencies (only needed once, or when packages change):
-- npm install
-
-Start the backend at http://localhost:3000/
 Copy the env template and fill in your values:
 - cp .env.example .env
 
@@ -67,8 +70,9 @@ Required env variables (see `.env.example` for the full list):
 - `SUPABASE_URL` / `SUPABASE_ANON_KEY` — Supabase project credentials
 - `CONTACT_FORM_SECRET` — shared secret for external contact form submissions
 
-Begin running the backend at http://localhost:3001/
+Start the backend:
 - npm run start OR npm run start:dev
+- Runs at http://localhost:3001/
 
 # External Contact Form Integration
 The CRM accepts contact form submissions from external client websites via `POST /clients/contact`, authenticated with a shared secret (`X-Api-Secret` header).

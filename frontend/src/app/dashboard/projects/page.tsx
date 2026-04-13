@@ -1,477 +1,1062 @@
 'use client';
+import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
-import { useState } from 'react';
 
-interface ProjectTask {
-    id: string;
-    description: string;
-    user?: {
-        name: string;
-        avatar: string;
-        dueDate?: string;
-        tag?: string;
-        tagColor?: string;
-    };
+
+interface Project {
+    project_id: string;
+    name: string;
+    status: string;
+    service_type: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    client_id: string | null;
+    client_name: string | null;
+    owner_id: string | null;
+    owner_name: string | null;
+    task_count: number;
+    budget: number | null;
+    description: string | null;
 }
 
-interface ProjectCard {
+interface Client {
     id: string;
-    title: string;
-    tasks: ProjectTask[];
-    phase?: string;
+    first_name: string;
+    last_name: string;
 }
+
+interface User {
+    user_id: string;
+    name: string;
+}
+
+
+// Maps API status values → display label + badge colors
+const STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
+    'open': { label: 'On Track', bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)' },
+    'in_progress': { label: 'At Risk', bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)' },
+    'completed': { label: 'Completed', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
+    'on_hold': { label: 'On Hold', bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)' },
+    'cancelled': { label: 'Cancelled', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)' },
+    'behind': { label: 'Behind', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)' },
+};
+
+const DEFAULT_STATUS = { label: 'Unknown', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' };
+
+const get_status_display = (status: string) => STATUS_MAP[status] ?? DEFAULT_STATUS;
 
 export default function ProjectsPage() {
-    const [projects, setProjects] = useState<ProjectCard[]>([
-        {
-            id: '1',
-            title: 'Title of some Project',
-            tasks: [
-                {
-                    id: '1',
-                    description: 'Description of some tasks #1 extended to fill',
-                    user: { name: 'John', avatar: '/images/images/account.png', dueDate: 'Due in 1 day', tag: 'Design Tag', tagColor: '#4CAF50' }
-                },
-                {
-                    id: '2',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '3',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '4',
-                    description: 'Description of some tasks #1',
-                },
-            ]
-        },
-        {
-            id: '2',
-            title: 'Title of some Project',
-            tasks: [
-                {
-                    id: '1',
-                    description: 'Description of some tasks #1 extended to fill',
-                    user: { name: 'Jane', avatar: '/images/images/account.png', dueDate: 'Due in 1 day', tag: 'Design Tag', tagColor: '#9C27B0' }
-                },
-                {
-                    id: '2',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '3',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '4',
-                    description: 'Description of some tasks #1',
-                },
-            ]
-        },
-        {
-            id: '3',
-            title: 'Title of some Project',
-            tasks: [
-                {
-                    id: '1',
-                    description: 'Description of some tasks #1 extended to fill',
-                    user: { name: 'Mike', avatar: '/images/images/account.png', dueDate: 'Due in 1 day', tag: 'Design Tag', tagColor: '#4CAF50' }
-                },
-                {
-                    id: '2',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '3',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '4',
-                    description: 'Description of some tasks #1',
-                },
-            ]
-        },
-        {
-            id: '4',
-            title: 'Title of some Project',
-            tasks: [
-                {
-                    id: '1',
-                    description: 'Description of some tasks #1 extended to fill',
-                    user: { name: 'Sara', avatar: '/images/images/account.png', dueDate: 'Due in 1 day', tag: 'Design Tag', tagColor: '#9C27B0' }
-                },
-                {
-                    id: '2',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '3',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '4',
-                    description: 'Description of some tasks #1',
-                },
-            ]
-        },
-        {
-            id: '5',
-            title: 'Title of some Project',
-            tasks: [
-                {
-                    id: '1',
-                    description: 'Description of some tasks #1 extended to fill',
-                    user: { name: 'Alex', avatar: '/images/images/account.png', dueDate: 'Due in 1 day', tag: 'Design Tag', tagColor: '#4CAF50' }
-                },
-                {
-                    id: '2',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '3',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '4',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '5',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '6',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '7',
-                    description: 'Description of some tasks #1',
-                },
-            ]
-        },
-        {
-            id: '6',
-            title: 'Title of some Project',
-            tasks: [
-                {
-                    id: '1',
-                    description: 'Description of some tasks #1 extended to fill',
-                    user: { name: 'Chris', avatar: '/images/images/account.png', dueDate: 'Due in 1 day', tag: 'Design Tag', tagColor: '#9C27B0' }
-                },
-                {
-                    id: '2',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '3',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '4',
-                    description: 'Description of some tasks #1',
-                },
-                {
-                    id: '5',
-                    description: 'Description of some tasks #1',
-                },
-            ]
-        }
-    ]);
+    const [projects, set_projects] = useState<Project[]>([]);
+    const [loading, set_loading] = useState(true);
+    const [search_query, set_search_query] = useState('');
+    const [status_filter, set_status_filter] = useState('All');
+    const [owner_filter, set_owner_filter] = useState('All');
+    const [client_filter, set_client_filter] = useState('All');
+    const [hovered_card, set_hovered_card] = useState<string | null>(null);
+    const [show_modal, set_show_modal] = useState(false);
+    const [create_hover, set_create_hover] = useState(false);
+    const [edit_project, set_edit_project] = useState<Project | null>(null);
+    const [edit_save_hover, set_edit_save_hover] = useState(false);
+    const [show_delete_confirm, set_show_delete_confirm] = useState(false);
+    const [delete_hover, set_delete_hover] = useState(false);
+    const [clients_list, set_clients_list] = useState<Client[]>([]);
+    const [users_list, set_users_list] = useState<User[]>([]);
+    const [submitting, set_submitting] = useState(false);
+    const [delete_project_id, set_delete_project_id] = useState<string | null>(null);
+    const [create_form, set_create_form] = useState({
+        name: '', client_id: '', owner_id: '', service_type: '', status: '',
+        start_date: '', end_date: '', budget: '', description: '',
+    });
+    const [edit_form, set_edit_form] = useState({
+        name: '', client_id: '', owner_id: '', service_type: '', status: '',
+        start_date: '', end_date: '', budget: '', description: '',
+    });
 
-    const phases = [
-        { id: 1, name: 'Phase #1', details: ['Detail #1', 'Detail #2'] },
-        { id: 2, name: 'Phase #2', details: ['Detail #1', 'Detail #2'] },
-        { id: 3, name: 'Phase #3', details: ['Detail #1', 'Detail #2'] },
-        { id: 4, name: 'Phase #4', details: ['Detail #1', 'Detail #2'] },
-    ];
+    useEffect(() => {
+        const fetch_projects = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' });
+                const json = await res.json();
+                set_projects(json.items ?? []);
+            } catch (err) {
+                console.error('Failed to fetch projects:', err);
+                set_projects([]);
+            } finally {
+                set_loading(false);
+            }
+        };
+        fetch_projects();
+    }, []);
+
+    // Fetch clients and users for dropdowns
+    useEffect(() => {
+        const fetch_options = async () => {
+            try {
+                const [clients_res, users_res] = await Promise.all([
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, { credentials: 'include' }),
+                    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, { credentials: 'include' }),
+                ]);
+                const clients_json = await clients_res.json();
+                const users_json = await users_res.json();
+                set_clients_list(Array.isArray(clients_json) ? clients_json : clients_json?.items ?? []);
+                set_users_list(Array.isArray(users_json) ? users_json : users_json?.items ?? []);
+            } catch (err) {
+                console.error('Failed to fetch clients/users:', err);
+            }
+        };
+        fetch_options();
+    }, []);
+
+    // Populate edit form when edit_project changes
+    useEffect(() => {
+        if (edit_project) {
+            set_edit_form({
+                name: edit_project.name ?? '',
+                client_id: edit_project.client_id ?? '',
+                owner_id: edit_project.owner_id ?? '',
+                service_type: edit_project.service_type ?? '',
+                status: edit_project.status ?? '',
+                start_date: edit_project.start_date ? edit_project.start_date.slice(0, 10) : '',
+                end_date: edit_project.end_date ? edit_project.end_date.slice(0, 10) : '',
+                budget: edit_project.budget != null ? String(edit_project.budget) : '',
+                description: edit_project.description ?? '',
+            });
+        }
+    }, [edit_project]);
+
+    const update_create = (field: string, value: string) =>
+        set_create_form(prev => ({ ...prev, [field]: value }));
+
+    const update_edit = (field: string, value: string) =>
+        set_edit_form(prev => ({ ...prev, [field]: value }));
+
+    const handle_create_submit = async () => {
+        if (!create_form.name.trim() || !create_form.client_id || !create_form.owner_id) {
+            alert('Project Name, Contact, and Owner are required.');
+            return;
+        }
+        set_submitting(true);
+        try {
+            const body: Record<string, unknown> = {
+                name: create_form.name,
+                client_id: create_form.client_id,
+                owner_id: create_form.owner_id,
+            };
+            if (create_form.service_type) body.service_type = create_form.service_type;
+            if (create_form.status) body.status = create_form.status;
+            if (create_form.start_date) body.start_date = create_form.start_date;
+            if (create_form.end_date) body.end_date = create_form.end_date;
+            if (create_form.budget) body.budget = Number(create_form.budget);
+            if (create_form.description) body.description = create_form.description;
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            set_projects(prev => [...prev, json.item]);
+            set_show_modal(false);
+            set_create_form({ name: '', client_id: '', owner_id: '', service_type: '', status: '', start_date: '', end_date: '', budget: '', description: '' });
+        } catch (err: unknown) {
+            alert(`Failed to create project: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_edit_submit = async () => {
+        if (!edit_project) return;
+        set_submitting(true);
+        try {
+            const changed: Record<string, unknown> = {};
+            if (edit_form.name !== (edit_project.name ?? '')) changed.name = edit_form.name;
+            if (edit_form.client_id !== (edit_project.client_id ?? '')) changed.client_id = edit_form.client_id;
+            if (edit_form.owner_id !== (edit_project.owner_id ?? '')) changed.owner_id = edit_form.owner_id;
+            if (edit_form.service_type !== (edit_project.service_type ?? '')) changed.service_type = edit_form.service_type;
+            if (edit_form.status !== (edit_project.status ?? '')) changed.status = edit_form.status;
+            const orig_start = edit_project.start_date ? edit_project.start_date.slice(0, 10) : '';
+            if (edit_form.start_date !== orig_start) changed.start_date = edit_form.start_date;
+            const orig_end = edit_project.end_date ? edit_project.end_date.slice(0, 10) : '';
+            if (edit_form.end_date !== orig_end) changed.end_date = edit_form.end_date;
+            const orig_budget = edit_project.budget != null ? String(edit_project.budget) : '';
+            if (edit_form.budget !== orig_budget) changed.budget = edit_form.budget ? Number(edit_form.budget) : null;
+            if (edit_form.description !== (edit_project.description ?? '')) changed.description = edit_form.description;
+
+            if (Object.keys(changed).length === 0) {
+                set_edit_project(null);
+                return;
+            }
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects/${edit_project.project_id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(changed),
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            const json = await res.json();
+            set_projects(prev => prev.map(p => p.project_id === edit_project.project_id ? json.item : p));
+            set_edit_project(null);
+            set_edit_save_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to update project: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    const handle_delete_submit = async () => {
+        const target_id = delete_project_id ?? edit_project?.project_id;
+        if (!target_id) return;
+        set_submitting(true);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects/${target_id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+            });
+            if (!res.ok) throw new Error(`Server error: ${res.status}`);
+            set_projects(prev => prev.filter(p => p.project_id !== target_id));
+            set_show_delete_confirm(false);
+            set_delete_project_id(null);
+            set_delete_hover(false);
+            set_edit_project(null);
+            set_edit_save_hover(false);
+        } catch (err: unknown) {
+            alert(`Failed to delete project: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } finally {
+            set_submitting(false);
+        }
+    };
+
+    // Derive unique owners and clients from fetched data
+    const owners = useMemo(() => Array.from(new Set(projects.map(p => p.owner_name).filter(Boolean) as string[])), [projects]);
+    const clients = useMemo(() => Array.from(new Set(projects.map(p => p.client_name).filter(Boolean) as string[])), [projects]);
+
+    const filtered_projects = useMemo(() => {
+        return projects.filter(p => {
+            // Search
+            if (search_query.trim()) {
+                const q = search_query.toLowerCase();
+                const matches = (p.name ?? '').toLowerCase().includes(q)
+                    || (p.client_name ?? '').toLowerCase().includes(q)
+                    || (p.owner_name ?? '').toLowerCase().includes(q);
+                if (!matches) return false;
+            }
+            // Status
+            if (status_filter !== 'All' && p.status !== status_filter) return false;
+            // Owner
+            if (owner_filter !== 'All' && p.owner_name !== owner_filter) return false;
+            // Client
+            if (client_filter !== 'All' && p.client_name !== client_filter) return false;
+            return true;
+        });
+    }, [projects, search_query, status_filter, owner_filter, client_filter]);
+
+    const format_date = (date_string: string) => {
+        return new Date(date_string).toLocaleDateString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric'
+        });
+    };
+
+    const get_initials = (name: string) => {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    };
+
+    const select_style: React.CSSProperties = {
+        padding: '8px 12px',
+        borderRadius: '8px',
+        border: '1px solid #ddd',
+        background: 'white',
+        fontSize: 14,
+        fontFamily: 'Poppins',
+        cursor: 'pointer',
+        color: '#666',
+    };
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
-            {/* Sidebar */}
             <Sidebar activePage="projects" />
 
-            {/* Main Content Area */}
             <div style={{
                 flex: 1,
+                minWidth: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'rgba(217, 217, 217, 0.15)',
-                padding: '20px 20px 20px 30px',
-                gap: '20px'
+                padding: '20px 40px 20px 40px',
+                gap: '20px',
+                overflowX: 'hidden',
             }}>
-                {/* Top Bar with Search and Filter */}
+                {/* Search Bar */}
+                <SearchBar
+                    placeholder="Search projects..."
+                    onSearch={(value) => set_search_query(value)}
+                />
+
+                {/* Filter Row */}
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: '20px'
+                    flexWrap: 'wrap',
+                    gap: '10px',
                 }}>
-                    <SearchBar placeholder="Search projects..." onSearch={(value) => console.log('Search:', value)} />
+                    {/* Left: Dropdown Filters */}
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <select
+                            value={status_filter}
+                            onChange={(e) => set_status_filter(e.target.value)}
+                            style={select_style}
+                        >
+                            <option value="All">Status: All</option>
+                            <option value="open">On Track</option>
+                            <option value="in_progress">At Risk</option>
+                            <option value="completed">Completed</option>
+                            <option value="on_hold">On Hold</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {/* Filter Button */}
-                        <button style={{
-                            background: '#FFAC80',
+                        <select
+                            value={owner_filter}
+                            onChange={(e) => set_owner_filter(e.target.value)}
+                            style={select_style}
+                        >
+                            <option value="All">Owner: All</option>
+                            {owners.map(owner => (
+                                <option key={owner} value={owner}>{owner}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={client_filter}
+                            onChange={(e) => set_client_filter(e.target.value)}
+                            style={select_style}
+                        >
+                            <option value="All">Contact: All</option>
+                            {clients.map(client => (
+                                <option key={client} value={client}>{client}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Right: Add New Project Button */}
+                    <button
+                        onClick={() => { set_create_form({ name: '', client_id: '', owner_id: '', service_type: '', status: '', start_date: '', end_date: '', budget: '', description: '' }); set_show_modal(true); }}
+                        style={{
+                            background: '#FF5900',
+                            color: 'white',
                             border: 'none',
                             borderRadius: '8px',
-                            padding: '8px 16px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            color: 'black',
+                            padding: '10px 20px',
                             fontSize: 14,
                             fontFamily: 'Poppins',
                             fontWeight: '500',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            transition: 'background 0.2s ease',
                         }}>
-                            <span>Filter</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 6h18M9 12h6M11 18h2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                        </button>
-
-                        {/* Something Button */}
-                        <button style={{
-                            background: 'white',
-                            border: '1px solid #e0e0e0',
-                            borderRadius: '8px',
-                            padding: '8px 16px',
-                            color: 'black',
-                            fontSize: 14,
-                            fontFamily: 'Poppins',
-                            fontWeight: '400',
-                            cursor: 'pointer'
-                        }}>
-                            Something
-                        </button>
-
-                        {/* Menu Dots */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {[1, 2, 3].map(i => (
-                                <div key={i} style={{
-                                    width: 8,
-                                    height: 8,
-                                    background: '#666',
-                                    borderRadius: '50%',
-                                    cursor: 'pointer'
-                                }} />
-                            ))}
-                        </div>
-                    </div>
+                        + Add New Project
+                    </button>
                 </div>
 
-                {/* Phase Cards */}
-                <div style={{
-                    display: 'flex',
-                    gap: '32px',
-                    alignItems: 'center',
-                    marginBottom: '30px',
-                    overflowX: 'auto'
-                }}>
-                    {phases.map((phase) => (
-                        <div key={phase.id} style={{
-                            background: 'white',
-                            borderRadius: '10px',
-                            width: '267px',
-                            height: '60px',
-                            flexShrink: 0,
-                            position: 'relative',
-                            boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
-                        }}>
-                            {/* Left colored border */}
-                            <div style={{
-                                position: 'absolute',
-                                left: 0,
-                                top: 0,
-                                width: '10px',
-                                height: '60px',
-                                background: 'linear-gradient(180deg, rgba(255, 89, 0, 0.4) 0%, rgba(255, 255, 255, 0.4) 100%, rgba(255, 73, 0, 0.4) 100%)',
-                                borderTopLeftRadius: '10px',
-                                borderBottomLeftRadius: '10px'
-                            }} />
+                {/* Loading State */}
+                {loading && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        color: '#999',
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                    }}>
+                        Loading projects...
+                    </div>
+                )}
 
-                            {/* Phase Title */}
-                            <div style={{
-                                position: 'absolute',
-                                left: '16px',
-                                top: '5px',
-                                fontSize: 12,
-                                fontWeight: '600',
+                {/* Empty state — no projects from API */}
+                {!loading && projects.length === 0 && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        color: '#999',
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                    }}>
+                        No projects yet. Click &quot;+ Add New Project&quot; to create one.
+                    </div>
+                )}
+
+                {/* Project Cards Grid */}
+                {!loading && projects.length > 0 && (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                        gap: '20px',
+                    }}>
+                        {filtered_projects.map((project) => {
+                            const status_display = get_status_display(project.status);
+                            return (
+                                <Link
+                                    key={project.project_id}
+                                    href={`/dashboard/projects/${project.project_id}`}
+                                    style={{ textDecoration: 'none', color: 'inherit' }}
+                                >
+                                    <div
+                                        onMouseEnter={() => set_hovered_card(project.project_id)}
+                                        onMouseLeave={() => set_hovered_card(null)}
+                                        style={{
+                                            background: 'white',
+                                            borderRadius: '15px',
+                                            boxShadow: hovered_card === project.project_id
+                                                ? `0px 4px 10px 0px ${status_display.shadow}`
+                                                : '0px 4px 6px rgba(0, 0, 0, 0.1)',
+                                            overflow: 'hidden',
+                                            cursor: 'pointer',
+                                            transition: 'box-shadow 300ms ease',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            height: '190px',
+                                        }}>
+                                        {/* Top Section */}
+                                        <div style={{ padding: '18px 18px 0 18px', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+                                            {/* Edit pencil + Delete trash icons — visible on card hover */}
+                                            {hovered_card === project.project_id && (
+                                                <div style={{ position: 'absolute', top: '6px', right: '6px', display: 'flex', gap: '4px', zIndex: 2 }}>
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_edit_project(project); }}
+                                                        style={{
+                                                            background: 'rgba(255,255,255,0.85)',
+                                                            border: '1px solid #ddd',
+                                                            borderRadius: '6px',
+                                                            width: 28,
+                                                            height: 28,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            cursor: 'pointer',
+                                                            padding: 0,
+                                                        }}>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); set_delete_project_id(project.project_id); set_show_delete_confirm(true); }}
+                                                        style={{
+                                                            background: 'rgba(255,255,255,0.85)',
+                                                            border: '1px solid #ddd',
+                                                            borderRadius: '6px',
+                                                            width: 28,
+                                                            height: 28,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            cursor: 'pointer',
+                                                            padding: 0,
+                                                        }}>
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <polyline points="3 6 5 6 21 6" />
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                            <line x1="10" y1="11" x2="10" y2="17" />
+                                                            <line x1="14" y1="11" x2="14" y2="17" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            )}
+                                            <div style={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'flex-start',
+                                                gap: '10px',
+                                            }}>
+                                                <h3 style={{
+                                                    fontSize: 16,
+                                                    fontWeight: '600',
+                                                    color: 'black',
+                                                    fontFamily: 'Poppins',
+                                                    margin: 0,
+                                                    flex: 1,
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    {project.name}
+                                                </h3>
+                                                <span style={{
+                                                    background: status_display.bg,
+                                                    color: status_display.text,
+                                                    padding: '6px 20px',
+                                                    borderRadius: '20px',
+                                                    fontSize: 14,
+                                                    fontWeight: '600',
+                                                    fontFamily: 'Poppins',
+                                                    whiteSpace: 'nowrap',
+                                                }}>
+                                                    {status_display.label}
+                                                </span>
+                                            </div>
+                                            <div style={{
+                                                fontSize: 13,
+                                                color: '#888',
+                                                fontFamily: 'Poppins',
+                                                marginTop: '4px',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap',
+                                            }}>
+                                                {project.client_name ?? 'No contact'}
+                                            </div>
+                                        </div>
+
+                                        {/* Status Accent Line */}
+                                        <div style={{
+                                            height: '3px',
+                                            background: status_display.bg,
+                                            margin: '12px 18px 0 18px',
+                                        }} />
+
+                                        {/* Bottom Section */}
+                                        <div style={{
+                                            padding: '12px 18px 16px 18px',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}>
+                                            {/* Owner */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    borderRadius: '50%',
+                                                    background: '#999',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white',
+                                                    fontSize: 12,
+                                                    fontWeight: '600',
+                                                    fontFamily: 'Poppins',
+                                                }}>
+                                                    {get_initials(project.owner_name ?? '?')}
+                                                </div>
+                                                <span style={{
+                                                    fontSize: 13,
+                                                    color: '#555',
+                                                    fontFamily: 'Poppins',
+                                                    fontWeight: '500',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis',
+                                                    whiteSpace: 'nowrap',
+                                                    maxWidth: '100px',
+                                                }}>
+                                                    {project.owner_name ?? 'Unassigned'}
+                                                </span>
+                                            </div>
+
+                                            {/* Due date + task count */}
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'flex-end',
+                                                gap: '2px',
+                                            }}>
+                                                <span style={{
+                                                    fontSize: 12,
+                                                    color: '#999',
+                                                    fontFamily: 'Poppins',
+                                                }}>
+                                                    Due {project.end_date ? format_date(project.end_date) : 'N/A'}
+                                                </span>
+                                                <span style={{
+                                                    fontSize: 12,
+                                                    color: '#999',
+                                                    fontFamily: 'Poppins',
+                                                }}>
+                                                    {project.task_count} tasks
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Filter empty state — projects exist but none match filters */}
+                {!loading && projects.length > 0 && filtered_projects.length === 0 && (
+                    <div style={{
+                        textAlign: 'center',
+                        padding: '60px 20px',
+                        color: '#999',
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                    }}>
+                        No projects match your filters.
+                    </div>
+                )}
+            </div>
+
+            {/* Create Project Modal */}
+            {show_modal && (
+                <div
+                    onClick={() => set_show_modal(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                    }}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            width: '560px',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}>
+                        {/* Header */}
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '20px 28px 0 28px',
+                        }}>
+                            <h2 style={{
+                                fontSize: 20,
+                                fontWeight: '700',
+                                fontFamily: 'Poppins',
                                 color: 'black',
-                                fontFamily: 'Poppins'
+                                margin: 0,
                             }}>
-                                {phase.name}
+                                Create New Project
+                            </h2>
+                            <button
+                                onClick={() => set_show_modal(false)}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    fontSize: 22,
+                                    cursor: 'pointer',
+                                    color: '#999',
+                                    padding: '0 4px',
+                                    lineHeight: 1,
+                                    fontFamily: 'Poppins',
+                                }}>
+                                &times;
+                            </button>
+                        </div>
+
+                        {/* Form */}
+                        <div style={{ padding: '20px 28px 28px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {/* Row 1: Project Name */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
+                                <input type="text" placeholder="Enter project name" value={create_form.name} onChange={(e) => update_create('name', e.target.value)} style={{
+                                    padding: '10px 14px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #ddd',
+                                    fontSize: 14,
+                                    fontFamily: 'Poppins',
+                                    outline: 'none',
+                                }} />
                             </div>
 
-                            {/* Plus Icon */}
-                            <div style={{
-                                position: 'absolute',
-                                right: '16px',
-                                top: '17px',
-                                width: '25px',
-                                height: '25px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
-                                <div style={{
-                                    width: '25px',
-                                    height: '5px',
-                                    background: '#FFAC80',
-                                    position: 'relative'
-                                }}>
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '-10px',
-                                        left: '10px',
-                                        width: '5px',
-                                        height: '25px',
-                                        background: '#FFAC80'
+                            {/* Row 2: Vendor + Owner */}
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
+                                    <select value={create_form.client_id} onChange={(e) => update_create('client_id', e.target.value)} style={{
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        color: '#666',
+                                        background: 'white',
+                                        cursor: 'pointer',
+                                    }}>
+                                        <option value="">Select contact</option>
+                                        {clients_list.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
+                                    </select>
+                                </div>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
+                                    <select value={create_form.owner_id} onChange={(e) => update_create('owner_id', e.target.value)} style={{
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        color: '#666',
+                                        background: 'white',
+                                        cursor: 'pointer',
+                                    }}>
+                                        <option value="">Select owner</option>
+                                        {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Row 3: Service Type + Status */}
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
+                                    <input type="text" placeholder="Enter service type" value={create_form.service_type} onChange={(e) => update_create('service_type', e.target.value)} style={{
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        outline: 'none',
+                                    }} />
+                                </div>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
+                                    <select value={create_form.status} onChange={(e) => update_create('status', e.target.value)} style={{
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        color: '#666',
+                                        background: 'white',
+                                        cursor: 'pointer',
+                                    }}>
+                                        <option value="">Select status</option>
+                                        <option value="open">On Track</option>
+                                        <option value="in_progress">At Risk</option>
+                                        <option value="behind">Behind</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Row 4: Start Date + End Date */}
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Start Date</label>
+                                    <input type="date" value={create_form.start_date} onChange={(e) => update_create('start_date', e.target.value)} style={{
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        color: '#666',
+                                    }} />
+                                </div>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
+                                    <input type="date" value={create_form.end_date} onChange={(e) => update_create('end_date', e.target.value)} style={{
+                                        padding: '10px 14px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        color: '#666',
                                     }} />
                                 </div>
                             </div>
 
-                            {/* Details */}
-                            <div style={{
-                                position: 'absolute',
-                                left: '16px',
-                                top: '42px',
-                                display: 'flex',
-                                gap: '20px',
-                                fontSize: 10,
-                                fontWeight: '600',
-                                color: 'rgba(0,0,0,0.5)',
-                                fontFamily: 'Poppins'
-                            }}>
-                                {phase.details.map((detail, index) => (
-                                    <span key={index}>{detail}</span>
-                                ))}
+                            {/* Row 5: Budget */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Budget</label>
+                                <div style={{ position: 'relative' }}>
+                                    <span style={{
+                                        position: 'absolute',
+                                        left: '14px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        color: '#888',
+                                        pointerEvents: 'none',
+                                    }}>$</span>
+                                    <input type="number" placeholder="0.00" value={create_form.budget} onChange={(e) => update_create('budget', e.target.value)} style={{
+                                        width: '100%',
+                                        padding: '10px 14px 10px 28px',
+                                        borderRadius: '12px',
+                                        border: '1px solid #ddd',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        outline: 'none',
+                                        boxSizing: 'border-box',
+                                    }} />
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
 
-                {/* Projects Grid */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '20px',
-                    flex: 1
-                }}>
-                    {projects.map((project) => (
-                        <div key={project.id} style={{
-                            background: 'white',
-                            borderRadius: '15px',
-                            padding: '20px',
-                            boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            minHeight: '250px'
-                        }}>
-                            {/* Project Header */}
+                            {/* Row 6: Description */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
+                                <textarea placeholder="Describe the project..." rows={4} value={create_form.description} onChange={(e) => update_create('description', e.target.value)} style={{
+                                    padding: '10px 14px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #ddd',
+                                    fontSize: 14,
+                                    fontFamily: 'Poppins',
+                                    outline: 'none',
+                                    resize: 'vertical',
+                                }} />
+                            </div>
+
+                            {/* Footer Buttons */}
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                alignItems: 'flex-start',
-                                marginBottom: '15px'
+                                alignItems: 'center',
+                                marginTop: '8px',
                             }}>
-                                <h3 style={{
-                                    fontSize: 16,
-                                    fontWeight: '600',
-                                    color: 'black',
-                                    fontFamily: 'Poppins',
-                                    margin: 0,
-                                    flex: 1
-                                }}>
-                                    {project.title}
-                                </h3>
-                                <button style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    fontSize: 18,
-                                    color: '#666',
-                                    cursor: 'pointer',
-                                    padding: '0',
-                                    width: '20px',
-                                    height: '20px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}>
-                                    +
+                                <button
+                                    onClick={() => set_show_modal(false)}
+                                    style={{
+                                        background: 'none',
+                                        border: '1px solid #ddd',
+                                        borderRadius: '12px',
+                                        padding: '10px 24px',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: '500',
+                                        color: '#666',
+                                        cursor: 'pointer',
+                                    }}>
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handle_create_submit}
+                                    disabled={submitting}
+                                    onMouseEnter={() => set_create_hover(true)}
+                                    onMouseLeave={() => set_create_hover(false)}
+                                    style={{
+                                        background: create_hover ? '#e04e00' : '#FF5900',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        padding: '10px 28px',
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: '600',
+                                        cursor: submitting ? 'not-allowed' : 'pointer',
+                                        transition: 'background 0.2s ease',
+                                        opacity: submitting ? 0.7 : 1,
+                                    }}>
+                                    {submitting ? 'Creating...' : 'Create Project'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
-                            {/* Tasks List */}
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {project.tasks.map((task) => (
-                                    <div key={task.id} style={{
-                                        fontSize: 12,
-                                        color: '#666',
-                                        fontFamily: 'Poppins',
-                                        lineHeight: 1.4
-                                    }}>
-                                        {task.description}
-                                    </div>
-                                ))}
+            {/* Edit Project Modal */}
+            {edit_project && (
+                <div
+                    onClick={() => { set_edit_project(null); set_edit_save_hover(false); }}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1000,
+                    }}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            width: '560px',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 28px 0 28px' }}>
+                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>Edit Project</h2>
+                            <button onClick={() => { set_edit_project(null); set_edit_save_hover(false); }} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#999', padding: '0 4px', lineHeight: 1, fontFamily: 'Poppins' }}>&times;</button>
+                        </div>
+
+                        <div style={{ padding: '20px 28px 28px 28px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Project Name</label>
+                                <input type="text" value={edit_form.name} onChange={(e) => update_edit('name', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
                             </div>
 
-                            {/* User Info */}
-                            {project.tasks[0]?.user && (
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    marginTop: '15px',
-                                    paddingTop: '15px',
-                                    borderTop: '1px solid #f0f0f0'
-                                }}>
-                                    <img
-                                        src={project.tasks[0].user.avatar}
-                                        alt={project.tasks[0].user.name}
-                                        style={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: '50%',
-                                            objectFit: 'cover'
-                                        }}
-                                    />
-                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                        {project.tasks[0].user.dueDate && (
-                                            <span style={{
-                                                background: '#FFB3BA',
-                                                color: '#8B0000',
-                                                padding: '4px 8px',
-                                                borderRadius: '12px',
-                                                fontSize: 10,
-                                                fontWeight: '500',
-                                                fontFamily: 'Poppins'
-                                            }}>
-                                                {project.tasks[0].user.dueDate}
-                                            </span>
-                                        )}
-                                        {project.tasks[0].user.tag && (
-                                            <span style={{
-                                                background: project.tasks[0].user.tagColor || '#4CAF50',
-                                                color: 'white',
-                                                padding: '4px 8px',
-                                                borderRadius: '12px',
-                                                fontSize: 10,
-                                                fontWeight: '500',
-                                                fontFamily: 'Poppins'
-                                            }}>
-                                                {project.tasks[0].user.tag}
-                                            </span>
-                                        )}
-                                    </div>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Contact</label>
+                                    <select value={edit_form.client_id} onChange={(e) => update_edit('client_id', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select contact</option>
+                                        {clients_list.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
+                                    </select>
                                 </div>
-                            )}
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
+                                    <select value={edit_form.owner_id} onChange={(e) => update_edit('owner_id', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select owner</option>
+                                        {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Service Type</label>
+                                    <input type="text" placeholder="Enter service type" value={edit_form.service_type} onChange={(e) => update_edit('service_type', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none' }} />
+                                </div>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Status</label>
+                                    <select value={edit_form.status} onChange={(e) => update_edit('status', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
+                                        <option value="">Select status</option>
+                                        <option value="open">On Track</option>
+                                        <option value="in_progress">At Risk</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="on_hold">On Hold</option>
+                                        <option value="behind">Behind</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Start Date</label>
+                                    <input type="date" value={edit_form.start_date} onChange={(e) => update_edit('start_date', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
+                                </div>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>End Date</label>
+                                    <input type="date" value={edit_form.end_date} onChange={(e) => update_edit('end_date', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666' }} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Budget</label>
+                                <div style={{ position: 'relative' }}>
+                                    <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', fontSize: 14, fontFamily: 'Poppins', color: '#888', pointerEvents: 'none' }}>$</span>
+                                    <input type="number" placeholder="0.00" value={edit_form.budget} onChange={(e) => update_edit('budget', e.target.value)} style={{ width: '100%', padding: '10px 14px 10px 28px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', boxSizing: 'border-box' }} />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Description</label>
+                                <textarea placeholder="Describe the project..." rows={4} value={edit_form.description} onChange={(e) => update_edit('description', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', resize: 'vertical' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                                <button
+                                    onClick={() => { set_delete_project_id(edit_project.project_id); set_show_delete_confirm(true); }}
+                                    style={{ background: 'none', border: '1px solid #DC2626', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#DC2626', cursor: 'pointer' }}>
+                                    Delete Project
+                                </button>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button onClick={() => { set_edit_project(null); set_edit_save_hover(false); }} style={{ background: 'none', border: '1px solid #ddd', borderRadius: '12px', padding: '10px 24px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', color: '#666', cursor: 'pointer' }}>Cancel</button>
+                                    <button
+                                        onClick={handle_edit_submit}
+                                        disabled={submitting}
+                                        onMouseEnter={() => set_edit_save_hover(true)}
+                                        onMouseLeave={() => set_edit_save_hover(false)}
+                                        style={{ background: edit_save_hover ? '#e04e00' : '#FF5900', color: 'white', border: 'none', borderRadius: '12px', padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600', cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease', opacity: submitting ? 0.7 : 1 }}>
+                                        {submitting ? 'Saving...' : 'Save'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    ))}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {show_delete_confirm && (
+                <div
+                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0, 0, 0, 0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1100,
+                    }}>
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: 'white',
+                            borderRadius: '20px',
+                            width: '420px',
+                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
+                        }}>
+                        {/* Red accent stripe */}
+                        <div style={{ height: '4px', background: '#DC2626', borderRadius: '20px 20px 0 0' }} />
+
+                        <div style={{ padding: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', textAlign: 'center' }}>
+                            {/* Warning icon */}
+                            <div style={{
+                                width: 48,
+                                height: 48,
+                                borderRadius: '50%',
+                                background: '#FEE2E2',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </div>
+
+                            <h2 style={{ fontSize: 20, fontWeight: '700', fontFamily: 'Poppins', color: 'black', margin: 0 }}>
+                                Delete Project?
+                            </h2>
+                            <p style={{ fontSize: 14, color: '#666', fontFamily: 'Poppins', margin: 0, lineHeight: 1.5 }}>
+                                Are you sure you want to delete this project? This action cannot be undone.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '12px', marginTop: '8px', width: '100%', justifyContent: 'center' }}>
+                                <button
+                                    onClick={() => { set_show_delete_confirm(false); set_delete_hover(false); }}
+                                    style={{
+                                        background: 'none', border: '1px solid #ddd', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500',
+                                        color: '#666', cursor: 'pointer',
+                                    }}>
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handle_delete_submit}
+                                    disabled={submitting}
+                                    onMouseEnter={() => set_delete_hover(true)}
+                                    onMouseLeave={() => set_delete_hover(false)}
+                                    style={{
+                                        background: delete_hover ? '#B91C1C' : '#DC2626',
+                                        color: 'white', border: 'none', borderRadius: '12px',
+                                        padding: '10px 28px', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600',
+                                        cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s ease',
+                                        opacity: submitting ? 0.7 : 1,
+                                    }}>
+                                    {submitting ? 'Deleting...' : 'Delete'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

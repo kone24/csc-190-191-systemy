@@ -4,7 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import { useUser, User } from '@/contexts/UserContext';
 
 export default function AccountPage() {
-    const { user, setUser } = useUser();
+    const { user, setUser, logout } = useUser();
     const [isEditing, setIsEditing] = useState(false);
     const [tempProfile, setTempProfile] = useState<User | null>(user);
 
@@ -77,30 +77,6 @@ export default function AccountPage() {
                         Account Settings
                     </div>
 
-                    {/* Menu Dots */}
-                    <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                    </div>
                 </div>
 
                 {/* Profile Card */}
@@ -168,25 +144,46 @@ export default function AccountPage() {
 
                         {/* Edit Button */}
                         {!isEditing ? (
-                            <button
-                                onClick={handleEdit}
-                                style={{
-                                    padding: '10px 20px',
-                                    background: '#FF5900',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: 10,
-                                    fontSize: 16,
-                                    fontFamily: 'Poppins',
-                                    fontWeight: '500',
-                                    cursor: 'pointer',
-                                    transition: 'background 0.3s ease'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = '#E04D00'}
-                                onMouseOut={(e) => e.currentTarget.style.background = '#FF5900'}
-                            >
-                                Edit Profile
-                            </button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={handleEdit}
+                                    style={{
+                                        padding: '10px 20px',
+                                        background: '#FF5900',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: 10,
+                                        fontSize: 16,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: '500',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.3s ease'
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.background = '#E04D00'}
+                                    onMouseOut={(e) => e.currentTarget.style.background = '#FF5900'}
+                                >
+                                    Edit Profile
+                                </button>
+                                <button
+                                    onClick={logout}
+                                    style={{
+                                        padding: '10px 20px',
+                                        background: 'white',
+                                        color: '#FF5900',
+                                        border: '2px solid #FF5900',
+                                        borderRadius: 10,
+                                        fontSize: 16,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: '500',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.3s ease, color 0.3s ease'
+                                    }}
+                                    onMouseOver={(e) => { e.currentTarget.style.background = '#FF5900'; e.currentTarget.style.color = 'white'; }}
+                                    onMouseOut={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#FF5900'; }}
+                                >
+                                    Log Out
+                                </button>
+                            </div>
                         ) : (
                             <div style={{ display: 'flex', gap: '10px' }}>
                                 <button

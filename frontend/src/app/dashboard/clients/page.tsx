@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
@@ -12,11 +12,21 @@ interface Client {
     last_name: string;
     email: string;
     business_name: string;
+    company?: string;
     phone_number: string;
     additional_info: string;
+    title?: string;
+    relationship_owner?: string;
+    status?: string;
+    contact_medium?: string;
+    date_of_contact?: string;
+    where_met?: string;
+    chat_summary?: string;
+    outcome?: string;
+    relationship_status?: string;
     tags: string[];
-    createdAt?: string;
-    updatedAt?: string;
+    created_at?: string;
+    updated_at?: string;
 }
 
 // Tags stored as "label|#color"; plain strings fall back to default purple.
@@ -29,6 +39,7 @@ function parseTag(raw: string): { name: string; color: string } {
 type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated';
 
 export default function ClientsPage() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const initialSearch = searchParams.get('search') || '';
 
@@ -45,7 +56,7 @@ export default function ClientsPage() {
         const fetchAllClients = async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`http://localhost:3001/clients`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
                     credentials: 'include',
                 });
                 if (!res.ok) throw new Error(`Error: ${res.status}`);
@@ -76,14 +87,24 @@ export default function ClientsPage() {
             setLoading(true);
             setError(null);
 
-            fetch(`http://localhost:3001/clients/search?q=${encodeURIComponent(searchQuery)}`, {
+            const q = searchQuery.trim().toLowerCase();
+
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients/search?q=${encodeURIComponent(searchQuery)}`, {
                 credentials: 'include',
             })
                 .then((res) => {
                     if (!res.ok) throw new Error(`Error: ${res.status}`);
                     return res.json();
                 })
-                .then((data) => setSearchResults(data))
+                .then((data: Client[]) => {
+                    // Also match clients whose ID starts with or contains the query
+                    const idMatches = allClients.filter((c) => c.id?.toLowerCase().includes(q));
+                    const merged = [...data];
+                    for (const c of idMatches) {
+                        if (!merged.some((m) => m.id === c.id)) merged.push(c);
+                    }
+                    setSearchResults(merged);
+                })
                 .catch((err) => { console.error('Search failed:', err); setError(err.message); })
                 .finally(() => setLoading(false));
         }, 300);
@@ -105,21 +126,35 @@ export default function ClientsPage() {
                 sorted.sort((a, b) => `${b.first_name ?? ''} ${b.last_name ?? ''}`.localeCompare(`${a.first_name ?? ''} ${a.last_name ?? ''}`));
                 break;
             case 'company-asc':
-                sorted.sort((a, b) => (a.business_name ?? '').localeCompare(b.business_name ?? ''));
+                sorted.sort((a, b) => (a.company || a.business_name || '').localeCompare(b.company || b.business_name || ''));
                 break;
             case 'company-desc':
-                sorted.sort((a, b) => (b.business_name ?? '').localeCompare(a.business_name ?? ''));
+                sorted.sort((a, b) => (b.company || b.business_name || '').localeCompare(a.company || a.business_name || ''));
                 break;
             case 'date-created':
-                sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                sorted.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
                 break;
             case 'date-updated':
-                sorted.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+                sorted.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
                 break;
         }
 
         return sorted;
     }, [isSearching, searchResults, allClients, sortBy]);
+
+    // Compute the minimum prefix length that uniquely identifies each client's ID
+    const shortIdMap = useMemo(() => {
+        const ids = displayedClients.map((c) => c.id ?? '');
+        const map: Record<string, string> = {};
+        for (const id of ids) {
+            let len = 4;
+            while (len < id.length && ids.some((other) => other !== id && other.startsWith(id.slice(0, len)))) {
+                len++;
+            }
+            map[id] = id.slice(0, len);
+        }
+        return map;
+    }, [displayedClients]);
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -129,11 +164,13 @@ export default function ClientsPage() {
             {/* Main Content Area */}
             <div style={{
                 flex: 1,
+                minWidth: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'rgba(217, 217, 217, 0.15)',
                 padding: '20px 20px 20px 30px',
-                gap: '20px'
+                gap: '20px',
+                overflowX: 'hidden'
             }}>
                 {/* Top Bar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -143,30 +180,6 @@ export default function ClientsPage() {
                         onSearch={(value) => setSearchQuery(value)}
                     />
 
-                    {/* Menu Dots */}
-                    <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                        <div style={{
-                            width: 8,
-                            height: 8,
-                            background: '#666',
-                            borderRadius: '50%',
-                            cursor: 'pointer'
-                        }} />
-                    </div>
                 </div>
 
                 {/* Loading and Error Messages */}
@@ -307,78 +320,27 @@ export default function ClientsPage() {
                             }}>
                                 <thead style={{ position: 'sticky', top: 0, background: 'rgba(255, 158, 77, 0.20)' }}>
                                     <tr>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Name
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Email
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Company
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Phone
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Notes
-                                        </th>
-                                        <th style={{
-                                            border: '1px solid rgba(217, 217, 217, 0.30)',
-                                            padding: 15,
-                                            textAlign: 'left',
-                                            fontFamily: 'Poppins',
-                                            fontWeight: '600',
-                                            fontSize: 14,
-                                            color: '#FF5900'
-                                        }}>
-                                            Tags
-                                        </th>
+                                        {['Name', 'Company', 'Title', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Tags'].map((header) => (
+                                            <th key={header} style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                textAlign: 'left',
+                                                fontFamily: 'Poppins',
+                                                fontWeight: '600',
+                                                fontSize: 14,
+                                                color: '#FF5900',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {header}
+                                            </th>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {displayedClients.map((client, idx) => (
                                         <tr
                                             key={client.id}
+                                            onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                                             style={{
                                                 background: idx % 2 === 0 ? 'white' : 'rgba(255, 245, 230, 0.50)',
                                                 transition: 'background 0.2s',
@@ -395,9 +357,7 @@ export default function ClientsPage() {
                                                 color: 'rgba(26, 26, 26, 0.80)',
                                                 fontWeight: '500'
                                             }}>
-                                                <Link href={`/dashboard/clients/${client.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                                                    {client.first_name} {client.last_name}
-                                                </Link>
+                                                {client.first_name} {client.last_name}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -406,7 +366,7 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.email}
+                                                {client.company || client.business_name}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -415,7 +375,7 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.business_name}
+                                                {client.title}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -424,7 +384,44 @@ export default function ClientsPage() {
                                                 fontSize: 14,
                                                 color: 'rgba(26, 26, 26, 0.80)'
                                             }}>
-                                                {client.phone_number}
+                                                {client.relationship_owner}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)'
+                                            }}>
+                                                {client.status}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)'
+                                            }}>
+                                                {client.contact_medium}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {client.date_of_contact}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)'
+                                            }}>
+                                                {client.where_met}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
@@ -437,41 +434,52 @@ export default function ClientsPage() {
                                                 textOverflow: 'ellipsis',
                                                 whiteSpace: 'nowrap'
                                             }}>
-                                                {client.additional_info}
+                                                {client.chat_summary}
+                                            </td>
+                                            <td style={{
+                                                border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                padding: 15,
+                                                fontFamily: 'Poppins',
+                                                fontSize: 14,
+                                                color: 'rgba(26, 26, 26, 0.80)',
+                                                maxWidth: 200,
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            }}>
+                                                {client.outcome}
                                             </td>
                                             <td style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
                                             }}>
-                                                <Link href={`/dashboard/clients/${client.id}`} style={{ textDecoration: 'none' }}>
-                                                    {client.tags?.length ? (
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                            {client.tags.map((raw, i) => {
-                                                                const { name, color } = parseTag(raw);
-                                                                return (
-                                                                    <span key={i} style={{
-                                                                        display: 'inline-flex',
-                                                                        alignItems: 'center',
-                                                                        height: 35,
-                                                                        paddingLeft: 29,
-                                                                        paddingRight: 29,
-                                                                        borderRadius: 20,
-                                                                        background: color,
-                                                                        color: 'white',
-                                                                        fontSize: 12,
-                                                                        fontFamily: 'Poppins',
-                                                                        fontWeight: '600',
-                                                                        whiteSpace: 'nowrap',
-                                                                    }}>
-                                                                        {name}
-                                                                    </span>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    ) : (
-                                                        <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(26, 26, 26, 0.80)' }}>—</span>
-                                                    )}
-                                                </Link>
+                                                {client.tags?.length ? (
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                        {client.tags.map((raw, i) => {
+                                                            const { name, color } = parseTag(raw);
+                                                            return (
+                                                                <span key={i} style={{
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    height: 35,
+                                                                    paddingLeft: 29,
+                                                                    paddingRight: 29,
+                                                                    borderRadius: 20,
+                                                                    background: color,
+                                                                    color: 'white',
+                                                                    fontSize: 12,
+                                                                    fontFamily: 'Poppins',
+                                                                    fontWeight: '600',
+                                                                    whiteSpace: 'nowrap',
+                                                                }}>
+                                                                    {name}
+                                                                </span>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(26, 26, 26, 0.80)' }}>—</span>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}

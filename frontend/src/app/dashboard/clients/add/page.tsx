@@ -26,6 +26,8 @@ export default function AddClientPage() {
     phone: "",
     company: "",
     title: "",
+    industry: "",
+    website: "",
     relationshipOwner: "",
     status: "",
     contactMedium: "",
@@ -171,7 +173,7 @@ export default function AddClientPage() {
       const clientData = {
         first_name: form.firstName,
         last_name: form.lastName,
-        business_name: form.company,
+        company: form.company || undefined,
         email: form.email,
         phone_number: form.phone || "",
         address: {
@@ -187,11 +189,14 @@ export default function AddClientPage() {
         project_timeline: "To be determined",
         budget_range: "To be determined",
         preferred_contact_method: "email",
-        additional_info: form.notes || "",
+        additional_info: form.address.additionalInfo || "",
+        notes: form.notes || "",
         // Optional: Include social media
         social_links: form.socialLinks || {},
         // CRM fields
         title: form.title || undefined,
+        industry: form.industry || undefined,
+        website: form.website || undefined,
         relationship_owner: form.relationshipOwner || undefined,
         status: form.status || undefined,
         contact_medium: form.contactMedium || undefined,
@@ -203,7 +208,7 @@ export default function AddClientPage() {
       };
 
       // Call your NestJS backend (correct port: 3001)
-      const res = await fetch("http://localhost:3001/clients", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(clientData),
@@ -409,6 +414,54 @@ export default function AddClientPage() {
                       fontFamily: 'Poppins'
                     }}
                     placeholder="e.g. VP of Engineering"
+                  />
+                </label>
+              </div>
+
+              {/* Industry - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Industry</span>
+                  <input
+                    type="text"
+                    value={form.industry}
+                    onChange={handleChange("industry")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="e.g. Technology, Healthcare"
+                  />
+                </label>
+              </div>
+
+              {/* Website - Optional */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '500', fontFamily: 'Poppins' }}>Website</span>
+                  <input
+                    type="url"
+                    value={form.website}
+                    onChange={handleChange("website")}
+                    style={{
+                      marginTop: '4px',
+                      display: 'block',
+                      width: '100%',
+                      borderRadius: '6px',
+                      border: '1px solid #d1d5db',
+                      padding: '8px',
+                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                      outline: 'none',
+                      fontFamily: 'Poppins'
+                    }}
+                    placeholder="https://example.com"
                   />
                 </label>
               </div>

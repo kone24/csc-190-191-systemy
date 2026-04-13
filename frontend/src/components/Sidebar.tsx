@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
 
 interface SidebarProps {
-    activePage: 'dashboard' | 'analytics' | 'projects' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management';
+    activePage: 'dashboard' | 'analytics' | 'projects' | 'gantt' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management';
 }
 
 interface NavItemProps {
@@ -126,6 +126,13 @@ export default function Sidebar({ activePage }: SidebarProps) {
                     icon='/images/icons/projects.png'
                     label="Projects"
                     isActive={activePage === 'projects'}
+                />
+
+                <NavItem
+                    href="/dashboard/gantt"
+                    icon="/images/icons/projects.png"
+                    label="Gantt Chart"
+                    isActive={activePage === 'gantt'}
                 />
 
                 <NavItem
