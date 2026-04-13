@@ -38,7 +38,7 @@ interface InvoiceStatus {
   cancelled: number;
 }
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 const RANGE_OPTIONS: { label: string; value: RangeOption }[] = [
   { label: '7 Days', value: '7d' },
@@ -201,11 +201,6 @@ export default function AnalyticsPage() {
         {/* Top Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
-          <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-            <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-            <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-            <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-          </div>
         </div>
 
         {/* Date Range Filter Bar */}

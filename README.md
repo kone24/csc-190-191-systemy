@@ -34,12 +34,24 @@ npm -v    # should show 10.x.x or newer
 
 > **Note:** `npm install` will fail if your versions are too old — this is enforced via the `engines` field in `package.json`.
 
+
+## To run the project
+Clone the repository:
+- git clone https://github.com/kone24/csc-190-191-systemy.git
+
+Navigate to the root folder:
+- cd csc-190-191-systemy
+
+Install the backend and frontend dependencies
+- npm run install:all	
+
+
 ## FRONTEND
 Navigate to the frontend directory:
 - cd frontend
 
-Install dependencies (only needed once, or when packages change):
-- npm install
+Copy the env template and fill in your values:
+- cp .env.example .env
 
 Start the frontend dev server:
 - npm run dev
@@ -50,9 +62,6 @@ View in browser:
 ## BACKEND
 Navigate to the backend directory:
 - cd backend
-
-Install dependencies (only needed once, or when packages change):
-- npm install
 
 Copy the env template and fill in your values:
 - cp .env.example .env

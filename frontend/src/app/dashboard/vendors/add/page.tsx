@@ -61,7 +61,7 @@ export default function AddVendorPage() {
 
     // Fetch projects for dropdown
     useEffect(() => {
-        fetch('http://localhost:3001/projects', { credentials: 'include' })
+        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' })
             .then(res => res.ok ? res.json() : [])
             .then(data => setProjects(Array.isArray(data) ? data : []))
             .catch(() => setProjects([]));
@@ -104,7 +104,7 @@ export default function AddVendorPage() {
                 additional_info: form.additionalInfo || undefined,
             };
 
-            const res = await fetch('http://localhost:3001/vendors', {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/vendors`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

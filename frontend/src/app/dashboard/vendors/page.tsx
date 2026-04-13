@@ -40,13 +40,14 @@ export default function VendorsPage() {
         const fetchAllVendors = async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`http://localhost:3001/vendors`, {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/vendors`, {
                     credentials: 'include',
                 });
                 if (!res.ok) throw new Error(`Error: ${res.status}`);
                 const data = await res.json();
                 const items = Array.isArray(data) ? data : data?.items ?? [];
-                setAllVendors(items);            } catch (err: any) {
+                setAllVendors(items);
+            } catch (err: any) {
                 console.error('Failed to fetch vendors:', err);
                 setError(err.message);
             } finally {
@@ -70,7 +71,7 @@ export default function VendorsPage() {
             setLoading(true);
             setError(null);
 
-            fetch(`http://localhost:3001/vendors/search?q=${encodeURIComponent(searchQuery)}`, {
+            fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/vendors/search?q=${encodeURIComponent(searchQuery)}`, {
                 credentials: 'include',
             })
                 .then((res) => {
@@ -134,11 +135,6 @@ export default function VendorsPage() {
                         placeholder="Search vendors..."
                         onSearch={(value) => setSearchQuery(value)}
                     />
-                    <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-                        <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-                        <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-                        <div style={{ width: 8, height: 8, background: '#666', borderRadius: '50%', cursor: 'pointer' }} />
-                    </div>
                 </div>
 
                 {/* Loading and Error Messages */}

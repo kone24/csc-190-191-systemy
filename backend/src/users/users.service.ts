@@ -20,6 +20,18 @@ export class UsersService {
         this.logger.log('Supabase client initialized for UsersService');
     }
 
+    async updateRole(userId: string, role: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('users')
+            .update({ role })
+            .eq('user_id', userId);
+
+        if (error) {
+            this.logger.error('Error updating user role:', error);
+            throw new Error(`Failed to update user role: ${error.message}`);
+        }
+    }
+
     async findAll(): Promise<UserResponseDto[]> {
         try {
             const { data: users, error } = await this.supabase
