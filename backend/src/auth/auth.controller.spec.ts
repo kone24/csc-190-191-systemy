@@ -70,11 +70,26 @@ describe('AuthController', () => {
   // GET /auth/me
   // =======================================================================
   describe('GET /auth/me', () => {
-    it('should return the user payload from request', () => {
-      const req = fakeReq({ user: { username: 'admin' } });
-      const result = controller.me(req);
+    it('should look up full user profile by email from JWT', async () => {
+      const req = fakeReq({ user: { username: 'admin@futureandsuns.com' } });
+      mockAuthService.findUserByEmail.mockResolvedValue({
+        ok: true,
+        user: { user_id: 'uuid-123', name: 'Admin', email: 'admin@futureandsuns.com', role: 'admin' },
+      });
 
-      expect(result).toEqual({ username: 'admin' });
+      const result = await controller.me(req);
+
+      expect(mockAuthService.findUserByEmail).toHaveBeenCalledWith('admin@futureandsuns.com');
+      expect(result).toEqual({
+        ok: true,
+        user: { user_id: 'uuid-123', name: 'Admin', email: 'admin@futureandsuns.com', role: 'admin' },
+      });
+    });
+
+    it('should return error when JWT payload has no username', async () => {
+      const req = fakeReq({ user: {} });
+      const result = await controller.me(req);
+      expect(result).toEqual({ ok: false, message: 'Invalid token payload' });
     });
   });
 
