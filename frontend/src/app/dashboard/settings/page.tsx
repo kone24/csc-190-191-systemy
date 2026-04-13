@@ -220,7 +220,7 @@ export default function SettingsPage() {
                         {activeTab === 'notifications' && (
                             <>
                                 <div style={cardStyle}>
-                                    <div style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 16 }}>
+                                    <div style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 16, color: '#111111' }}>
                                         Notification Preferences
                                     </div>
                                     {toggleRow(
@@ -261,7 +261,7 @@ export default function SettingsPage() {
                         {activeTab === 'general' && (
                             <>
                                 <div style={cardStyle}>
-                                    <div style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 16 }}>
+                                    <div style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 16, color: '#111111' }}>
                                         Timezone
                                     </div>
                                     <div style={descStyle}>
@@ -300,7 +300,7 @@ export default function SettingsPage() {
                         {/* Integrations Tab */}
                         {activeTab === 'integrations' && (
                             <div style={cardStyle}>
-                                <div style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 16 }}>
+                                <div style={{ fontSize: 18, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 16, color: '#111111' }}>
                                     Connected Services
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>

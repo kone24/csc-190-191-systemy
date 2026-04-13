@@ -35,6 +35,14 @@ function updateChain(error: any = null) {
     return { update, eq };
 }
 
+/** select('timezone').eq(...).maybeSingle() → resolves { data, error } */
+function selectMaybeSingleChain(data: any, error: any = null) {
+    const maybeSingle = jest.fn().mockResolvedValue({ data, error });
+    const eq = jest.fn().mockReturnValue({ maybeSingle });
+    const select = jest.fn().mockReturnValue({ eq });
+    return { select, eq, maybeSingle };
+}
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -70,7 +78,7 @@ describe('UsersService', () => {
         it('returns mapped users when Supabase returns data', async () => {
             const raw = [
                 { user_id: 'u1', name: 'Alice', email: 'alice@ex.com', role: 'admin' },
-                { user_id: 'u2', name: 'Bob',   email: 'bob@ex.com',   role: 'staff' },
+                { user_id: 'u2', name: 'Bob', email: 'bob@ex.com', role: 'staff' },
             ];
             mockFrom.mockReturnValue(selectAllChain(raw));
 
@@ -78,7 +86,7 @@ describe('UsersService', () => {
 
             expect(result).toHaveLength(2);
             expect(result[0]).toEqual({ user_id: 'u1', name: 'Alice', email: 'alice@ex.com', role: 'admin' });
-            expect(result[1]).toEqual({ user_id: 'u2', name: 'Bob',   email: 'bob@ex.com',   role: 'staff' });
+            expect(result[1]).toEqual({ user_id: 'u2', name: 'Bob', email: 'bob@ex.com', role: 'staff' });
         });
 
         it('returns empty array when Supabase returns null data', async () => {
@@ -124,6 +132,65 @@ describe('UsersService', () => {
             await service.updateRole('some-uuid', 'admin');
 
             expect(chain.update).toHaveBeenCalledWith({ role: 'admin' });
+        });
+    });
+
+    // =========================================================================
+    // getTimezone
+    // =========================================================================
+    describe('getTimezone()', () => {
+        it('returns timezone when Supabase returns data', async () => {
+            mockFrom.mockReturnValue(selectMaybeSingleChain({ timezone: 'America/New_York' }));
+
+            const result = await service.getTimezone('u1');
+
+            expect(result).toBe('America/New_York');
+        });
+
+        it('returns default timezone when Supabase returns null data', async () => {
+            mockFrom.mockReturnValue(selectMaybeSingleChain(null));
+
+            const result = await service.getTimezone('u1');
+
+            expect(result).toBe('America/Los_Angeles');
+        });
+
+        it('returns default timezone when timezone field is null', async () => {
+            mockFrom.mockReturnValue(selectMaybeSingleChain({ timezone: null }));
+
+            const result = await service.getTimezone('u1');
+
+            expect(result).toBe('America/Los_Angeles');
+        });
+
+        it('returns default timezone when Supabase returns an error', async () => {
+            mockFrom.mockReturnValue(selectMaybeSingleChain(null, { message: 'DB error' }));
+
+            const result = await service.getTimezone('u1');
+
+            expect(result).toBe('America/Los_Angeles');
+        });
+    });
+
+    // =========================================================================
+    // updateTimezone
+    // =========================================================================
+    describe('updateTimezone()', () => {
+        it('resolves without error when Supabase update succeeds', async () => {
+            const chain = updateChain(null);
+            mockFrom.mockReturnValue(chain);
+
+            await expect(service.updateTimezone('u1', 'America/Chicago')).resolves.toBeUndefined();
+            expect(chain.update).toHaveBeenCalledWith({ timezone: 'America/Chicago' });
+            expect(chain.eq).toHaveBeenCalledWith('user_id', 'u1');
+        });
+
+        it('throws when Supabase update returns an error', async () => {
+            mockFrom.mockReturnValue(updateChain({ message: 'update failed' }));
+
+            await expect(service.updateTimezone('u1', 'America/Denver')).rejects.toThrow(
+                'Failed to update user timezone: update failed',
+            );
         });
     });
 });
