@@ -119,14 +119,14 @@ describe('LeadScoringService', () => {
 
       const result = service.scoreLead(input);
 
-      expect(result.score).toBe(65);
+      expect(result.score).toBe(70);
       expect(result.label).toBe('MEDIUM');
       expect(result.recommendation).toBe('Medium potential lead');
       expect(result.details.breakdown).toEqual({
         budget: 30,
         timeline: 15,
         services: 10,
-        relationship: 10,
+        relationship: 15,
         interactions: 0,
         meetings: 0,
         emails: 0,
@@ -186,7 +186,7 @@ describe('LeadScoringService', () => {
       );
 
       expect(prospectResult.details.breakdown.relationship).toBe(10);
-      expect(interestedResult.details.breakdown.relationship).toBe(10);
+      expect(interestedResult.details.breakdown.relationship).toBe(15);
       expect(clientResult.details.breakdown.relationship).toBe(5);
       expect(unknownResult.details.breakdown.relationship).toBe(0);
     });
@@ -240,7 +240,7 @@ describe('LeadScoringService', () => {
         budgetRange: '$10,000+',
         projectTimeline: 'Immediate',
         servicesNeeded: ['A', 'B', 'C'],
-        relationshipStatus: 'Prospect',
+        relationshipStatus: 'Interested',
         interactionCount: 10,
         meetingCount: 5,
         emailCount: 10,
@@ -297,9 +297,9 @@ describe('LeadScoringService', () => {
         score: 80,
         recommendation: 'High potential lead',
         updated_at: fixedNow.toISOString(),
-    });
+      });
 
-    expect(payload[0].details).toMatchObject({
+      expect(payload[0].details).toMatchObject({
         label: 'HIGH',
         scoringModel: 'weighted_rules_v1',
       });

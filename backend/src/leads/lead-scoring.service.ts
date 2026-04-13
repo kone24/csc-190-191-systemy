@@ -177,8 +177,9 @@ export class LeadScoringService {
     }
 
     switch (status) {
-      case 'prospect':
       case 'interested':
+        return 15;
+      case 'prospect':
         return 10;
       case 'client':
         return 5;
