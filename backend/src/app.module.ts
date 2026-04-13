@@ -15,6 +15,7 @@ import { UsersModule } from './users/users.module';
 import { RemindersModule } from './reminders/reminders.module';
 import { TestController } from './test.controller';
 import { MailModule } from './mail/mail.module';
+import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MailModule } from './mail/mail.module';
     AnalyticsModule,
     UsersModule,
     MailModule,
+    GanttEntryModule,
   ],
   controllers: [AppController, TestController],
   providers: [AppService],
