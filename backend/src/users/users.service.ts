@@ -32,6 +32,33 @@ export class UsersService {
         }
     }
 
+    async updateTimezone(userId: string, timezone: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('users')
+            .update({ timezone })
+            .eq('user_id', userId);
+
+        if (error) {
+            this.logger.error('Error updating user timezone:', error);
+            throw new Error(`Failed to update user timezone: ${error.message}`);
+        }
+    }
+
+    async getTimezone(userId: string): Promise<string> {
+        const { data, error } = await this.supabase
+            .from('users')
+            .select('timezone')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (error) {
+            this.logger.error('Error fetching user timezone:', error);
+            return 'America/Los_Angeles';
+        }
+
+        return data?.timezone ?? 'America/Los_Angeles';
+    }
+
     async findAll(): Promise<UserResponseDto[]> {
         try {
             const { data: users, error } = await this.supabase
