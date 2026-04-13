@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
 
 interface SidebarProps {
-    activePage: 'dashboard' | 'analytics' | 'projects' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management';
+    activePage: 'dashboard' | 'analytics' | 'projects' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management' | 'recommendations';
 }
 
 interface NavItemProps {
@@ -147,6 +147,13 @@ export default function Sidebar({ activePage }: SidebarProps) {
                     icon="/images/icons/invoices.png"
                     label="Invoices"
                     isActive={activePage === 'invoices'}
+                />
+
+                <NavItem
+                    href="/dashboard/recommendations"
+                    icon="/images/icons/analytics.png"
+                    label="Recommendations"
+                    isActive={activePage === 'recommendations'}
                 />
 
                 {/* Admin Only - Management */}

@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UsersModule } from './users/users.module';
+import { RecommendationsModule } from './recommendations/recommendations.module'
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module';
     AnalyticsModule,
     ProjectsModule,
     UsersModule,
+    RecommendationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
