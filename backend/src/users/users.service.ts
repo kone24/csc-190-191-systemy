@@ -59,6 +59,17 @@ export class UsersService {
         return data?.timezone ?? 'America/Los_Angeles';
     }
 
+    async findById(userId: string): Promise<{ user_id: string; name: string; email: string; role: string } | null> {
+        const { data, error } = await this.supabase
+            .from('users')
+            .select('user_id, name, email, role')
+            .eq('user_id', userId)
+            .single();
+
+        if (error || !data) return null;
+        return data;
+    }
+
     async findAll(): Promise<UserResponseDto[]> {
         try {
             const { data: users, error } = await this.supabase

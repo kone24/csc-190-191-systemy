@@ -45,6 +45,10 @@ export default function DashboardPage() {
   const [activeProjectsCount, setActiveProjectsCount] = useState<number | null>(null);
   const [activeContactsCount, setActiveContactsCount] = useState<number | null>(null);
   const [ganttEntries, setGanttEntries] = useState<GanttEntryPreview[] | null>(null);
+  const [openInvoicesCount, setOpenInvoicesCount] = useState<number | null>(null);
+  const [overdueInvoicesCount, setOverdueInvoicesCount] = useState<number | null>(null);
+  const [tasksDueCount, setTasksDueCount] = useState<number | null>(null);
+  const [tasksOverdueCount, setTasksOverdueCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
@@ -69,6 +73,36 @@ export default function DashboardPage() {
         setGanttEntries(Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []));
       })
       .catch(() => setGanttEntries([]));
+
+    // Fetch open invoices count (unpaid + overdue)
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/invoices`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : data.items ?? [];
+        const open = list.filter((i: { status: string }) => i.status === 'unpaid' || i.status === 'overdue');
+        const overdue = list.filter((i: { status: string }) => i.status === 'overdue');
+        setOpenInvoicesCount(open.length);
+        setOverdueInvoicesCount(overdue.length);
+      })
+      .catch(() => { setOpenInvoicesCount(0); setOverdueInvoicesCount(0); });
+
+    // Fetch tasks due this week from gantt-entries
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/gantt-entries`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
+        const now = new Date();
+        const endOfWeek = new Date(now);
+        endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()));
+        const due = list.filter((e: { end_date: string }) => {
+          const d = new Date(e.end_date);
+          return d <= endOfWeek;
+        });
+        const overdue = list.filter((e: { end_date: string }) => new Date(e.end_date) < now);
+        setTasksDueCount(due.length);
+        setTasksOverdueCount(overdue.length);
+      })
+      .catch(() => { setTasksDueCount(0); setTasksOverdueCount(0); });
   }, []);
 
   const tileStyle = (index: number, borderColor: string, shadowColor: string): React.CSSProperties => ({
@@ -382,8 +416,8 @@ export default function DashboardPage() {
               <div style={tileStyle(2, kpiColors.tasksDue.border, kpiColors.tasksDue.shadow)} onMouseEnter={() => setHoveredTile(2)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: '#FF928A', borderBottom: '1px solid #ef4444' }}><span style={{ ...tileLabelStyle, color: '#7f1d1d' }}>Tasks Due This Week</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>14</div>
-                  <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>3 overdue</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{tasksDueCount === null ? '...' : tasksDueCount}</div>
+                  {(tasksOverdueCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{tasksOverdueCount} overdue</div>}
                 </div>
               </div>
 
@@ -391,8 +425,8 @@ export default function DashboardPage() {
               <div style={tileStyle(3, kpiColors.openInvoices.border, kpiColors.openInvoices.shadow)} onMouseEnter={() => setHoveredTile(3)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: 'rgba(255, 246, 66, 0.6)', borderBottom: '1px solid rgba(220, 200, 0, 0.8)' }}><span style={{ ...tileLabelStyle, color: '#713f12' }}>Open Invoices</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>4</div>
-                  <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>1 overdue</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{openInvoicesCount === null ? '...' : openInvoicesCount}</div>
+                  {(overdueInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>{overdueInvoicesCount} overdue</div>}
                 </div>
               </div>
             </>
@@ -410,8 +444,8 @@ export default function DashboardPage() {
               <div style={tileStyle(2, kpiColors.tasksDue.border, kpiColors.tasksDue.shadow)} onMouseEnter={() => setHoveredTile(2)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: '#FF928A', borderBottom: '1px solid #ef4444' }}><span style={{ ...tileLabelStyle, color: '#7f1d1d' }}>My Tasks Due</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>5</div>
-                  <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>1 overdue</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{tasksDueCount === null ? '...' : tasksDueCount}</div>
+                  {(tasksOverdueCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{tasksOverdueCount} overdue</div>}
                 </div>
               </div>
             </>
