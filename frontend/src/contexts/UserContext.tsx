@@ -38,34 +38,62 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
 
-    // Initialize user from localStorage on mount
+    // Initialize user: try fetching from backend (cookie-based auth), fall back to localStorage
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            try {
-                const parsedUser = JSON.parse(storedUser);
-                setUser(parsedUser);
-            } catch (error) {
-                console.error('Error parsing stored user:', error);
-                localStorage.removeItem('user');
-            }
-        } else {
-            // For demo purposes, set a default user
-            // Change role here to test different user types:
-            // 'Administrator' | 'Manager' | 'User'
-            // This part will be update later when we have the database and authentication flow in place
-            const defaultUser: User = {
-                id: '1',
-                firstName: 'Admin',
-                lastName: 'User',
-                email: 'admin@headword.com',
-                company: 'Headword Inc.',
-                phone: '+1 (555) 123-4567',
-                role: 'Administrator' // <-- Default to admin, use switcher to test other roles
-            };
-            setUser(defaultUser);
-            localStorage.setItem('user', JSON.stringify(defaultUser));
-        }
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+
+        fetch(`${backendUrl}/auth/me`, { credentials: 'include' })
+            .then(res => {
+                if (!res.ok) throw new Error('Not authenticated');
+                return res.json();
+            })
+            .then((data: { ok: boolean; user?: { user_id: string; name: string; email: string; role: string } }) => {
+                if (data.ok && data.user) {
+                    const nameParts = (data.user.name || '').split(' ');
+                    const roleMap: Record<string, 'Administrator' | 'Manager' | 'User'> = {
+                        admin: 'Administrator',
+                        manager: 'Manager',
+                        staff: 'User',
+                    };
+                    const mappedUser: User = {
+                        id: data.user.user_id,
+                        firstName: nameParts[0] || '',
+                        lastName: nameParts.slice(1).join(' ') || '',
+                        email: data.user.email,
+                        company: 'Headword Inc.',
+                        phone: '',
+                        role: roleMap[data.user.role] || 'User',
+                    };
+                    setUser(mappedUser);
+                    localStorage.setItem('user', JSON.stringify(mappedUser));
+                } else {
+                    throw new Error('No user in response');
+                }
+            })
+            .catch(() => {
+                // No valid session cookie — fall back to localStorage or default
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    try {
+                        setUser(JSON.parse(storedUser));
+                    } catch {
+                        localStorage.removeItem('user');
+                    }
+                } else {
+                    // Default dev user (only used when no auth cookie and no localStorage)
+                    const defaultUser: User = {
+                        id: 'df287192-f89c-4784-9fdb-b6254ca114f4',
+                        firstName: 'Admin',
+                        lastName: 'User',
+                        email: 'tonthattuanst@gmail.com',
+                        company: 'Headword Inc.',
+                        phone: '+1 (555) 123-4567',
+                        role: 'Administrator'
+                    };
+                    setUser(defaultUser);
+                    localStorage.setItem('user', JSON.stringify(defaultUser));
+                }
+            });
     }, []);
 
     // Update localStorage when user changes

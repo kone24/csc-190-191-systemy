@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
 
 interface SidebarProps {
-    activePage: 'dashboard' | 'analytics' | 'projects' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management' | 'recommendations';
+    activePage: 'dashboard' | 'analytics' | 'projects' | 'gantt' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management' | 'recommendations';
 }
 
 interface NavItemProps {
@@ -55,7 +55,7 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
 
 export default function Sidebar({ activePage }: SidebarProps) {
     const { isAdmin } = useUser();
-    
+
     return (
         <div style={{
             width: 320,
@@ -129,6 +129,13 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 />
 
                 <NavItem
+                    href="/dashboard/gantt"
+                    icon="/images/icons/projects.png"
+                    label="Gantt Chart"
+                    isActive={activePage === 'gantt'}
+                />
+
+                <NavItem
                     href="/dashboard/clients"
                     icon="/images/icons/clients.png"
                     label="Contacts"
@@ -178,7 +185,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 />
 
                 <NavItem
-                    href=""
+                    href="/dashboard/settings"
                     icon="/images/icons/settings.png"
                     label="Settings"
                     isActive={activePage === 'settings'}

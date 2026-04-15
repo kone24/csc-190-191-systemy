@@ -21,7 +21,7 @@ export default function SearchInput({ onResults }: SearchInputProps) {
       setLoading(true);
       setError(null);
 
-      fetch(`http://localhost:3001/clients/search?q=${encodeURIComponent(query)}`, {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients/search?q=${encodeURIComponent(query)}`, {
         credentials: "include",
       })
         .then((res) => {

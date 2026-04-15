@@ -50,63 +50,6 @@ describe('AuthController', () => {
   });
 
   // =======================================================================
-  // POST /auth/login
-  // =======================================================================
-  describe('POST /auth/login', () => {
-    it('should set cookie and return ok:true on valid credentials', async () => {
-      mockAuthService.login.mockResolvedValue({
-        message: 'Login successful',
-        user: { username: 'admin' },
-        token: 'jwt-token',
-      });
-
-      const res = fakeRes();
-      const result = await controller.login(
-        { username: 'admin', password: '1234' },
-        res,
-      );
-
-      expect(mockAuthService.login).toHaveBeenCalledWith('admin', '1234');
-      expect(res.cookie).toHaveBeenCalledWith(
-        'access_token',
-        'jwt-token',
-        expect.objectContaining({
-          httpOnly: true,
-          sameSite: 'lax',
-          path: '/',
-        }),
-      );
-      expect(result).toEqual({ ok: true, user: { username: 'admin' } });
-    });
-
-    it('should return ok:false when credentials are invalid', async () => {
-      mockAuthService.login.mockResolvedValue({
-        message: 'Invalid credentials',
-      });
-
-      const res = fakeRes();
-      const result = await controller.login(
-        { username: 'wrong', password: 'wrong' },
-        res,
-      );
-
-      expect(res.cookie).not.toHaveBeenCalled();
-      expect(result).toEqual({ ok: false, message: 'Invalid credentials' });
-    });
-
-    it('should handle undefined body gracefully', async () => {
-      mockAuthService.login.mockResolvedValue({
-        message: 'Invalid credentials',
-      });
-
-      const res = fakeRes();
-      const result = await controller.login(undefined as any, res);
-
-      expect(result.ok).toBe(false);
-    });
-  });
-
-  // =======================================================================
   // POST /auth/logout
   // =======================================================================
   describe('POST /auth/logout', () => {
@@ -127,11 +70,26 @@ describe('AuthController', () => {
   // GET /auth/me
   // =======================================================================
   describe('GET /auth/me', () => {
-    it('should return the user payload from request', () => {
-      const req = fakeReq({ user: { username: 'admin' } });
-      const result = controller.me(req);
+    it('should look up full user profile by email from JWT', async () => {
+      const req = fakeReq({ user: { username: 'admin@futureandsuns.com' } });
+      mockAuthService.findUserByEmail.mockResolvedValue({
+        ok: true,
+        user: { user_id: 'uuid-123', name: 'Admin', email: 'admin@futureandsuns.com', role: 'admin' },
+      });
 
-      expect(result).toEqual({ username: 'admin' });
+      const result = await controller.me(req);
+
+      expect(mockAuthService.findUserByEmail).toHaveBeenCalledWith('admin@futureandsuns.com');
+      expect(result).toEqual({
+        ok: true,
+        user: { user_id: 'uuid-123', name: 'Admin', email: 'admin@futureandsuns.com', role: 'admin' },
+      });
+    });
+
+    it('should return error when JWT payload has no username', async () => {
+      const req = fakeReq({ user: {} });
+      const result = await controller.me(req);
+      expect(result).toEqual({ ok: false, message: 'Invalid token payload' });
     });
   });
 

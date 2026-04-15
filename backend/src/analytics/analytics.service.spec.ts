@@ -5,34 +5,25 @@ import { AnalyticsService } from './analytics.service';
 // ---------------------------------------------------------------------------
 // Mock Supabase client
 // ---------------------------------------------------------------------------
-const mockSelect = jest.fn();
-const mockEq = jest.fn();
-const mockGte = jest.fn();
-const mockLt = jest.fn();
-const mockOrder = jest.fn();
 
-const chainMethods = () => ({
-  select: mockSelect,
-  eq: mockEq,
-  gte: mockGte,
-  lt: mockLt,
-  order: mockOrder,
-});
+/**
+ * Creates a Supabase query-builder chain that:
+ *  - has all chainable methods (select, eq, gte, lt, order) returning `this`
+ *  - is thenable: when awaited it resolves to `resolveValue`
+ */
+function makeChain(resolveValue: any) {
+  const chain: any = {};
+  for (const method of ['select', 'eq', 'gte', 'lt', 'order']) {
+    chain[method] = jest.fn().mockReturnValue(chain);
+  }
+  chain.then = (onFulfilled: any, onRejected: any) =>
+    Promise.resolve(resolveValue).then(onFulfilled, onRejected);
+  chain.catch = (onRejected: any) =>
+    Promise.resolve(resolveValue).catch(onRejected);
+  return chain;
+}
 
-// Each method returns the chain so queries can be chained
-[mockSelect, mockEq, mockGte, mockLt, mockOrder].forEach((fn) => {
-  fn.mockReturnValue({
-    select: mockSelect,
-    eq: mockEq,
-    gte: mockGte,
-    lt: mockLt,
-    order: mockOrder,
-    // terminal — resolves to { data, error, count }
-    then: undefined,
-  });
-});
-
-const mockFrom = jest.fn().mockReturnValue(chainMethods());
+const mockFrom = jest.fn();
 
 jest.mock('@supabase/supabase-js', () => ({
   createClient: jest.fn(() => ({ from: mockFrom })),
@@ -72,25 +63,24 @@ describe('AnalyticsService', () => {
 
   describe('getSummary', () => {
     it('returns summary shape with all required fields', async () => {
-      // Mock the chain for clients count (head: true)
-      mockSelect.mockResolvedValueOnce({ count: 20, error: null }); // totalClients
-      mockSelect.mockResolvedValueOnce({ count: 5, error: null });  // newClients (gte applied)
-      mockGte.mockResolvedValueOnce({ count: 5, error: null });
-
-      // Mock for invoices
       const invoices = [
         { amount: '3000', status: 'paid' },
         { amount: '5000', status: 'paid' },
         { amount: '2000', status: 'unpaid' },
       ];
-      mockSelect.mockResolvedValueOnce({ data: invoices, error: null });
 
-      // Previous period queries
-      mockLt.mockResolvedValueOnce({ count: 3, error: null }); // prev clients
-      mockLt.mockResolvedValueOnce({
-        data: [{ amount: '2000', status: 'paid' }],
-        error: null,
-      }); // prev invoices
+      // getSummary('30d') makes 5 from() calls in order:
+      // 1. totalClients  (select head:true)
+      // 2. newClients    (select head:true + gte)
+      // 3. current invoices (select + gte)
+      // 4. prev new clients (select head:true + gte + lt)
+      // 5. prev invoices    (select + gte + lt)
+      mockFrom
+        .mockReturnValueOnce(makeChain({ count: 20, error: null }))
+        .mockReturnValueOnce(makeChain({ count: 5, error: null }))
+        .mockReturnValueOnce(makeChain({ data: invoices, error: null }))
+        .mockReturnValueOnce(makeChain({ count: 3, error: null }))
+        .mockReturnValueOnce(makeChain({ data: [{ amount: '2000', status: 'paid' }], error: null }));
 
       const result = await service.getSummary('30d');
 
@@ -111,7 +101,7 @@ describe('AnalyticsService', () => {
         { amount: '4500', created_at: '2026-01-20T00:00:00Z', status: 'paid' },
         { amount: '2000', created_at: '2026-02-10T00:00:00Z', status: 'paid' },
       ];
-      mockOrder.mockResolvedValueOnce({ data: invoices, error: null });
+      mockFrom.mockReturnValueOnce(makeChain({ data: invoices, error: null }));
 
       const result = await service.getRevenueByMonth('all');
 
@@ -133,7 +123,7 @@ describe('AnalyticsService', () => {
         { created_at: '2026-01-18T00:00:00Z' },
         { created_at: '2026-02-02T00:00:00Z' },
       ];
-      mockOrder.mockResolvedValueOnce({ data: clients, error: null });
+      mockFrom.mockReturnValueOnce(makeChain({ data: clients, error: null }));
 
       const result = await service.getClientGrowth('all');
 
@@ -155,7 +145,7 @@ describe('AnalyticsService', () => {
         { status: 'overdue' },
         { status: 'cancelled' },
       ];
-      mockSelect.mockResolvedValueOnce({ data: invoices, error: null });
+      mockFrom.mockReturnValueOnce(makeChain({ data: invoices, error: null }));
 
       const result = await service.getInvoiceStatus('all');
 
@@ -168,7 +158,7 @@ describe('AnalyticsService', () => {
     });
 
     it('returns zeros when no invoices exist', async () => {
-      mockSelect.mockResolvedValueOnce({ data: [], error: null });
+      mockFrom.mockReturnValueOnce(makeChain({ data: [], error: null }));
 
       const result = await service.getInvoiceStatus('7d');
 

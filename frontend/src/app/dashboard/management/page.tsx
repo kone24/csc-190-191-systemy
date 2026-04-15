@@ -6,170 +6,100 @@ import { useUser } from '@/contexts/UserContext';
 
 interface UserData {
     id: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     email: string;
-    role: 'Administrator' | 'Manager' | 'User';
-    status: 'Active' | 'Inactive';
-    lastLogin: string;
-    createdAt: string;
-}
-
-interface SystemStats {
-    totalUsers: number;
-    activeUsers: number;
-    totalProjects: number;
-    totalClients: number;
-    systemUptime: string;
-    lastBackup: string;
+    role: 'admin' | 'manager' | 'staff';
 }
 
 export default function ManagementPage() {
     const { user } = useUser();
     const [activeTab, setActiveTab] = useState('users');
     const [users, setUsers] = useState<UserData[]>([]);
-    const [stats, setStats] = useState<SystemStats>({
-        totalUsers: 15,
-        activeUsers: 12,
-        totalProjects: 47,
-        totalClients: 89,
-        systemUptime: '99.9%',
-        lastBackup: '2 hours ago'
-    });
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [roleUpdating, setRoleUpdating] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    // Mock user data - replace with API call
     useEffect(() => {
-        const mockUsers: UserData[] = [
-            {
-                id: '1',
-                firstName: 'Admin',
-                lastName: 'User',
-                email: 'admin@headword.com',
-                role: 'Administrator',
-                status: 'Active',
-                lastLogin: '2026-02-17T10:30:00Z',
-                createdAt: '2025-01-01T00:00:00Z'
-            },
-            {
-                id: '2',
-                firstName: 'John',
-                lastName: 'Manager',
-                email: 'john.manager@headword.com',
-                role: 'Manager',
-                status: 'Active',
-                lastLogin: '2026-02-17T09:15:00Z',
-                createdAt: '2025-02-15T00:00:00Z'
-            },
-            {
-                id: '3',
-                firstName: 'Jane',
-                lastName: 'Smith',
-                email: 'jane.smith@headword.com',
-                role: 'User',
-                status: 'Active',
-                lastLogin: '2026-02-16T16:45:00Z',
-                createdAt: '2025-03-20T00:00:00Z'
-            },
-            {
-                id: '4',
-                firstName: 'Bob',
-                lastName: 'Johnson',
-                email: 'bob.johnson@headword.com',
-                role: 'User',
-                status: 'Inactive',
-                lastLogin: '2026-02-10T12:00:00Z',
-                createdAt: '2025-05-10T00:00:00Z'
+        const fetchUsers = async () => {
+            try {
+                setLoading(true);
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, { credentials: 'include' });
+                if (!res.ok) throw new Error('Failed to fetch users');
+                const data = await res.json();
+                const mapped: UserData[] = (data.items ?? []).map((u: { user_id: string; name: string; email: string; role: string }) => ({
+                    id: u.user_id,
+                    name: u.name,
+                    email: u.email,
+                    role: (u.role as UserData['role']) ?? 'staff',
+                }));
+                setUsers(mapped);
+            } catch (err) {
+                setError('Failed to load users. Please try again.');
+                console.error(err);
+            } finally {
+                setLoading(false);
             }
-        ];
-        setUsers(mockUsers);
+        };
+        fetchUsers();
     }, []);
 
-    const handleRoleChange = (userId: string, newRole: string) => {
-        setUsers(prev => prev.map(user => 
-            user.id === userId 
-                ? { ...user, role: newRole as 'Administrator' | 'Manager' | 'User' }
-                : user
-        ));
+    const handleRoleChange = async (userId: string, newRole: string) => {
+        setRoleUpdating(userId);
+        setError(null);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/${userId}/role`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: newRole }),
+            });
+            if (!res.ok) throw new Error('Failed to update role');
+            setUsers(prev => prev.map(u =>
+                u.id === userId
+                    ? { ...u, role: newRole as UserData['role'] }
+                    : u
+            ));
+
+        } catch (err) {
+            setError('Failed to update user role. Please try again.');
+            console.error(err);
+        } finally {
+            setRoleUpdating(null);
+        }
     };
 
-    const handleStatusToggle = (userId: string) => {
-        setUsers(prev => prev.map(user => 
-            user.id === userId 
-                ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' }
-                : user
-        ));
+    const ROLE_OPTIONS: { value: UserData['role']; label: string }[] = [
+        { value: 'admin', label: 'Admin' },
+        { value: 'manager', label: 'Manager' },
+        { value: 'staff', label: 'Staff' },
+    ];
+
+    const roleColor = (role: string) => {
+        if (role === 'admin') return { bg: '#FFF0E8', color: '#FF5900' };
+        if (role === 'manager') return { bg: '#E8F0FF', color: '#2255CC' };
+        return { bg: '#F0F0F0', color: '#333333' };
     };
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
-
-    const StatCard = ({ title, value, subtitle }: { title: string; value: string; subtitle?: string }) => (
-        <div style={{
-            background: 'white',
-            borderRadius: 15,
-            padding: '25px',
-            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-            textAlign: 'center',
-            minHeight: '120px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
-        }}>
-            <div style={{
-                fontSize: '14px',
-                color: 'rgba(0, 0, 0, 0.6)',
-                marginBottom: '8px',
-                fontFamily: 'Poppins',
-                fontWeight: '600'
-            }}>
-                {title}
-            </div>
-            <div style={{
-                fontSize: '32px',
-                fontWeight: '600',
-                color: '#FF5900',
-                marginBottom: '5px',
-                fontFamily: 'Poppins'
-            }}>
-                {value}
-            </div>
-            {subtitle && (
-                <div style={{
-                    fontSize: '12px',
-                    color: 'rgba(0, 0, 0, 0.5)',
-                    fontFamily: 'Poppins'
-                }}>
-                    {subtitle}
-                </div>
-            )}
-        </div>
-    );
+    const roleLabel = (role: string) =>
+        ROLE_OPTIONS.find(r => r.value === role)?.label ?? role;
 
     return (
         <AdminOnly>
             <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
                 <Sidebar activePage="management" />
 
-                <div style={{ 
-                    flex: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    background: 'rgba(217, 217, 217, 0.15)', 
-                    padding: '20px 20px 20px 30px', 
-                    gap: '20px' 
+                <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: 'rgba(217, 217, 217, 0.15)',
+                    padding: '20px 20px 20px 30px',
+                    gap: '20px'
                 }}>
                     {/* Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <div style={{
-                            color: 'black',
+                            color: '#111111',
                             fontSize: 32,
                             fontFamily: 'Poppins',
                             fontWeight: '600',
@@ -181,38 +111,13 @@ export default function ManagementPage() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                             <div style={{
                                 fontSize: '14px',
-                                color: 'rgba(0, 0, 0, 0.7)',
-                                fontFamily: 'Poppins'
+                                color: '#333333',
+                                fontFamily: 'Poppins',
+                                fontWeight: '500'
                             }}>
                                 Welcome, {user?.firstName} {user?.lastName}
                             </div>
-                            <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex' }}>
-                                {[...Array(3)].map((_, i) => (
-                                    <div key={i} style={{
-                                        width: 8,
-                                        height: 8,
-                                        background: '#666',
-                                        borderRadius: '50%',
-                                        cursor: 'pointer'
-                                    }} />
-                                ))}
-                            </div>
                         </div>
-                    </div>
-
-                    {/* Statistics Cards */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '20px',
-                        marginBottom: '30px'
-                    }}>
-                        <StatCard title="Total Users" value={stats.totalUsers.toString()} />
-                        <StatCard title="Active Users" value={stats.activeUsers.toString()} />
-                        <StatCard title="Total Projects" value={stats.totalProjects.toString()} />
-                        <StatCard title="Total Contacts" value={stats.totalClients.toString()} />
-                        <StatCard title="System Uptime" value={stats.systemUptime} />
-                        <StatCard title="Last Backup" value={stats.lastBackup} />
                     </div>
 
                     {/* Tab Navigation */}
@@ -272,111 +177,104 @@ export default function ManagementPage() {
                                         fontSize: '24px',
                                         fontFamily: 'Poppins',
                                         fontWeight: '600',
-                                        margin: 0
+                                        margin: 0,
+                                        color: '#111111'
                                     }}>
                                         User Management
                                     </h3>
-                                    <button style={{
-                                        padding: '10px 20px',
-                                        background: '#FF5900',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: 10,
-                                        fontSize: '14px',
-                                        fontFamily: 'Poppins',
-                                        fontWeight: '500',
-                                        cursor: 'pointer'
-                                    }}>
-                                        + Add User
-                                    </button>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span style={{ fontSize: '14px', fontFamily: 'Poppins', color: '#555555' }}>
+                                            {users.length} user{users.length !== 1 ? 's' : ''}
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                            <tr style={{ background: 'rgba(217, 217, 217, 0.3)' }}>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Name</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Email</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Role</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Status</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Last Login</th>
-                                                <th style={{ padding: '15px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600' }}>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {users.map(userData => (
-                                                <tr key={userData.id} style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.1)' }}>
-                                                    <td style={{ padding: '15px', fontFamily: 'Poppins' }}>
-                                                        {userData.firstName} {userData.lastName}
-                                                    </td>
-                                                    <td style={{ padding: '15px', fontFamily: 'Poppins', color: 'rgba(0, 0, 0, 0.7)' }}>
-                                                        {userData.email}
-                                                    </td>
-                                                    <td style={{ padding: '15px' }}>
-                                                        <select
-                                                            value={userData.role}
-                                                            onChange={(e) => handleRoleChange(userData.id, e.target.value)}
-                                                            style={{
-                                                                padding: '5px 10px',
-                                                                border: '1px solid rgba(0, 0, 0, 0.2)',
-                                                                borderRadius: 5,
-                                                                fontFamily: 'Poppins'
-                                                            }}
-                                                        >
-                                                            <option value="Administrator">Administrator</option>
-                                                            <option value="Manager">Manager</option>
-                                                            <option value="User">User</option>
-                                                        </select>
-                                                    </td>
-                                                    <td style={{ padding: '15px' }}>
-                                                        <span style={{
-                                                            padding: '4px 12px',
-                                                            borderRadius: 15,
-                                                            fontSize: '12px',
-                                                            fontWeight: '500',
-                                                            background: userData.status === 'Active' ? '#E7F7E7' : '#FFE7E7',
-                                                            color: userData.status === 'Active' ? '#00AA00' : '#CC0000'
-                                                        }}>
-                                                            {userData.status}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '15px', fontFamily: 'Poppins', fontSize: '14px', color: 'rgba(0, 0, 0, 0.7)' }}>
-                                                        {formatDate(userData.lastLogin)}
-                                                    </td>
-                                                    <td style={{ padding: '15px' }}>
-                                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                                            <button
-                                                                onClick={() => handleStatusToggle(userData.id)}
-                                                                style={{
-                                                                    padding: '6px 12px',
-                                                                    background: userData.status === 'Active' ? '#FFE7E7' : '#E7F7E7',
-                                                                    color: userData.status === 'Active' ? '#CC0000' : '#00AA00',
-                                                                    border: 'none',
-                                                                    borderRadius: 5,
-                                                                    fontSize: '12px',
-                                                                    cursor: 'pointer'
-                                                                }}
-                                                            >
-                                                                {userData.status === 'Active' ? 'Deactivate' : 'Activate'}
-                                                            </button>
-                                                            <button style={{
-                                                                padding: '6px 12px',
-                                                                background: '#F0F0F0',
-                                                                color: 'black',
-                                                                border: 'none',
-                                                                borderRadius: 5,
-                                                                fontSize: '12px',
-                                                                cursor: 'pointer'
-                                                            }}>
-                                                                Edit
-                                                            </button>
-                                                        </div>
-                                                    </td>
+                                {error && (
+                                    <div style={{
+                                        padding: '12px 16px',
+                                        background: '#FFF0F0',
+                                        border: '1px solid #FFCCCC',
+                                        borderRadius: 8,
+                                        color: '#CC0000',
+                                        fontFamily: 'Poppins',
+                                        fontSize: '14px',
+                                        marginBottom: '16px'
+                                    }}>
+                                        {error}
+                                    </div>
+                                )}
+
+                                {loading ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: '#555555', fontFamily: 'Poppins' }}>
+                                        Loading users...
+                                    </div>
+                                ) : (
+                                    <div style={{ overflowX: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr style={{ background: 'rgba(217, 217, 217, 0.4)' }}>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Name</th>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Email</th>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Current Role</th>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Change Role</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                {users.map(userData => {
+                                                    const rc = roleColor(userData.role);
+                                                    return (
+                                                        <tr key={userData.id} style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.08)' }}>
+                                                            <td style={{ padding: '14px 16px', fontFamily: 'Poppins', fontWeight: '500', color: '#111111' }}>
+                                                                {userData.name}
+                                                            </td>
+                                                            <td style={{ padding: '14px 16px', fontFamily: 'Poppins', color: '#444444', fontSize: '14px' }}>
+                                                                {userData.email}
+                                                            </td>
+                                                            <td style={{ padding: '14px 16px' }}>
+                                                                <span style={{
+                                                                    padding: '4px 12px',
+                                                                    borderRadius: 20,
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '600',
+                                                                    fontFamily: 'Poppins',
+                                                                    background: rc.bg,
+                                                                    color: rc.color
+                                                                }}>
+                                                                    {roleLabel(userData.role)}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: '14px 16px' }}>
+                                                                <select
+                                                                    value={userData.role}
+                                                                    disabled={roleUpdating === userData.id}
+                                                                    onChange={(e) => handleRoleChange(userData.id, e.target.value)}
+                                                                    style={{
+                                                                        padding: '7px 12px',
+                                                                        border: '1px solid #CCCCCC',
+                                                                        borderRadius: 8,
+                                                                        fontFamily: 'Poppins',
+                                                                        fontSize: '14px',
+                                                                        color: '#111111',
+                                                                        background: roleUpdating === userData.id ? '#F5F5F5' : 'white',
+                                                                        cursor: roleUpdating === userData.id ? 'not-allowed' : 'pointer',
+                                                                        outline: 'none'
+                                                                    }}
+                                                                >
+                                                                    {ROLE_OPTIONS.map(r => (
+                                                                        <option key={r.value} value={r.value}>{r.label}</option>
+                                                                    ))}
+                                                                </select>
+                                                                {roleUpdating === userData.id && (
+                                                                    <span style={{ marginLeft: '8px', fontSize: '12px', color: '#888888', fontFamily: 'Poppins' }}>Saving...</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -386,22 +284,23 @@ export default function ManagementPage() {
                                     fontSize: '24px',
                                     fontFamily: 'Poppins',
                                     fontWeight: '600',
-                                    marginBottom: '25px'
+                                    marginBottom: '25px',
+                                    color: '#111111'
                                 }}>
                                     System Settings
                                 </h3>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     <div style={{
                                         padding: '20px',
-                                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                                        border: '1px solid rgba(0, 0, 0, 0.15)',
                                         borderRadius: 10,
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center'
                                     }}>
                                         <div>
-                                            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '5px' }}>Backup Schedule</div>
-                                            <div style={{ fontSize: '14px', color: 'rgba(0, 0, 0, 0.7)' }}>Automated daily backups at 2:00 AM</div>
+                                            <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '5px', color: '#111111' }}>Backup Schedule</div>
+                                            <div style={{ fontSize: '14px', color: '#555555' }}>Automated daily backups at 2:00 AM</div>
                                         </div>
                                         <button style={{
                                             padding: '8px 16px',
@@ -409,22 +308,23 @@ export default function ManagementPage() {
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: 5,
-                                            cursor: 'pointer'
+                                            cursor: 'pointer',
+                                            fontFamily: 'Poppins'
                                         }}>
                                             Configure
                                         </button>
                                     </div>
                                     <div style={{
                                         padding: '20px',
-                                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                                        border: '1px solid rgba(0, 0, 0, 0.15)',
                                         borderRadius: 10,
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center'
                                     }}>
                                         <div>
-                                            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '5px' }}>System Maintenance</div>
-                                            <div style={{ fontSize: '14px', color: 'rgba(0, 0, 0, 0.7)' }}>Last maintenance: February 15, 2026</div>
+                                            <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '5px', color: '#111111' }}>System Maintenance</div>
+                                            <div style={{ fontSize: '14px', color: '#555555' }}>Last maintenance: February 15, 2026</div>
                                         </div>
                                         <button style={{
                                             padding: '8px 16px',
@@ -432,7 +332,8 @@ export default function ManagementPage() {
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: 5,
-                                            cursor: 'pointer'
+                                            cursor: 'pointer',
+                                            fontFamily: 'Poppins'
                                         }}>
                                             Schedule
                                         </button>
@@ -447,18 +348,19 @@ export default function ManagementPage() {
                                     fontSize: '24px',
                                     fontFamily: 'Poppins',
                                     fontWeight: '600',
-                                    marginBottom: '25px'
+                                    marginBottom: '25px',
+                                    color: '#111111'
                                 }}>
                                     Security Settings
                                 </h3>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     <div style={{
                                         padding: '20px',
-                                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                                        border: '1px solid rgba(0, 0, 0, 0.15)',
                                         borderRadius: 10
                                     }}>
-                                        <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '15px' }}>Password Policy</div>
-                                        <ul style={{ margin: 0, paddingLeft: '20px', color: 'rgba(0, 0, 0, 0.7)' }}>
+                                        <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '15px', color: '#111111' }}>Password Policy</div>
+                                        <ul style={{ margin: 0, paddingLeft: '20px', color: '#444444' }}>
                                             <li>Minimum 8 characters</li>
                                             <li>Must contain uppercase and lowercase letters</li>
                                             <li>Must contain at least one number</li>
@@ -467,15 +369,15 @@ export default function ManagementPage() {
                                     </div>
                                     <div style={{
                                         padding: '20px',
-                                        border: '1px solid rgba(0, 0, 0, 0.1)',
+                                        border: '1px solid rgba(0, 0, 0, 0.15)',
                                         borderRadius: 10,
                                         display: 'flex',
                                         justifyContent: 'space-between',
                                         alignItems: 'center'
                                     }}>
                                         <div>
-                                            <div style={{ fontSize: '16px', fontWeight: '500', marginBottom: '5px' }}>Two-Factor Authentication</div>
-                                            <div style={{ fontSize: '14px', color: 'rgba(0, 0, 0, 0.7)' }}>Enforce 2FA for all admin users</div>
+                                            <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '5px', color: '#111111' }}>Two-Factor Authentication</div>
+                                            <div style={{ fontSize: '14px', color: '#555555' }}>Enforce 2FA for all admin users</div>
                                         </div>
                                         <button style={{
                                             padding: '8px 16px',
@@ -483,7 +385,8 @@ export default function ManagementPage() {
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: 5,
-                                            cursor: 'pointer'
+                                            cursor: 'pointer',
+                                            fontFamily: 'Poppins'
                                         }}>
                                             Enabled
                                         </button>
@@ -498,20 +401,21 @@ export default function ManagementPage() {
                                     fontSize: '24px',
                                     fontFamily: 'Poppins',
                                     fontWeight: '600',
-                                    marginBottom: '25px'
+                                    marginBottom: '25px',
+                                    color: '#111111'
                                 }}>
                                     Activity Logs
                                 </h3>
                                 <div style={{
-                                    padding: '20px',
-                                    background: 'rgba(217, 217, 217, 0.1)',
+                                    padding: '40px 20px',
+                                    background: 'rgba(217, 217, 217, 0.15)',
                                     borderRadius: 10,
                                     textAlign: 'center',
-                                    color: 'rgba(0, 0, 0, 0.6)'
+                                    color: '#444444'
                                 }}>
-                                    <div style={{ fontSize: '18px', marginBottom: '10px' }}>📊</div>
-                                    <div>Activity logs will be displayed here</div>
-                                    <div style={{ fontSize: '14px', marginTop: '5px' }}>Coming soon...</div>
+                                    <div style={{ fontSize: '32px', marginBottom: '12px' }}>📋</div>
+                                    <div style={{ fontFamily: 'Poppins', fontWeight: '500', color: '#222222' }}>Activity logs will be displayed here</div>
+                                    <div style={{ fontSize: '14px', marginTop: '5px', fontFamily: 'Poppins', color: '#666666' }}>Coming soon...</div>
                                 </div>
                             </div>
                         )}
