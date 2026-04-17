@@ -6,6 +6,7 @@ import {
 import { SupabaseService } from '../supabase/supabase.service';
 import { LeadScoringPipelineService } from './lead-scoring-pipeline.service';
 import { LeadScoringInput } from './types/lead-scoring-input.type';
+import { LeadRecommendationResponse } from './types/lead-recommendation-response.type';
 
 type LeadScoreLabel = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -43,6 +44,19 @@ type LeadScoreResult = {
       hasUpcomingReminder: boolean;
     };
   };
+};
+
+type RecommendationRow = {
+  id: string | null;
+  score: number | null;
+  recommendation: string | null;
+  details: Record<string, unknown> | null;
+  updated_at: string | null;
+  clients?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    business_name?: string | null;
+  } | null;
 };
 
 @Injectable()
@@ -349,5 +363,54 @@ export class LeadScoringService {
       this.logger.error(`Failed to store lead scores: ${error.message}`);
       throw new InternalServerErrorException('Failed to store lead scores');
     }
+  }
+
+  async getLeadRecommendations(): Promise<LeadRecommendationResponse[]> {
+    const supabase = this.supabaseService.getClient();
+
+    const { data, error } = await supabase
+      .from('ai_recommendation')
+      .select(`
+        id,
+        score,
+        recommendation,
+        details,
+        updated_at,
+        clients (
+          first_name,
+          last_name,
+          business_name
+        )
+      `)
+      .eq('type', 'lead_score')
+      .order('score', { ascending: false });
+
+    if (error) {
+      this.logger.error(`Failed to fetch lead recommendations: ${error.message}`);
+      throw new InternalServerErrorException(
+        'Failed to fetch lead recommendations',
+      );
+    }
+
+    const rows = (data ?? []) as RecommendationRow[];
+
+    return rows.map((row) => {
+      const client = row.clients;
+
+      const clientName =
+        client?.business_name ||
+        `${client?.first_name ?? ''} ${client?.last_name ?? ''}`.trim() ||
+        row.id ||
+        'Unknown Client';
+
+      return {
+        clientId: row.id ?? '',
+        clientName,
+        score: row.score,
+        recommendation: row.recommendation,
+        details: row.details ?? null,
+        updatedAt: row.updated_at ?? null,
+      };
+    });
   }
 }

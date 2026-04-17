@@ -27,6 +27,9 @@ interface Client {
     tags: string[];
     created_at?: string;
     updated_at?: string;
+    leadScore?: number | null;
+    leadPotential?: 'LOW' | 'MEDIUM' | 'HIGH' | null;
+    leadRecommendation?: string | null;
 }
 
 // Tags stored as "label|#color"; plain strings fall back to default purple.
@@ -36,7 +39,7 @@ function parseTag(raw: string): { name: string; color: string } {
     return { name: raw, color: '#8A38F5' };
 }
 
-type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated';
+type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated' | 'potential-high-low' | 'potential-low-high';
 
 export default function ClientsPage() {
     const router = useRouter();
@@ -56,20 +59,58 @@ export default function ClientsPage() {
         const fetchAllClients = async () => {
             try {
                 setLoading(true);
-                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
+
+                const [clientsRes, recsRes] = await Promise.all([
+                fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
                     credentials: 'include',
-                });
-                if (!res.ok) throw new Error(`Error: ${res.status}`);
-                const data = await res.json();
-                const items = Array.isArray(data) ? data : data?.items ?? [];
-                setAllClients(items);
+                }),
+                fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/recommendations`, {
+                    credentials: 'include',
+                }),
+                ]);
+
+                if (!clientsRes.ok) throw new Error(`Error: ${clientsRes.status}`);
+                if (!recsRes.ok) throw new Error(`Error: ${recsRes.status}`);
+
+                const clientsData = await clientsRes.json();
+                const recsData = await recsRes.json();
+
+                const clients = Array.isArray(clientsData)
+                ? clientsData
+                : clientsData?.items ?? [];
+
+                const recommendations = Array.isArray(recsData?.recommendations)
+                ? recsData.recommendations
+                : [];
+
+                const recommendationMap = new Map(
+                recommendations.map((rec: any) => [
+                    rec.clientId,
+                    {
+                    leadScore: rec.score ?? null,
+                    leadPotential: rec.details?.label ?? null,
+                    leadRecommendation: rec.recommendation ?? null,
+                    },
+                ]),
+                );
+
+                const mergedClients = clients.map((client: Client) => ({
+                ...client,
+                ...(recommendationMap.get(client.id) ?? {
+                    leadScore: null,
+                    leadPotential: null,
+                    leadRecommendation: null,
+                }),
+                }));
+
+                setAllClients(mergedClients);
             } catch (err: any) {
                 console.error('Failed to fetch clients:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
-        };
+            };
 
         fetchAllClients();
     }, []);
@@ -137,6 +178,29 @@ export default function ClientsPage() {
             case 'date-updated':
                 sorted.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
                 break;
+            case 'potential-high-low': {
+                const rank = (value?: string | null) =>
+                    value === 'HIGH' ? 3 : value === 'MEDIUM' ? 2 : value === 'LOW' ? 1 : 0;
+
+                sorted.sort((a, b) => {
+                    const byPotential = rank(b.leadPotential) - rank(a.leadPotential);
+                    if (byPotential !== 0) return byPotential;
+                    return (b.leadScore ?? -1) - (a.leadScore ?? -1);
+                });
+                break;
+                }
+
+                case 'potential-low-high': {
+                const rank = (value?: string | null) =>
+                    value === 'LOW' ? 1 : value === 'MEDIUM' ? 2 : value === 'HIGH' ? 3 : 4;
+
+                sorted.sort((a, b) => {
+                    const byPotential = rank(a.leadPotential) - rank(b.leadPotential);
+                    if (byPotential !== 0) return byPotential;
+                    return (a.leadScore ?? Number.MAX_SAFE_INTEGER) - (b.leadScore ?? Number.MAX_SAFE_INTEGER);
+                });
+                break;
+                }
         }
 
         return sorted;
@@ -289,6 +353,8 @@ export default function ClientsPage() {
                                 <option value="company-desc">Sort: Company (Z-A)</option>
                                 <option value="date-created">Sort: Date Created (Newest)</option>
                                 <option value="date-updated">Sort: Date Updated (Newest)</option>
+                                <option value="potential-high-low">Sort: Potential (High-Low)</option>
+                                <option value="potential-low-high">Sort: Potential (Low-High)</option>
                             </select>
 
                             <Link href="/dashboard/clients/add">
@@ -320,7 +386,7 @@ export default function ClientsPage() {
                             }}>
                                 <thead style={{ position: 'sticky', top: 0, background: 'rgba(255, 158, 77, 0.20)' }}>
                                     <tr>
-                                        {['Name', 'Company', 'Title', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Tags'].map((header) => (
+                                        {['Name', 'Company', 'Title', 'Relationship Owner', 'Status', 'Contact Medium', 'Date of Contact', 'Where Met', 'Chat Summary', 'Outcome', 'Tags', 'Potential'].map((header) => (
                                             <th key={header} style={{
                                                 border: '1px solid rgba(217, 217, 217, 0.30)',
                                                 padding: 15,
@@ -481,6 +547,41 @@ export default function ClientsPage() {
                                                     <span style={{ fontFamily: 'Poppins', fontSize: 14, color: 'rgba(26, 26, 26, 0.80)' }}>—</span>
                                                 )}
                                             </td>
+                                            <td
+                                                style={{
+                                                    border: '1px solid rgba(217, 217, 217, 0.30)',
+                                                    padding: 15,
+                                                    fontFamily: 'Poppins',
+                                                    fontSize: 14,
+                                                    color: 'rgba(26, 26, 26, 0.80)',
+                                                    whiteSpace: 'nowrap',
+                                                }}
+                                                >
+                                                {client.leadPotential ? (
+                                                    <span
+                                                    style={{
+                                                        display: 'inline-block',
+                                                        padding: '6px 14px',
+                                                        borderRadius: 20,
+                                                        fontSize: 12,
+                                                        fontFamily: 'Poppins',
+                                                        fontWeight: '600',
+                                                        background:
+                                                        client.leadPotential === 'HIGH'
+                                                            ? '#22C55E'
+                                                            : client.leadPotential === 'MEDIUM'
+                                                            ? '#F59E0B'
+                                                            : '#EF4444',
+                                                        color: 'white',
+                                                    }}
+                                                    >
+                                                    {client.leadPotential}
+                                                    {client.leadScore != null ? ` (${client.leadScore})` : ''}
+                                                    </span>
+                                                ) : (
+                                                    <span style={{ color: 'rgba(26, 26, 26, 0.50)' }}>—</span>
+                                                )}
+                                                </td>
                                         </tr>
                                     ))}
                                 </tbody>

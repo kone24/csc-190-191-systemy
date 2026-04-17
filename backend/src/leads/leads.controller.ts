@@ -30,4 +30,16 @@ export class LeadsController {
         results,
         };
     }
+
+    @Get('recommendations')
+    async getRecommendations() {
+    const recommendations =
+        await this.leadScoringService.getLeadRecommendations();
+
+    return {
+        ok: true,
+        count: recommendations.length,
+        recommendations,
+    };
+    }
 }
