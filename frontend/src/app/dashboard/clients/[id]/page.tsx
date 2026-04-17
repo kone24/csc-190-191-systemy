@@ -219,7 +219,7 @@ export default function ClientProfilePage() {
     fetch(`http://localhost:3001/clients/${id}/audit`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => setAuditHistory(data.history ?? []))
-      .catch(() => {});
+      .catch(() => { });
   }, [id]);
 
   useEffect(() => { fetchAudit(); }, [fetchAudit]);
@@ -950,7 +950,7 @@ export default function ClientProfilePage() {
                           {entry.action}
                         </span>
                         <span style={{ fontFamily: 'Poppins', fontSize: 12, color: 'rgba(0,0,0,0.40)' }}>
-                          {new Date(entry.created_at).toLocaleString()}
+                          {new Date(entry.created_at).toLocaleString('en-US', { timeZone: 'UTC' })}
                         </span>
                       </div>
                       {entry.diff && Object.entries(entry.diff).map(([field, change]) => (

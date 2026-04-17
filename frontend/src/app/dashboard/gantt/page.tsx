@@ -9,20 +9,20 @@ import { ManagerAndAbove } from '@/components/RoleGuard';
 
 // ── Color palette ───────────────────────────────────────────────────────────
 const COLORS: Record<string, { bg: string; text: string }> = {
-    red:    { bg: '#fca5a5', text: '#1f2937' },  // rose pastel
-    teal:   { bg: '#7dd3fc', text: '#1f2937' },  // sky pastel
+    red: { bg: '#fca5a5', text: '#1f2937' },  // rose pastel
+    teal: { bg: '#7dd3fc', text: '#1f2937' },  // sky pastel
     purple: { bg: '#c4b5fd', text: '#1f2937' },  // lavender pastel
-    green:  { bg: '#86efac', text: '#1f2937' },  // sage pastel
-    blue:   { bg: '#93c5fd', text: '#1f2937' },  // dusty blue pastel
+    green: { bg: '#86efac', text: '#1f2937' },  // sage pastel
+    blue: { bg: '#93c5fd', text: '#1f2937' },  // dusty blue pastel
     yellow: { bg: '#fdba74', text: '#1f2937' },  // peach pastel
-    pink:   { bg: '#f9a8d4', text: '#1f2937' },  // soft pink pastel
-    mint:   { bg: '#6ee7b7', text: '#1f2937' },  // mint / emerald pastel
+    pink: { bg: '#f9a8d4', text: '#1f2937' },  // soft pink pastel
+    mint: { bg: '#6ee7b7', text: '#1f2937' },  // mint / emerald pastel
     indigo: { bg: '#a5b4fc', text: '#1f2937' },  // indigo pastel
-    amber:  { bg: '#fde68a', text: '#1f2937' },  // amber pastel
-    lime:   { bg: '#d9f99d', text: '#1f2937' },  // lime pastel
-    cyan:   { bg: '#a5f3fc', text: '#1f2937' },  // cyan pastel
-    mauve:  { bg: '#e9d5ff', text: '#1f2937' },  // mauve / light violet pastel
-    blush:  { bg: '#fecdd3', text: '#1f2937' },  // blush / light rose pastel
+    amber: { bg: '#fde68a', text: '#1f2937' },  // amber pastel
+    lime: { bg: '#d9f99d', text: '#1f2937' },  // lime pastel
+    cyan: { bg: '#a5f3fc', text: '#1f2937' },  // cyan pastel
+    mauve: { bg: '#e9d5ff', text: '#1f2937' },  // mauve / light violet pastel
+    blush: { bg: '#fecdd3', text: '#1f2937' },  // blush / light rose pastel
 };
 
 const COLOR_KEYS = ['red', 'teal', 'purple', 'green', 'blue', 'yellow', 'pink', 'mint', 'indigo', 'amber', 'lime', 'cyan', 'mauve', 'blush'] as const;
@@ -296,20 +296,20 @@ function buildInitialData(): ClientGroup[] {
 }
 
 const LEGEND_ITEMS = [
-    { color: 'red',    label: 'Red'    },
-    { color: 'teal',   label: 'Teal'   },
+    { color: 'red', label: 'Red' },
+    { color: 'teal', label: 'Teal' },
     { color: 'purple', label: 'Purple' },
-    { color: 'green',  label: 'Green'  },
-    { color: 'blue',   label: 'Blue'   },
+    { color: 'green', label: 'Green' },
+    { color: 'blue', label: 'Blue' },
     { color: 'yellow', label: 'Yellow' },
-    { color: 'pink',   label: 'Pink'   },
-    { color: 'mint',   label: 'Mint'   },
+    { color: 'pink', label: 'Pink' },
+    { color: 'mint', label: 'Mint' },
     { color: 'indigo', label: 'Indigo' },
-    { color: 'amber',  label: 'Amber'  },
-    { color: 'lime',   label: 'Lime'   },
-    { color: 'cyan',   label: 'Cyan'   },
-    { color: 'mauve',  label: 'Mauve'  },
-    { color: 'blush',  label: 'Blush'  },
+    { color: 'amber', label: 'Amber' },
+    { color: 'lime', label: 'Lime' },
+    { color: 'cyan', label: 'Cyan' },
+    { color: 'mauve', label: 'Mauve' },
+    { color: 'blush', label: 'Blush' },
 ];
 
 // ── Resize handle CSS (injected once) ───────────────────────────────────────
@@ -888,11 +888,18 @@ export default function GanttPage() {
     }, [colWidth, data]);
 
     // ── Popover position clamped to viewport ────────────────────────────
+    const [viewportSize, setViewportSize] = useState({ w: 1200, h: 800 });
+    useEffect(() => {
+        setViewportSize({ w: window.innerWidth, h: window.innerHeight });
+        const onResize = () => setViewportSize({ w: window.innerWidth, h: window.innerHeight });
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
     const popoverLeft = popover
-        ? Math.min(popover.x, (typeof window !== 'undefined' ? window.innerWidth : 1200) - 300)
+        ? Math.min(popover.x, viewportSize.w - 300)
         : 0;
     const popoverTop = popover
-        ? Math.min(popover.y, (typeof window !== 'undefined' ? window.innerHeight : 800) - 540)
+        ? Math.min(popover.y, viewportSize.h - 540)
         : 0;
 
     const selectStyle: React.CSSProperties = {
@@ -911,759 +918,759 @@ export default function GanttPage() {
 
     return (
         <ManagerAndAbove>
-        <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
-            {/* Inject resize handle CSS */}
-            <style dangerouslySetInnerHTML={{ __html: RESIZE_CSS }} />
+            <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
+                {/* Inject resize handle CSS */}
+                <style dangerouslySetInnerHTML={{ __html: RESIZE_CSS }} />
 
-            <DevRoleSwitcher />
-            <Sidebar activePage="gantt" />
+                <DevRoleSwitcher />
+                <Sidebar activePage="gantt" />
 
-            <div style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                background: 'rgba(217, 217, 217, 0.15)',
-                padding: '20px 20px 20px 30px',
-                gap: 20,
-                overflow: 'hidden',
-            }}>
-                {/* Error toast */}
-                {error && (
-                    <div style={{
-                        position: 'fixed', top: 20, right: 20, zIndex: 9999,
-                        background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA',
-                        borderRadius: 8, padding: '10px 16px',
-                        fontFamily: 'Poppins', fontSize: 13, fontWeight: 500,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                    }}>
-                        {error}
+                <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: 'rgba(217, 217, 217, 0.15)',
+                    padding: '20px 20px 20px 30px',
+                    gap: 20,
+                    overflow: 'hidden',
+                }}>
+                    {/* Error toast */}
+                    {error && (
+                        <div style={{
+                            position: 'fixed', top: 20, right: 20, zIndex: 9999,
+                            background: '#FEE2E2', color: '#991B1B', border: '1px solid #FECACA',
+                            borderRadius: 8, padding: '10px 16px',
+                            fontFamily: 'Poppins', fontSize: 13, fontWeight: 500,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        }}>
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Top bar */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <SearchBar placeholder="Search projects..." onSearch={() => { }} />
                     </div>
-                )}
 
-                {/* Top bar */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <SearchBar placeholder="Search projects..." onSearch={() => {}} />
-                </div>
+                    {/* Page title */}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+                        <h1 style={{
+                            fontFamily: 'Poppins', fontWeight: 600, fontSize: 28,
+                            color: '#1a1a1a', margin: 0,
+                        }}>
+                            Gantt Chart
+                        </h1>
+                        <span style={{
+                            fontFamily: 'Poppins', fontWeight: 400, fontSize: 14,
+                            color: '#6b7280',
+                        }}>
+                            {visibleRangeLabel}
+                        </span>
+                    </div>
 
-                {/* Page title */}
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-                    <h1 style={{
-                        fontFamily: 'Poppins', fontWeight: 600, fontSize: 28,
-                        color: '#1a1a1a', margin: 0,
-                    }}>
-                        Gantt Chart
-                    </h1>
-                    <span style={{
-                        fontFamily: 'Poppins', fontWeight: 400, fontSize: 14,
-                        color: '#6b7280',
-                    }}>
-                        {visibleRangeLabel}
-                    </span>
-                </div>
-
-                {/* Filter bar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <select
-                        value={filterClient}
-                        onChange={(e) => { setFilterClient(e.target.value); setFilterProject(''); }}
-                        style={{
-                            fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
-                            color: filterClient ? '#f97316' : '#374151',
-                            background: 'white',
-                            border: `1px solid ${filterClient ? '#f97316' : '#d1d5db'}`,
-                            borderRadius: 8, padding: '5px 10px',
-                            cursor: 'pointer', outline: 'none',
-                        }}
-                    >
-                        <option value="">Client: All</option>
-                        {clientOptions.map(c => (
-                            <option key={c} value={c}>{c}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        value={filterProject}
-                        onChange={(e) => setFilterProject(e.target.value)}
-                        style={{
-                            fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
-                            color: filterProject ? '#f97316' : '#374151',
-                            background: 'white',
-                            border: `1px solid ${filterProject ? '#f97316' : '#d1d5db'}`,
-                            borderRadius: 8, padding: '5px 10px',
-                            cursor: 'pointer', outline: 'none',
-                        }}
-                    >
-                        <option value="">Project: All</option>
-                        {projectOptions.map(p => (
-                            <option key={p} value={p}>{p}</option>
-                        ))}
-                    </select>
-
-                    {filtersActive && (
-                        <button
-                            onClick={clearFilters}
+                    {/* Filter bar */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <select
+                            value={filterClient}
+                            onChange={(e) => { setFilterClient(e.target.value); setFilterProject(''); }}
                             style={{
-                                background: 'none', border: 'none',
                                 fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
-                                color: '#f97316', cursor: 'pointer', padding: '5px 4px',
+                                color: filterClient ? '#f97316' : '#374151',
+                                background: 'white',
+                                border: `1px solid ${filterClient ? '#f97316' : '#d1d5db'}`,
+                                borderRadius: 8, padding: '5px 10px',
+                                cursor: 'pointer', outline: 'none',
                             }}
                         >
-                            Clear filters
-                        </button>
+                            <option value="">Client: All</option>
+                            {clientOptions.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={filterProject}
+                            onChange={(e) => setFilterProject(e.target.value)}
+                            style={{
+                                fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
+                                color: filterProject ? '#f97316' : '#374151',
+                                background: 'white',
+                                border: `1px solid ${filterProject ? '#f97316' : '#d1d5db'}`,
+                                borderRadius: 8, padding: '5px 10px',
+                                cursor: 'pointer', outline: 'none',
+                            }}
+                        >
+                            <option value="">Project: All</option>
+                            {projectOptions.map(p => (
+                                <option key={p} value={p}>{p}</option>
+                            ))}
+                        </select>
+
+                        {filtersActive && (
+                            <button
+                                onClick={clearFilters}
+                                style={{
+                                    background: 'none', border: 'none',
+                                    fontFamily: 'Poppins', fontSize: 12, fontWeight: 500,
+                                    color: '#f97316', cursor: 'pointer', padding: '5px 4px',
+                                }}
+                            >
+                                Clear filters
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Color legend */}
+                    <div style={{
+                        display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center',
+                        background: 'white', borderRadius: 12, padding: '10px 20px',
+                        boxShadow: '0px 2px 6px rgba(0,0,0,0.08)',
+                    }}>
+                        <span style={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: 13, color: '#555' }}>
+                            Legend:
+                        </span>
+                        {LEGEND_ITEMS.map(item => (
+                            <div key={item.color} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div style={{
+                                    width: 14, height: 14, borderRadius: 3,
+                                    background: COLORS[item.color].bg,
+                                }} />
+                                <span style={{ fontFamily: 'Poppins', fontSize: 12, color: '#555' }}>
+                                    {item.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* ── Gantt grid ─────────────────────────────────────────────── */}
+                    {loading ? (
+                        <div style={{
+                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: 'white', borderRadius: 12,
+                            boxShadow: '0px 2px 8px rgba(0,0,0,0.10)',
+                        }}>
+                            <span style={{ fontFamily: 'Poppins', fontSize: 14, color: '#999' }}>Loading Gantt data...</span>
+                        </div>
+                    ) : (
+                        <div
+                            ref={containerRef}
+                            style={{
+                                flex: 1, overflowX: 'hidden', overflowY: 'auto', borderRadius: 12,
+                                boxShadow: '0px 2px 8px rgba(0,0,0,0.10)',
+                                background: 'white', width: '100%',
+                            }}
+                        >
+                            <div style={{ width: '100%', fontFamily: 'Poppins' }}>
+                                {/* Global grabbing cursor while dragging */}
+                                {isDragging && <style>{`* { cursor: grabbing !important; user-select: none !important; }`}</style>}
+
+                                {/* Header row */}
+                                <div style={{
+                                    display: 'flex',
+                                    position: 'sticky', top: 0, zIndex: 3,
+                                }}>
+                                    <div style={{
+                                        width: LEFT_COL_WIDTH, flexShrink: 0,
+                                        height: HEADER_HEIGHT,
+                                        background: '#f8f9fa', color: '#374151',
+                                        fontWeight: 500, fontSize: 12,
+                                        padding: '0 8px 0 16px',
+                                        display: 'flex', alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        position: 'sticky', left: 0, zIndex: 4,
+                                        borderBottom: '1px solid #e5e7eb',
+                                        boxSizing: 'border-box',
+                                    }}>
+                                        <span>Client / Project</span>
+                                        <button
+                                            onClick={goToday}
+                                            title="Jump to current week"
+                                            style={{
+                                                fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
+                                                color: '#374151', background: 'none',
+                                                border: '1px solid #d1d5db', borderRadius: 6,
+                                                padding: '3px 8px', cursor: 'pointer',
+                                                lineHeight: 1.4, flexShrink: 0,
+                                            }}
+                                        >
+                                            Today
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        onClick={goPrev}
+                                        title="Previous week"
+                                        style={{
+                                            width: NAV_BTN_WIDTH, flexShrink: 0,
+                                            height: HEADER_HEIGHT,
+                                            background: '#f8f9fa', color: '#374151',
+                                            border: 'none', cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: 16, fontWeight: 700, fontFamily: 'Poppins',
+                                            borderBottom: '1px solid #e5e7eb',
+                                            borderLeft: '1px solid #e5e7eb',
+                                            boxSizing: 'border-box',
+                                            padding: 0,
+                                        }}
+                                    >
+                                        &#8249;
+                                    </button>
+
+                                    {visibleWeekDates.map((w, i) => {
+                                        const isCurrent = i === currentWeekCol;
+                                        return (
+                                            <div key={i} style={{
+                                                flex: 1, minWidth: 0,
+                                                height: HEADER_HEIGHT,
+                                                background: isCurrent ? '#fff7ed' : '#f8f9fa',
+                                                color: isCurrent ? '#c2410c' : '#374151',
+                                                fontWeight: isCurrent ? 700 : 500,
+                                                fontSize: 12,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                borderBottom: '1px solid #e5e7eb',
+                                                borderTop: isCurrent ? '2px solid #f97316' : 'none',
+                                                borderLeft: '1px solid #e5e7eb',
+                                                whiteSpace: 'nowrap',
+                                                boxSizing: 'border-box',
+                                            }}>
+                                                {formatWeekHeader(w)}
+                                            </div>
+                                        );
+                                    })}
+
+                                    <button
+                                        onClick={goNext}
+                                        title="Next week"
+                                        style={{
+                                            width: NAV_BTN_WIDTH, flexShrink: 0,
+                                            height: HEADER_HEIGHT,
+                                            background: '#f8f9fa', color: '#374151',
+                                            border: 'none', cursor: 'pointer',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: 16, fontWeight: 700, fontFamily: 'Poppins',
+                                            borderBottom: '1px solid #e5e7eb',
+                                            borderLeft: '1px solid #e5e7eb',
+                                            boxSizing: 'border-box',
+                                            padding: 0,
+                                        }}
+                                    >
+                                        &#8250;
+                                    </button>
+
+                                </div>
+
+                                {/* Body rows */}
+                                {filteredData.map((group, clientIdx) => (
+                                    <React.Fragment key={`client-${group.client}`}>
+                                        <div style={{
+                                            width: '100%',
+                                            height: CLIENT_ROW_HEIGHT,
+                                            background: '#e5e7eb', color: '#1f2937',
+                                            fontWeight: 600, fontSize: 14,
+                                            padding: '0 16px', letterSpacing: 1,
+                                            display: 'flex', alignItems: 'center',
+                                            position: 'sticky', left: 0, zIndex: 2,
+                                            borderLeft: '3px solid #9ca3af',
+                                        }}>
+                                            {group.client}
+                                        </div>
+
+                                        {group.projects.map((project, projectIdx) => {
+                                            const laneCount = Math.max(project.lanes.length, 1);
+                                            const rowH = projectRowHeight(laneCount);
+                                            const rowIdx = projectRowIndexMap.get(`${group.client}-${project.name}`) ?? 0;
+                                            const rowBg = rowIdx % 2 === 0 ? '#fafafa' : 'white';
+
+                                            return (
+                                                <div
+                                                    key={`${group.client}-${project.name}`}
+                                                    style={{
+                                                        display: 'flex',
+                                                        borderBottom: '1px solid #e5e7eb',
+                                                    }}
+                                                >
+                                                    <div style={{
+                                                        width: LEFT_COL_WIDTH, flexShrink: 0,
+                                                        height: rowH,
+                                                        background: rowBg,
+                                                        padding: '10px 16px 4px 32px',
+                                                        fontWeight: 500, fontSize: 13, color: '#374151',
+                                                        display: 'flex', alignItems: 'flex-start',
+                                                        position: 'sticky', left: 0, zIndex: 2,
+                                                        borderRight: '1px solid #e5e7eb',
+                                                        boxSizing: 'border-box',
+                                                    }}>
+                                                        {project.name}
+                                                    </div>
+
+                                                    <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: rowBg }} />
+
+                                                    <div
+                                                        style={{
+                                                            position: 'relative',
+                                                            flex: 1,
+                                                            minWidth: 0,
+                                                            height: rowH,
+                                                            background: rowBg,
+                                                            overflow: 'hidden',
+                                                        }}
+                                                        onClick={(e) => {
+                                                            if (e.target !== e.currentTarget) return;
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            const relX = e.clientX - rect.left;
+                                                            const colIdx = Math.min(Math.max(Math.floor(relX / colWidth), 0), WEEK_COUNT - 1);
+                                                            const weekIso = toIso(addWeeks(windowStart, colIdx));
+                                                            handleEmptyCellClick(e, clientIdx, projectIdx, e.clientX, e.clientY, weekIso);
+                                                        }}
+                                                    >
+                                                        {/* Column gridlines (borders + current-week tint, non-interactive) */}
+                                                        {Array.from({ length: WEEK_COUNT }).map((_, wi) => (
+                                                            <div
+                                                                key={`gridline-${wi}`}
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    left: wi * colWidth,
+                                                                    top: 0,
+                                                                    width: colWidth,
+                                                                    height: rowH,
+                                                                    borderLeft: wi > 0 ? '1px solid #e5e7eb' : 'none',
+                                                                    background: wi === currentWeekCol ? 'rgba(249, 115, 22, 0.05)' : 'transparent',
+                                                                    boxSizing: 'border-box',
+                                                                    pointerEvents: 'none',
+                                                                }}
+                                                            />
+                                                        ))}
+
+                                                        {/* Per-lane per-column hover cells (including the extra add-new lane) */}
+                                                        {Array.from({ length: laneCount + 1 }).map((_, li) =>
+                                                            Array.from({ length: WEEK_COUNT }).map((_, wi) => (
+                                                                <div
+                                                                    key={`cell-${li}-${wi}`}
+                                                                    className="gantt-cell"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        const weekIso = toIso(addWeeks(windowStart, wi));
+                                                                        handleEmptyCellClick(e, clientIdx, projectIdx, e.clientX, e.clientY, weekIso);
+                                                                    }}
+                                                                    style={{
+                                                                        position: 'absolute',
+                                                                        left: wi * colWidth,
+                                                                        top: 4 + li * (LANE_HEIGHT + LANE_GAP),
+                                                                        width: colWidth,
+                                                                        height: LANE_HEIGHT,
+                                                                        cursor: 'pointer',
+                                                                        boxSizing: 'border-box',
+                                                                        borderRadius: 4,
+                                                                    }}
+                                                                />
+                                                            )),
+                                                        )}
+
+                                                        {/* Entry bars */}
+                                                        {project.lanes.map((lane, laneIdx) =>
+                                                            lane.map((entry, entryIdx) => {
+                                                                if (entry.endDate < windowStartIso || entry.startDate > windowEndIso) return null;
+
+                                                                const entryStart = parseDate(entry.startDate);
+                                                                const entryEnd = parseDate(entry.endDate);
+                                                                const c = COLORS[entry.color] || COLORS.red;
+
+                                                                const rawStartCol = weeksBetween(windowStart, entryStart);
+                                                                const rawEndCol = weeksBetween(windowStart, entryEnd);
+
+                                                                // Apply drag offset for the bar being dragged
+                                                                const barKey = `${clientIdx}-${projectIdx}-${laneIdx}-${entryIdx}`;
+                                                                const isThisBarDragging = isDragging && dragKey === barKey;
+                                                                const deltaCol = isThisBarDragging ? dragDeltaCol : 0;
+
+                                                                // Clamp to visible window
+                                                                const startCol = Math.max(rawStartCol + deltaCol, 0);
+                                                                const endCol = Math.min(rawEndCol + deltaCol, WEEK_COUNT - 1);
+
+                                                                const barLeft = startCol * colWidth + BAR_H_PAD;
+                                                                const barWidth = (endCol - startCol + 1) * colWidth - BAR_H_PAD * 2;
+                                                                const barTop = 4 + laneIdx * (LANE_HEIGHT + LANE_GAP);
+
+                                                                const maxWidth = 52 * colWidth;
+
+                                                                return (
+                                                                    <div
+                                                                        key={`bar-${laneIdx}-${entryIdx}`}
+                                                                        className="gantt-bar"
+                                                                        style={{
+                                                                            position: 'absolute',
+                                                                            left: barLeft,
+                                                                            top: barTop,
+                                                                            zIndex: isThisBarDragging ? 10 : 1,
+                                                                            opacity: isThisBarDragging ? 0.85 : 1,
+                                                                            transition: isThisBarDragging ? 'none' : undefined,
+                                                                        }}
+                                                                    >
+                                                                        <ResizableBox
+                                                                            width={barWidth}
+                                                                            height={BAR_HEIGHT}
+                                                                            axis="x"
+                                                                            minConstraints={[colWidth - BAR_H_PAD * 2, BAR_HEIGHT]}
+                                                                            maxConstraints={[maxWidth, BAR_HEIGHT]}
+                                                                            resizeHandles={['e']}
+                                                                            onResizeStop={(_e, { size }) => {
+                                                                                const newFullWidth = size.width + BAR_H_PAD * 2;
+                                                                                handleResizeStop(
+                                                                                    clientIdx, projectIdx,
+                                                                                    laneIdx, entryIdx,
+                                                                                    newFullWidth,
+                                                                                    entry.startDate,
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <div
+                                                                                className="gantt-bar-inner"
+                                                                                onMouseDown={(e) => handleBarMouseDown(
+                                                                                    e, clientIdx, projectIdx,
+                                                                                    laneIdx, entryIdx, entry,
+                                                                                )}
+                                                                                onMouseEnter={(e) => {
+                                                                                    if (!isDragging) setTooltip({
+                                                                                        x: e.clientX, y: e.clientY,
+                                                                                        text: entry.text,
+                                                                                        assignee: entry.assignee,
+                                                                                        color: entry.color,
+                                                                                    });
+                                                                                }}
+                                                                                onMouseMove={(e) => {
+                                                                                    if (!isDragging) setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
+                                                                                }}
+                                                                                onMouseLeave={() => setTooltip(null)}
+                                                                                onClick={(e) => handleEntryClick(
+                                                                                    e, clientIdx, projectIdx,
+                                                                                    laneIdx, entryIdx, entry,
+                                                                                )}
+                                                                                style={{
+                                                                                    width: '100%',
+                                                                                    height: BAR_HEIGHT,
+                                                                                    borderRadius: 4,
+                                                                                    background: c.bg,
+                                                                                    color: c.text,
+                                                                                    fontSize: 11,
+                                                                                    fontWeight: 500,
+                                                                                    lineHeight: `${BAR_HEIGHT}px`,
+                                                                                    paddingLeft: 8,
+                                                                                    paddingRight: 14,
+                                                                                    whiteSpace: 'nowrap',
+                                                                                    overflow: 'hidden',
+                                                                                    textOverflow: 'ellipsis',
+                                                                                    boxSizing: 'border-box',
+                                                                                    boxShadow: isThisBarDragging ? '0 4px 12px rgba(0,0,0,0.18)' : undefined,
+                                                                                }}
+                                                                            >
+                                                                                {entry.assignee ? `${entry.text} — ${entry.assignee}` : entry.text}
+                                                                            </div>
+                                                                        </ResizableBox>
+                                                                    </div>
+                                                                );
+                                                            }),
+                                                        )}
+
+                                                    </div>
+
+                                                    <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: rowBg }} />
+                                                </div>
+                                            );
+                                        })}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </div>
 
-                {/* Color legend */}
-                <div style={{
-                    display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center',
-                    background: 'white', borderRadius: 12, padding: '10px 20px',
-                    boxShadow: '0px 2px 6px rgba(0,0,0,0.08)',
-                }}>
-                    <span style={{ fontFamily: 'Poppins', fontWeight: 600, fontSize: 13, color: '#555' }}>
-                        Legend:
-                    </span>
-                    {LEGEND_ITEMS.map(item => (
-                        <div key={item.color} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <div style={{
-                                width: 14, height: 14, borderRadius: 3,
-                                background: COLORS[item.color].bg,
-                            }} />
-                            <span style={{ fontFamily: 'Poppins', fontSize: 12, color: '#555' }}>
-                                {item.label}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* ── Gantt grid ─────────────────────────────────────────────── */}
-                {loading ? (
-                    <div style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: 'white', borderRadius: 12,
-                        boxShadow: '0px 2px 8px rgba(0,0,0,0.10)',
-                    }}>
-                        <span style={{ fontFamily: 'Poppins', fontSize: 14, color: '#999' }}>Loading Gantt data...</span>
-                    </div>
-                ) : (
-                <div
-                    ref={containerRef}
-                    style={{
-                        flex: 1, overflowX: 'hidden', overflowY: 'auto', borderRadius: 12,
-                        boxShadow: '0px 2px 8px rgba(0,0,0,0.10)',
-                        background: 'white', width: '100%',
-                    }}
-                >
-                    <div style={{ width: '100%', fontFamily: 'Poppins' }}>
-                        {/* Global grabbing cursor while dragging */}
-                        {isDragging && <style>{`* { cursor: grabbing !important; user-select: none !important; }`}</style>}
-
-                        {/* Header row */}
-                        <div style={{
-                            display: 'flex',
-                            position: 'sticky', top: 0, zIndex: 3,
-                        }}>
-                            <div style={{
-                                width: LEFT_COL_WIDTH, flexShrink: 0,
-                                height: HEADER_HEIGHT,
-                                background: '#f8f9fa', color: '#374151',
-                                fontWeight: 500, fontSize: 12,
-                                padding: '0 8px 0 16px',
-                                display: 'flex', alignItems: 'center',
-                                justifyContent: 'space-between',
-                                position: 'sticky', left: 0, zIndex: 4,
-                                borderBottom: '1px solid #e5e7eb',
-                                boxSizing: 'border-box',
-                            }}>
-                                <span>Client / Project</span>
-                                <button
-                                    onClick={goToday}
-                                    title="Jump to current week"
-                                    style={{
-                                        fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
-                                        color: '#374151', background: 'none',
-                                        border: '1px solid #d1d5db', borderRadius: 6,
-                                        padding: '3px 8px', cursor: 'pointer',
-                                        lineHeight: 1.4, flexShrink: 0,
-                                    }}
-                                >
-                                    Today
-                                </button>
-                            </div>
-
-                            <button
-                                onClick={goPrev}
-                                title="Previous week"
-                                style={{
-                                    width: NAV_BTN_WIDTH, flexShrink: 0,
-                                    height: HEADER_HEIGHT,
-                                    background: '#f8f9fa', color: '#374151',
-                                    border: 'none', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 16, fontWeight: 700, fontFamily: 'Poppins',
-                                    borderBottom: '1px solid #e5e7eb',
-                                    borderLeft: '1px solid #e5e7eb',
-                                    boxSizing: 'border-box',
-                                    padding: 0,
-                                }}
-                            >
-                                &#8249;
-                            </button>
-
-                            {visibleWeekDates.map((w, i) => {
-                                const isCurrent = i === currentWeekCol;
-                                return (
-                                    <div key={i} style={{
-                                        flex: 1, minWidth: 0,
-                                        height: HEADER_HEIGHT,
-                                        background: isCurrent ? '#fff7ed' : '#f8f9fa',
-                                        color: isCurrent ? '#c2410c' : '#374151',
-                                        fontWeight: isCurrent ? 700 : 500,
-                                        fontSize: 12,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        borderBottom: '1px solid #e5e7eb',
-                                        borderTop: isCurrent ? '2px solid #f97316' : 'none',
-                                        borderLeft: '1px solid #e5e7eb',
-                                        whiteSpace: 'nowrap',
-                                        boxSizing: 'border-box',
-                                    }}>
-                                        {formatWeekHeader(w)}
-                                    </div>
-                                );
-                            })}
-
-                            <button
-                                onClick={goNext}
-                                title="Next week"
-                                style={{
-                                    width: NAV_BTN_WIDTH, flexShrink: 0,
-                                    height: HEADER_HEIGHT,
-                                    background: '#f8f9fa', color: '#374151',
-                                    border: 'none', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: 16, fontWeight: 700, fontFamily: 'Poppins',
-                                    borderBottom: '1px solid #e5e7eb',
-                                    borderLeft: '1px solid #e5e7eb',
-                                    boxSizing: 'border-box',
-                                    padding: 0,
-                                }}
-                            >
-                                &#8250;
-                            </button>
-
-                        </div>
-
-                        {/* Body rows */}
-                        {filteredData.map((group, clientIdx) => (
-                            <React.Fragment key={`client-${group.client}`}>
-                                <div style={{
-                                    width: '100%',
-                                    height: CLIENT_ROW_HEIGHT,
-                                    background: '#e5e7eb', color: '#1f2937',
-                                    fontWeight: 600, fontSize: 14,
-                                    padding: '0 16px', letterSpacing: 1,
-                                    display: 'flex', alignItems: 'center',
-                                    position: 'sticky', left: 0, zIndex: 2,
-                                    borderLeft: '3px solid #9ca3af',
-                                }}>
-                                    {group.client}
-                                </div>
-
-                                {group.projects.map((project, projectIdx) => {
-                                    const laneCount = Math.max(project.lanes.length, 1);
-                                    const rowH = projectRowHeight(laneCount);
-                                    const rowIdx = projectRowIndexMap.get(`${group.client}-${project.name}`) ?? 0;
-                                    const rowBg = rowIdx % 2 === 0 ? '#fafafa' : 'white';
-
-                                    return (
-                                        <div
-                                            key={`${group.client}-${project.name}`}
-                                            style={{
-                                                display: 'flex',
-                                                borderBottom: '1px solid #e5e7eb',
-                                            }}
-                                        >
-                                            <div style={{
-                                                width: LEFT_COL_WIDTH, flexShrink: 0,
-                                                height: rowH,
-                                                background: rowBg,
-                                                padding: '10px 16px 4px 32px',
-                                                fontWeight: 500, fontSize: 13, color: '#374151',
-                                                display: 'flex', alignItems: 'flex-start',
-                                                position: 'sticky', left: 0, zIndex: 2,
-                                                borderRight: '1px solid #e5e7eb',
-                                                boxSizing: 'border-box',
-                                            }}>
-                                                {project.name}
-                                            </div>
-
-                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: rowBg }} />
-
-                                            <div
-                                                style={{
-                                                    position: 'relative',
-                                                    flex: 1,
-                                                    minWidth: 0,
-                                                    height: rowH,
-                                                    background: rowBg,
-                                                    overflow: 'hidden',
-                                                }}
-                                                onClick={(e) => {
-                                                    if (e.target !== e.currentTarget) return;
-                                                    const rect = e.currentTarget.getBoundingClientRect();
-                                                    const relX = e.clientX - rect.left;
-                                                    const colIdx = Math.min(Math.max(Math.floor(relX / colWidth), 0), WEEK_COUNT - 1);
-                                                    const weekIso = toIso(addWeeks(windowStart, colIdx));
-                                                    handleEmptyCellClick(e, clientIdx, projectIdx, e.clientX, e.clientY, weekIso);
-                                                }}
-                                            >
-                                                {/* Column gridlines (borders + current-week tint, non-interactive) */}
-                                                {Array.from({ length: WEEK_COUNT }).map((_, wi) => (
-                                                    <div
-                                                        key={`gridline-${wi}`}
-                                                        style={{
-                                                            position: 'absolute',
-                                                            left: wi * colWidth,
-                                                            top: 0,
-                                                            width: colWidth,
-                                                            height: rowH,
-                                                            borderLeft: wi > 0 ? '1px solid #e5e7eb' : 'none',
-                                                            background: wi === currentWeekCol ? 'rgba(249, 115, 22, 0.05)' : 'transparent',
-                                                            boxSizing: 'border-box',
-                                                            pointerEvents: 'none',
-                                                        }}
-                                                    />
-                                                ))}
-
-                                                {/* Per-lane per-column hover cells (including the extra add-new lane) */}
-                                                {Array.from({ length: laneCount + 1 }).map((_, li) =>
-                                                    Array.from({ length: WEEK_COUNT }).map((_, wi) => (
-                                                        <div
-                                                            key={`cell-${li}-${wi}`}
-                                                            className="gantt-cell"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                const weekIso = toIso(addWeeks(windowStart, wi));
-                                                                handleEmptyCellClick(e, clientIdx, projectIdx, e.clientX, e.clientY, weekIso);
-                                                            }}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                left: wi * colWidth,
-                                                                top: 4 + li * (LANE_HEIGHT + LANE_GAP),
-                                                                width: colWidth,
-                                                                height: LANE_HEIGHT,
-                                                                cursor: 'pointer',
-                                                                boxSizing: 'border-box',
-                                                                borderRadius: 4,
-                                                            }}
-                                                        />
-                                                    )),
-                                                )}
-
-                                                {/* Entry bars */}
-                                                {project.lanes.map((lane, laneIdx) =>
-                                                    lane.map((entry, entryIdx) => {
-                                                        if (entry.endDate < windowStartIso || entry.startDate > windowEndIso) return null;
-
-                                                        const entryStart = parseDate(entry.startDate);
-                                                        const entryEnd = parseDate(entry.endDate);
-                                                        const c = COLORS[entry.color] || COLORS.red;
-
-                                                        const rawStartCol = weeksBetween(windowStart, entryStart);
-                                                        const rawEndCol = weeksBetween(windowStart, entryEnd);
-
-                                                        // Apply drag offset for the bar being dragged
-                                                        const barKey = `${clientIdx}-${projectIdx}-${laneIdx}-${entryIdx}`;
-                                                        const isThisBarDragging = isDragging && dragKey === barKey;
-                                                        const deltaCol = isThisBarDragging ? dragDeltaCol : 0;
-
-                                                        // Clamp to visible window
-                                                        const startCol = Math.max(rawStartCol + deltaCol, 0);
-                                                        const endCol = Math.min(rawEndCol + deltaCol, WEEK_COUNT - 1);
-
-                                                        const barLeft = startCol * colWidth + BAR_H_PAD;
-                                                        const barWidth = (endCol - startCol + 1) * colWidth - BAR_H_PAD * 2;
-                                                        const barTop = 4 + laneIdx * (LANE_HEIGHT + LANE_GAP);
-
-                                                        const maxWidth = 52 * colWidth;
-
-                                                        return (
-                                                            <div
-                                                                key={`bar-${laneIdx}-${entryIdx}`}
-                                                                className="gantt-bar"
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    left: barLeft,
-                                                                    top: barTop,
-                                                                    zIndex: isThisBarDragging ? 10 : 1,
-                                                                    opacity: isThisBarDragging ? 0.85 : 1,
-                                                                    transition: isThisBarDragging ? 'none' : undefined,
-                                                                }}
-                                                            >
-                                                                <ResizableBox
-                                                                    width={barWidth}
-                                                                    height={BAR_HEIGHT}
-                                                                    axis="x"
-                                                                    minConstraints={[colWidth - BAR_H_PAD * 2, BAR_HEIGHT]}
-                                                                    maxConstraints={[maxWidth, BAR_HEIGHT]}
-                                                                    resizeHandles={['e']}
-                                                                    onResizeStop={(_e, { size }) => {
-                                                                        const newFullWidth = size.width + BAR_H_PAD * 2;
-                                                                        handleResizeStop(
-                                                                            clientIdx, projectIdx,
-                                                                            laneIdx, entryIdx,
-                                                                            newFullWidth,
-                                                                            entry.startDate,
-                                                                        );
-                                                                    }}
-                                                                >
-                                                                    <div
-                                                                        className="gantt-bar-inner"
-                                                                        onMouseDown={(e) => handleBarMouseDown(
-                                                                            e, clientIdx, projectIdx,
-                                                                            laneIdx, entryIdx, entry,
-                                                                        )}
-                                                                        onMouseEnter={(e) => {
-                                                                            if (!isDragging) setTooltip({
-                                                                                x: e.clientX, y: e.clientY,
-                                                                                text: entry.text,
-                                                                                assignee: entry.assignee,
-                                                                                color: entry.color,
-                                                                            });
-                                                                        }}
-                                                                        onMouseMove={(e) => {
-                                                                            if (!isDragging) setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null);
-                                                                        }}
-                                                                        onMouseLeave={() => setTooltip(null)}
-                                                                        onClick={(e) => handleEntryClick(
-                                                                            e, clientIdx, projectIdx,
-                                                                            laneIdx, entryIdx, entry,
-                                                                        )}
-                                                                        style={{
-                                                                            width: '100%',
-                                                                            height: BAR_HEIGHT,
-                                                                            borderRadius: 4,
-                                                                            background: c.bg,
-                                                                            color: c.text,
-                                                                            fontSize: 11,
-                                                                            fontWeight: 500,
-                                                                            lineHeight: `${BAR_HEIGHT}px`,
-                                                                            paddingLeft: 8,
-                                                                            paddingRight: 14,
-                                                                            whiteSpace: 'nowrap',
-                                                                            overflow: 'hidden',
-                                                                            textOverflow: 'ellipsis',
-                                                                            boxSizing: 'border-box',
-                                                                            boxShadow: isThisBarDragging ? '0 4px 12px rgba(0,0,0,0.18)' : undefined,
-                                                                        }}
-                                                                    >
-                                                                        {entry.assignee ? `${entry.text} — ${entry.assignee}` : entry.text}
-                                                                    </div>
-                                                                </ResizableBox>
-                                                            </div>
-                                                        );
-                                                    }),
-                                                )}
-
-                                            </div>
-
-                                            <div style={{ width: NAV_BTN_WIDTH, flexShrink: 0, height: rowH, background: rowBg }} />
-                                        </div>
-                                    );
-                                })}
-                            </React.Fragment>
-                        ))}
-                    </div>
-                </div>
-                )}
-            </div>
-
-            {/* ── Popover ─────────────────────────────────────────────────────── */}
-            {popover && (
-                <div
-                    onClick={closePopover}
-                    style={{
-                        position: 'fixed', inset: 0,
-                        background: 'rgba(0, 0, 0, 0.18)',
-                        zIndex: 999,
-                    }}
-                >
+                {/* ── Popover ─────────────────────────────────────────────────────── */}
+                {popover && (
                     <div
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={closePopover}
                         style={{
-                            position: 'fixed',
-                            left: popoverLeft,
-                            top: popoverTop,
-                            zIndex: 1000,
-                            background: 'white',
-                            borderRadius: 8,
-                            width: 280,
-                            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
+                            position: 'fixed', inset: 0,
+                            background: 'rgba(0, 0, 0, 0.18)',
+                            zIndex: 999,
                         }}
                     >
-                        <div style={{
-                            height: 4,
-                            background: COLORS[formColor]?.bg || '#93c5fd',
-                        }} />
-
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '14px 16px 0 16px',
-                        }}>
-                            <h3 style={{
-                                fontSize: 16, fontWeight: 700,
-                                fontFamily: 'Poppins', color: 'black', margin: 0,
-                            }}>
-                                {isEditing ? 'Edit Entry' : 'New Entry'}
-                            </h3>
-                            <button
-                                onClick={closePopover}
-                                style={{
-                                    background: 'none', border: 'none',
-                                    fontSize: 20, cursor: 'pointer',
-                                    color: '#999', padding: '0 4px',
-                                    lineHeight: 1, fontFamily: 'Poppins',
-                                }}
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        <div style={{
-                            padding: '14px 16px 16px 16px',
-                            display: 'flex', flexDirection: 'column', gap: 14,
-                        }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <label style={{
-                                    fontSize: 12, color: '#888',
-                                    fontFamily: 'Poppins', fontWeight: 500,
-                                }}>
-                                    Content
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formText}
-                                    onChange={(e) => setFormText(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
-                                    autoFocus
-                                    placeholder="Enter content..."
-                                    style={{
-                                        padding: '10px 14px',
-                                        borderRadius: 12,
-                                        border: '1px solid #ddd',
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                        outline: 'none',
-                                        width: '100%',
-                                        boxSizing: 'border-box',
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                <label style={{
-                                    fontSize: 12, color: '#888',
-                                    fontFamily: 'Poppins', fontWeight: 500,
-                                }}>
-                                    Assignee
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formAssignee}
-                                    onChange={(e) => setFormAssignee(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
-                                    placeholder="Optional"
-                                    style={{
-                                        padding: '10px 14px',
-                                        borderRadius: 12,
-                                        border: '1px solid #ddd',
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                        outline: 'none',
-                                        width: '100%',
-                                        boxSizing: 'border-box',
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                <label style={{
-                                    fontSize: 12, color: '#888',
-                                    fontFamily: 'Poppins', fontWeight: 500,
-                                }}>
-                                    Color
-                                </label>
-                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                    {COLOR_KEYS.map((ck) => {
-                                        const selected = formColor === ck;
-                                        return (
-                                            <button
-                                                key={ck}
-                                                onClick={() => setFormColor(ck)}
-                                                title={ck.charAt(0).toUpperCase() + ck.slice(1)}
-                                                style={{
-                                                    width: 28, height: 28,
-                                                    borderRadius: 8,
-                                                    background: COLORS[ck].bg,
-                                                    border: selected ? '3px solid #333' : '2px solid transparent',
-                                                    cursor: 'pointer',
-                                                    outline: 'none',
-                                                    transition: 'border 0.15s',
-                                                    boxSizing: 'border-box',
-                                                }}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: 10 }}>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    <label style={{
-                                        fontSize: 12, color: '#888',
-                                        fontFamily: 'Poppins', fontWeight: 500,
-                                    }}>
-                                        Start Week
-                                    </label>
-                                    <select
-                                        value={formStartDate}
-                                        onChange={(e) => {
-                                            const v = e.target.value;
-                                            setFormStartDate(v);
-                                            if (v > formEndDate) setFormEndDate(v);
-                                        }}
-                                        style={selectStyle}
-                                    >
-                                        {dropdownWeeks.map(({ iso, date }) => (
-                                            <option key={iso} value={iso}>
-                                                {formatWeekHeader(date)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    <label style={{
-                                        fontSize: 12, color: '#888',
-                                        fontFamily: 'Poppins', fontWeight: 500,
-                                    }}>
-                                        End Week
-                                    </label>
-                                    <select
-                                        value={formEndDate}
-                                        onChange={(e) => setFormEndDate(e.target.value)}
-                                        style={selectStyle}
-                                    >
-                                        {dropdownWeeks.map(({ iso, date }) => (
-                                            <option key={iso} value={iso} disabled={iso < formStartDate}>
-                                                {formatWeekHeader(date)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                position: 'fixed',
+                                left: popoverLeft,
+                                top: popoverTop,
+                                zIndex: 1000,
+                                background: 'white',
+                                borderRadius: 8,
+                                width: 280,
+                                boxShadow: '0 8px 30px rgba(0, 0, 0, 0.18)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <div style={{
+                                height: 4,
+                                background: COLORS[formColor]?.bg || '#93c5fd',
+                            }} />
 
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
-                                marginTop: 2,
+                                padding: '14px 16px 0 16px',
                             }}>
-                                {isEditing ? (
-                                    <button
-                                        onClick={handleDelete}
-                                        onMouseEnter={() => setDeleteHover(true)}
-                                        onMouseLeave={() => setDeleteHover(false)}
-                                        style={{
-                                            background: deleteHover ? '#DC2626' : 'none',
-                                            border: deleteHover ? 'none' : '1px solid #DC2626',
-                                            borderRadius: 12,
-                                            padding: '8px 14px',
-                                            fontSize: 13, fontFamily: 'Poppins', fontWeight: 500,
-                                            color: deleteHover ? 'white' : '#DC2626',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s ease',
-                                        }}
-                                    >
-                                        Delete
-                                    </button>
-                                ) : (
-                                    <div />
-                                )}
+                                <h3 style={{
+                                    fontSize: 16, fontWeight: 700,
+                                    fontFamily: 'Poppins', color: 'black', margin: 0,
+                                }}>
+                                    {isEditing ? 'Edit Entry' : 'New Entry'}
+                                </h3>
+                                <button
+                                    onClick={closePopover}
+                                    style={{
+                                        background: 'none', border: 'none',
+                                        fontSize: 20, cursor: 'pointer',
+                                        color: '#999', padding: '0 4px',
+                                        lineHeight: 1, fontFamily: 'Poppins',
+                                    }}
+                                >
+                                    &times;
+                                </button>
+                            </div>
 
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <button
-                                        onClick={closePopover}
+                            <div style={{
+                                padding: '14px 16px 16px 16px',
+                                display: 'flex', flexDirection: 'column', gap: 14,
+                            }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                    <label style={{
+                                        fontSize: 12, color: '#888',
+                                        fontFamily: 'Poppins', fontWeight: 500,
+                                    }}>
+                                        Content
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formText}
+                                        onChange={(e) => setFormText(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+                                        autoFocus
+                                        placeholder="Enter content..."
                                         style={{
-                                            background: 'none',
+                                            padding: '10px 14px',
+                                            borderRadius: 12,
                                             border: '1px solid #ddd',
-                                            borderRadius: 12,
-                                            padding: '8px 14px',
-                                            fontSize: 13, fontFamily: 'Poppins', fontWeight: 500,
-                                            color: '#666', cursor: 'pointer',
+                                            fontSize: 14,
+                                            fontFamily: 'Poppins',
+                                            outline: 'none',
+                                            width: '100%',
+                                            boxSizing: 'border-box',
                                         }}
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSave}
-                                        onMouseEnter={() => setSaveHover(true)}
-                                        onMouseLeave={() => setSaveHover(false)}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                    <label style={{
+                                        fontSize: 12, color: '#888',
+                                        fontFamily: 'Poppins', fontWeight: 500,
+                                    }}>
+                                        Assignee
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formAssignee}
+                                        onChange={(e) => setFormAssignee(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+                                        placeholder="Optional"
                                         style={{
-                                            background: COLORS[formColor]?.bg ?? '#93c5fd',
-                                            color: COLORS[formColor]?.text ?? '#1f2937', border: 'none',
+                                            padding: '10px 14px',
                                             borderRadius: 12,
-                                            padding: '8px 16px',
-                                            fontSize: 13, fontFamily: 'Poppins', fontWeight: 600,
-                                            cursor: 'pointer',
-                                            transition: 'background 0.2s ease',
+                                            border: '1px solid #ddd',
+                                            fontSize: 14,
+                                            fontFamily: 'Poppins',
+                                            outline: 'none',
+                                            width: '100%',
+                                            boxSizing: 'border-box',
                                         }}
-                                    >
-                                        Save
-                                    </button>
+                                    />
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                    <label style={{
+                                        fontSize: 12, color: '#888',
+                                        fontFamily: 'Poppins', fontWeight: 500,
+                                    }}>
+                                        Color
+                                    </label>
+                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                        {COLOR_KEYS.map((ck) => {
+                                            const selected = formColor === ck;
+                                            return (
+                                                <button
+                                                    key={ck}
+                                                    onClick={() => setFormColor(ck)}
+                                                    title={ck.charAt(0).toUpperCase() + ck.slice(1)}
+                                                    style={{
+                                                        width: 28, height: 28,
+                                                        borderRadius: 8,
+                                                        background: COLORS[ck].bg,
+                                                        border: selected ? '3px solid #333' : '2px solid transparent',
+                                                        cursor: 'pointer',
+                                                        outline: 'none',
+                                                        transition: 'border 0.15s',
+                                                        boxSizing: 'border-box',
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        <label style={{
+                                            fontSize: 12, color: '#888',
+                                            fontFamily: 'Poppins', fontWeight: 500,
+                                        }}>
+                                            Start Week
+                                        </label>
+                                        <select
+                                            value={formStartDate}
+                                            onChange={(e) => {
+                                                const v = e.target.value;
+                                                setFormStartDate(v);
+                                                if (v > formEndDate) setFormEndDate(v);
+                                            }}
+                                            style={selectStyle}
+                                        >
+                                            {dropdownWeeks.map(({ iso, date }) => (
+                                                <option key={iso} value={iso}>
+                                                    {formatWeekHeader(date)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        <label style={{
+                                            fontSize: 12, color: '#888',
+                                            fontFamily: 'Poppins', fontWeight: 500,
+                                        }}>
+                                            End Week
+                                        </label>
+                                        <select
+                                            value={formEndDate}
+                                            onChange={(e) => setFormEndDate(e.target.value)}
+                                            style={selectStyle}
+                                        >
+                                            {dropdownWeeks.map(({ iso, date }) => (
+                                                <option key={iso} value={iso} disabled={iso < formStartDate}>
+                                                    {formatWeekHeader(date)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginTop: 2,
+                                }}>
+                                    {isEditing ? (
+                                        <button
+                                            onClick={handleDelete}
+                                            onMouseEnter={() => setDeleteHover(true)}
+                                            onMouseLeave={() => setDeleteHover(false)}
+                                            style={{
+                                                background: deleteHover ? '#DC2626' : 'none',
+                                                border: deleteHover ? 'none' : '1px solid #DC2626',
+                                                borderRadius: 12,
+                                                padding: '8px 14px',
+                                                fontSize: 13, fontFamily: 'Poppins', fontWeight: 500,
+                                                color: deleteHover ? 'white' : '#DC2626',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    ) : (
+                                        <div />
+                                    )}
+
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button
+                                            onClick={closePopover}
+                                            style={{
+                                                background: 'none',
+                                                border: '1px solid #ddd',
+                                                borderRadius: 12,
+                                                padding: '8px 14px',
+                                                fontSize: 13, fontFamily: 'Poppins', fontWeight: 500,
+                                                color: '#666', cursor: 'pointer',
+                                            }}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSave}
+                                            onMouseEnter={() => setSaveHover(true)}
+                                            onMouseLeave={() => setSaveHover(false)}
+                                            style={{
+                                                background: COLORS[formColor]?.bg ?? '#93c5fd',
+                                                color: COLORS[formColor]?.text ?? '#1f2937', border: 'none',
+                                                borderRadius: 12,
+                                                padding: '8px 16px',
+                                                fontSize: 13, fontFamily: 'Poppins', fontWeight: 600,
+                                                cursor: 'pointer',
+                                                transition: 'background 0.2s ease',
+                                            }}
+                                        >
+                                            Save
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                )}
+            </div>
+
+            {/* ── Tooltip ─────────────────────────────────────────────────────── */}
+            {tooltip && (
+                <div style={{
+                    position: 'fixed',
+                    left: tooltip.x + 14,
+                    top: tooltip.y - 12,
+                    zIndex: 9000,
+                    background: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    padding: '8px 12px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    maxWidth: 240,
+                    pointerEvents: 'none',
+                }}>
+                    <div style={{ fontWeight: 600, color: '#1f2937', lineHeight: 1.4 }}>
+                        {tooltip.text}
+                    </div>
+                    {tooltip.assignee && (
+                        <div style={{ color: '#6b7280', marginTop: 4 }}>
+                            Assignee: {tooltip.assignee}
+                        </div>
+                    )}
+                    <div style={{
+                        width: 20, height: 4, borderRadius: 2,
+                        background: COLORS[tooltip.color]?.bg ?? '#93c5fd',
+                        marginTop: 6,
+                    }} />
                 </div>
             )}
-        </div>
-
-        {/* ── Tooltip ─────────────────────────────────────────────────────── */}
-        {tooltip && (
-            <div style={{
-                position: 'fixed',
-                left: tooltip.x + 14,
-                top: tooltip.y - 12,
-                zIndex: 9000,
-                background: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: 8,
-                padding: '8px 12px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                fontFamily: 'Poppins',
-                fontSize: 12,
-                maxWidth: 240,
-                pointerEvents: 'none',
-            }}>
-                <div style={{ fontWeight: 600, color: '#1f2937', lineHeight: 1.4 }}>
-                    {tooltip.text}
-                </div>
-                {tooltip.assignee && (
-                    <div style={{ color: '#6b7280', marginTop: 4 }}>
-                        Assignee: {tooltip.assignee}
-                    </div>
-                )}
-                <div style={{
-                    width: 20, height: 4, borderRadius: 2,
-                    background: COLORS[tooltip.color]?.bg ?? '#93c5fd',
-                    marginTop: 6,
-                }} />
-            </div>
-        )}
         </ManagerAndAbove>
     );
 }

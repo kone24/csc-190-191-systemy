@@ -11,4 +11,4 @@ import { LeadScoringScheduler } from './lead-scoring.scheduler';
     providers: [LeadScoringPipelineService, LeadScoringService, LeadScoringScheduler],
     exports: [LeadScoringPipelineService, LeadScoringService],
 })
-export class LeadsModule {}
+export class LeadsModule { }

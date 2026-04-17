@@ -78,21 +78,21 @@ export default function InvoicesPage() {
                 const list = Array.isArray(data) ? data : data.items ?? data.clients ?? [];
                 setClients(list);
             })
-            .catch(() => {});
+            .catch(() => { });
         fetch(`${API}/projects`, { credentials: 'include' })
             .then(r => r.json())
             .then(data => {
                 const list = Array.isArray(data) ? data : data.items ?? data.projects ?? [];
                 setProjects(list);
             })
-            .catch(() => {});
+            .catch(() => { });
         fetch(`${API}/users`, { credentials: 'include' })
             .then(r => r.json())
             .then(data => {
                 const list = Array.isArray(data) ? data : data.items ?? data.users ?? [];
                 setUsers(list);
             })
-            .catch(() => {});
+            .catch(() => { });
     }, [showModal]);
 
     const openCreate = () => {
@@ -199,7 +199,7 @@ export default function InvoicesPage() {
 
     const formatDate = (dateString: string | null) => {
         if (!dateString) return '—';
-        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
     };
 
     const filteredInvoices = selectedStatus === 'all'

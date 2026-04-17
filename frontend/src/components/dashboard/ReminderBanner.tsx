@@ -92,7 +92,7 @@ export default function ReminderBanner() {
             ) : null}
 
             <div className="mt-2 text-xs text-gray-500">
-              Due: {new Date(reminder.remind_at).toLocaleString()}
+              Due: {new Date(reminder.remind_at).toLocaleString('en-US', { timeZone: 'UTC' })}
             </div>
 
             <button
