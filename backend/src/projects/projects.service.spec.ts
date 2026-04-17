@@ -71,7 +71,7 @@ describe('ProjectsService', () => {
                     useValue: {
                         get: jest.fn((key: string) => {
                             if (key === 'SUPABASE_URL') return 'https://fake.supabase.co';
-                            if (key === 'SUPABASE_ANON_KEY') return 'fake-anon-key';
+                            if (key === 'SUPABASE_SERVICE_ROLE_KEY') return 'fake-service-role-key';
                             return undefined;
                         }),
                     },

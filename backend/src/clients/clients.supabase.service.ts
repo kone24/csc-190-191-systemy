@@ -7,16 +7,6 @@ import { SearchQueryDto } from './dto/search-query.dto';
 export class ClientsSupabaseService {
     private readonly logger = new Logger(ClientsSupabaseService.name);
 
-    constructor(private configService: ConfigService) {
-        const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-        const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
-
-        if (!supabaseUrl || !supabaseKey) {
-            throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be provided');
-        }
-
-        this.supabase = createClient(supabaseUrl, supabaseKey);
-        this.logger.log('Supabase client initialized');
     constructor(private readonly supabaseService: SupabaseService) {
         this.logger.log('ClientsSupabaseService initialized');
     }
@@ -92,7 +82,7 @@ export class ClientsSupabaseService {
 
             if (error) {
                 if (error.code === 'PGRST116') {
-                throw new Error(`Client with ID ${id} not found`);
+                    throw new Error(`Client with ID ${id} not found`);
                 }
                 throw new Error(`Failed to fetch client: ${error.message}`);
             }
@@ -117,7 +107,7 @@ export class ClientsSupabaseService {
 
             if (error) {
                 if (error.code === 'PGRST116') {
-                throw new Error(`Client with ID ${id} not found`);
+                    throw new Error(`Client with ID ${id} not found`);
                 }
                 throw new Error(`Failed to update client: ${error.message}`);
             }
@@ -125,8 +115,8 @@ export class ClientsSupabaseService {
             this.logger.log(`Client updated with ID: ${id}`);
             return data as Client;
         } catch (error) {
-        this.logger.error('Error in update method:', error);
-        throw error;
+            this.logger.error('Error in update method:', error);
+            throw error;
         }
     }
 
@@ -145,8 +135,8 @@ export class ClientsSupabaseService {
 
             this.logger.log(`Client deleted with ID: ${id}`);
         } catch (error) {
-        this.logger.error('Error in remove method:', error);
-        throw error;
+            this.logger.error('Error in remove method:', error);
+            throw error;
         }
     }
 
@@ -159,7 +149,7 @@ export class ClientsSupabaseService {
             if (searchQuery.searchTerm) {
                 const term = searchQuery.searchTerm;
                 query = query.or(
-                `first_name.ilike.%${term}%,last_name.ilike.%${term}%,business_name.ilike.%${term}%,email.ilike.%${term}%`,
+                    `first_name.ilike.%${term}%,last_name.ilike.%${term}%,business_name.ilike.%${term}%,email.ilike.%${term}%`,
                 );
             }
 
@@ -183,8 +173,8 @@ export class ClientsSupabaseService {
 
             return (data || []) as Client[];
         } catch (error) {
-        this.logger.error('Error in searchClients method:', error);
-        throw error;
+            this.logger.error('Error in searchClients method:', error);
+            throw error;
         }
     }
 
@@ -246,8 +236,8 @@ export class ClientsSupabaseService {
             this.logger.log(`Contact client created with ID: ${data.id} from ${origin}`);
             return data as Client;
         } catch (error) {
-        this.logger.error('Error in createContactClient method:', error);
-        throw error;
+            this.logger.error('Error in createContactClient method:', error);
+            throw error;
         }
     }
 }

@@ -62,7 +62,7 @@ describe('VendorsSupabaseService', () => {
             get: jest.fn((key: string) => {
                 const map: Record<string, string> = {
                     SUPABASE_URL: 'https://fake.supabase.co',
-                    SUPABASE_ANON_KEY: 'fake-key',
+                    SUPABASE_SERVICE_ROLE_KEY: 'fake-key',
                 };
                 return map[key];
             }),
@@ -86,17 +86,17 @@ describe('VendorsSupabaseService', () => {
             } as unknown as ConfigService;
 
             expect(() => new VendorsSupabaseService(badConfig)).toThrow(
-                'SUPABASE_URL and SUPABASE_ANON_KEY must be provided',
+                'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be provided',
             );
         });
 
-        it('should throw if SUPABASE_ANON_KEY is missing', () => {
+        it('should throw if SUPABASE_SERVICE_ROLE_KEY is missing', () => {
             const badConfig = {
                 get: jest.fn((key: string) => (key === 'SUPABASE_URL' ? 'https://x.supabase.co' : undefined)),
             } as unknown as ConfigService;
 
             expect(() => new VendorsSupabaseService(badConfig)).toThrow(
-                'SUPABASE_URL and SUPABASE_ANON_KEY must be provided',
+                'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be provided',
             );
         });
     });

@@ -68,7 +68,7 @@ describe('AuthService', () => {
             get: jest.fn((key: string) => {
               const map: Record<string, string> = {
                 SUPABASE_URL: 'https://mocked-supabase-url.supabase.co',
-                SUPABASE_ANON_KEY: 'mocked-anon-key',
+                SUPABASE_SERVICE_ROLE_KEY: 'mocked-service-role-key',
               };
               return map[key];
             }),
