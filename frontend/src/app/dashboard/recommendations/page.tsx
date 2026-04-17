@@ -89,8 +89,8 @@ export default function RecommendationsPage() {
     const avgScore =
       total > 0
         ? Math.round(
-            recommendations.reduce((sum, item) => sum + item.score, 0) / total
-          )
+          recommendations.reduce((sum, item) => sum + item.score, 0) / total
+        )
         : 0;
 
     return { total, high, medium, avgScore };
@@ -125,6 +125,7 @@ export default function RecommendationsPage() {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      timeZone: 'UTC',
     });
   };
 

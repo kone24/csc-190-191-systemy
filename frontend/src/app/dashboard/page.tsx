@@ -10,12 +10,12 @@ import { useUser } from '@/contexts/UserContext';
 
 // Copied from projects/page.tsx — maps raw DB project status values to display label + badge colors
 const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
-  'open':        { label: 'On Track',  bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)'   },
-  'in_progress': { label: 'At Risk',   bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)'  },
-  'completed':   { label: 'Completed', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
-  'on_hold':     { label: 'On Hold',   bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)'    },
-  'cancelled':   { label: 'Cancelled', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
-  'behind':      { label: 'Behind',    bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)'   },
+  'open': { label: 'On Track', bg: '#22C55E', text: 'black', shadow: 'rgba(34, 197, 94, 0.6)' },
+  'in_progress': { label: 'At Risk', bg: '#F59E0B', text: 'black', shadow: 'rgba(245, 158, 11, 0.6)' },
+  'completed': { label: 'Completed', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' },
+  'on_hold': { label: 'On Hold', bg: '#FF5900', text: 'white', shadow: 'rgba(255, 89, 0, 0.6)' },
+  'cancelled': { label: 'Cancelled', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)' },
+  'behind': { label: 'Behind', bg: '#EF4444', text: 'white', shadow: 'rgba(239, 68, 68, 0.6)' },
 };
 const PROJECT_STATUS_DEFAULT = { label: 'Unknown', bg: '#9CA3AF', text: 'white', shadow: 'rgba(156, 163, 175, 0.6)' };
 
@@ -127,11 +127,11 @@ export default function DashboardPage() {
   });
 
   const kpiColors = {
-    activeProjects: { border: '#FFAC80',  shadow: 'rgba(255, 172, 128, 0.6)' },
-    activeContacts: { border: '#00F5A0',  shadow: 'rgba(0, 245, 160, 0.6)'   },
-    tasksDue:       { border: '#FF928A',  shadow: 'rgba(255, 146, 138, 0.6)' },
-    openInvoices:   { border: '#FFF642',  shadow: 'rgba(255, 246, 66, 0.6)'  },
-    comingSoon:     { border: '#8979FF',  shadow: 'rgba(137, 121, 255, 0.6)' },
+    activeProjects: { border: '#FFAC80', shadow: 'rgba(255, 172, 128, 0.6)' },
+    activeContacts: { border: '#00F5A0', shadow: 'rgba(0, 245, 160, 0.6)' },
+    tasksDue: { border: '#FF928A', shadow: 'rgba(255, 146, 138, 0.6)' },
+    openInvoices: { border: '#FFF642', shadow: 'rgba(255, 246, 66, 0.6)' },
+    comingSoon: { border: '#8979FF', shadow: 'rgba(137, 121, 255, 0.6)' },
   };
 
   const tileTopZone: React.CSSProperties = {
@@ -172,18 +172,18 @@ export default function DashboardPage() {
   });
 
   const priorityColors: Record<string, { bg: string; text: string }> = {
-    High: { bg: '#FFAC80',                  text: 'black' },
-    Med:  { bg: 'rgba(255, 246, 66, 0.32)', text: 'black' },
-    Low:  { bg: '#00F5A0',                  text: 'black' },
+    High: { bg: '#FFAC80', text: 'black' },
+    Med: { bg: 'rgba(255, 246, 66, 0.32)', text: 'black' },
+    Low: { bg: '#00F5A0', text: 'black' },
   };
 
   const projectRows = [
-    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.',    assigneeInitials: 'JK', assigneeBg: '#f97316', due: 'Dec 31', status: 'open'        },
-    { project: 'Q1 Campaign',     task: 'Research',      assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Jan 10', status: 'on_hold'     },
-    { project: 'App Launch',      task: 'Build',         assignee: 'Matthew T.',assigneeInitials: 'MT', assigneeBg: '#00C980', due: 'Jan 20', status: 'in_progress' },
-    { project: 'Brand Refresh',   task: 'Strategy',      assignee: 'Ashley S.', assigneeInitials: 'AS', assigneeBg: '#537FF1', due: 'Feb 5',  status: 'behind'      },
-    { project: 'Case Study',      task: 'Copywriting',   assignee: 'Xavier M.', assigneeInitials: 'XM', assigneeBg: '#FF928A', due: 'Mar 1',  status: 'open'        },
-    { project: 'App Launch',      task: 'QA Testing',    assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Mar 15', status: 'completed'   },
+    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.', assigneeInitials: 'JK', assigneeBg: '#f97316', due: 'Dec 31', status: 'open' },
+    { project: 'Q1 Campaign', task: 'Research', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Jan 10', status: 'on_hold' },
+    { project: 'App Launch', task: 'Build', assignee: 'Matthew T.', assigneeInitials: 'MT', assigneeBg: '#00C980', due: 'Jan 20', status: 'in_progress' },
+    { project: 'Brand Refresh', task: 'Strategy', assignee: 'Ashley S.', assigneeInitials: 'AS', assigneeBg: '#537FF1', due: 'Feb 5', status: 'behind' },
+    { project: 'Case Study', task: 'Copywriting', assignee: 'Xavier M.', assigneeInitials: 'XM', assigneeBg: '#FF928A', due: 'Mar 1', status: 'open' },
+    { project: 'App Launch', task: 'QA Testing', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Mar 15', status: 'completed' },
   ];
   const [liveProjectRows, setLiveProjectRows] = useState<typeof projectRows | null>(null);
 
@@ -199,11 +199,11 @@ export default function DashboardPage() {
 
   const userMyTasks = [
     { name: 'Send Campaign debrief', project: 'Website Rebrand', priority: 'High', due: 'Oct 3', sortKey: 3 },
-    { name: 'Review Design Draft',   project: 'Q1 Campaign',     priority: 'Med',  due: 'Oct 4', sortKey: 4 },
-    { name: 'Approve Invoice',       project: 'App Launch',      priority: 'Low',  due: 'Oct 5', sortKey: 5 },
-    { name: 'Client Check-in',       project: 'Brand Refresh',   priority: 'High', due: 'Oct 6', sortKey: 6 },
-    { name: 'Update Content Brief',  project: 'Q1 Campaign',     priority: 'Med',  due: 'Oct 7', sortKey: 7 },
-    { name: 'Prepare Slide Deck',    project: 'Website Rebrand', priority: 'High', due: 'Oct 8', sortKey: 8 },
+    { name: 'Review Design Draft', project: 'Q1 Campaign', priority: 'Med', due: 'Oct 4', sortKey: 4 },
+    { name: 'Approve Invoice', project: 'App Launch', priority: 'Low', due: 'Oct 5', sortKey: 5 },
+    { name: 'Client Check-in', project: 'Brand Refresh', priority: 'High', due: 'Oct 6', sortKey: 6 },
+    { name: 'Update Content Brief', project: 'Q1 Campaign', priority: 'Med', due: 'Oct 7', sortKey: 7 },
+    { name: 'Prepare Slide Deck', project: 'Website Rebrand', priority: 'High', due: 'Oct 8', sortKey: 8 },
   ];
 
   const companyTasks = [
@@ -228,7 +228,7 @@ export default function DashboardPage() {
     const mon1 = new Date(today);
     mon1.setDate(today.getDate() - ((day + 6) % 7));
     mon1.setHours(0, 0, 0, 0);
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const fmt = (d: Date) => `${months[d.getMonth()]} ${d.getDate()}`;
     const fri1 = new Date(mon1); fri1.setDate(mon1.getDate() + 4);
     const mon2 = new Date(mon1); mon2.setDate(mon1.getDate() + 7);
@@ -309,7 +309,7 @@ export default function DashboardPage() {
         // Clamp to window using ms — more explicit than string comparison
         const overlapStartMs = Math.max(parseLocalDate(sd), mondayMs);
         // end_date is stored as the Monday of the end week — add 4 days to get that Friday
-        const overlapEndMs   = Math.min(parseLocalDate(ed) + 4 * 86400000, nextFridayMs);
+        const overlapEndMs = Math.min(parseLocalDate(ed) + 4 * 86400000, nextFridayMs);
         // Count Mon–Fri days the entry overlaps with the 10-day window
         const overlapDays = overlapStartMs <= overlapEndMs ? countWorkdays(overlapStartMs, overlapEndMs) : 0;
         // Width as a percentage of the 10-day window, clamped 0–100
@@ -336,7 +336,7 @@ export default function DashboardPage() {
   const formatProjectDate = (dateStr: string | null) => {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   };
   const getOwnerInitials = (name: string | null) => {
     if (!name) return '?';
@@ -466,181 +466,181 @@ export default function DashboardPage() {
         {/* Content Section — layout depends on role */}
         {isAdminOrManager ? (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
-          <div style={{ height: 390, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
-            {/* Upcoming Tasks Section */}
-            <div style={{
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              padding: '20px',
-            }}>
-              {/* Header: toggle + sort */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => setTaskView('my')} style={{
-                    padding: '5px 14px', borderRadius: 20, fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
-                    border: taskView === 'my' ? 'none' : '1.5px solid #f97316',
-                    background: taskView === 'my' ? '#f97316' : 'transparent',
-                    color: taskView === 'my' ? 'white' : '#f97316',
-                  }}>My Tasks</button>
-                  <button onClick={() => setTaskView('company')} style={{
-                    padding: '5px 14px', borderRadius: 20, fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
-                    border: taskView === 'company' ? 'none' : '1.5px solid #f97316',
-                    background: taskView === 'company' ? '#f97316' : 'transparent',
-                    color: taskView === 'company' ? 'white' : '#f97316',
-                  }}>Company Wide</button>
-                </div>
-                <button onClick={() => setSortByDate(prev => !prev)} style={{
-                  padding: '5px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
-                  border: '1.5px solid #d1d5db', background: sortByDate ? '#f3f4f6' : 'transparent', color: '#374151',
-                }}>Sort by Date</button>
-              </div>
-              {/* Task rows */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {displayTasks.slice(0, 6).map((task, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
-                    <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.name}</div>
-                    {'assignee' in task && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).assignee}</div>}
-                    <span style={{ ...badgeStyle(priorityColors[task.priority].bg, priorityColors[task.priority].text), marginRight: 12 }}>{task.priority}</span>
-                    <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{task.due}</div>
+            <div style={{ height: 390, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+              {/* Upcoming Tasks Section */}
+              <div style={{
+                background: 'white',
+                boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                borderRadius: 20,
+                padding: '20px',
+              }}>
+                {/* Header: toggle + sort */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => setTaskView('my')} style={{
+                      padding: '5px 14px', borderRadius: 20, fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
+                      border: taskView === 'my' ? 'none' : '1.5px solid #f97316',
+                      background: taskView === 'my' ? '#f97316' : 'transparent',
+                      color: taskView === 'my' ? 'white' : '#f97316',
+                    }}>My Tasks</button>
+                    <button onClick={() => setTaskView('company')} style={{
+                      padding: '5px 14px', borderRadius: 20, fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
+                      border: taskView === 'company' ? 'none' : '1.5px solid #f97316',
+                      background: taskView === 'company' ? '#f97316' : 'transparent',
+                      color: taskView === 'company' ? 'white' : '#f97316',
+                    }}>Company Wide</button>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Manage Projects Panel */}
-            <div style={{
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              padding: '20px',
-            }}>
-              <div style={{ color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', marginBottom: '20px' }}>Manage Projects</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 90px 100px', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #eee', marginBottom: '10px' }}>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Project</div>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Owner</div>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Due Date</div>
-                <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Status</div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {liveProjectRows === null
-                  ? <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
-                  : displayProjectRows.map((row, i) => {
-                    const s = PROJECT_STATUS_MAP[row.status] ?? PROJECT_STATUS_DEFAULT;
-                    return (
-                      <div
-                        key={i}
-                        onClick={() => { window.location.href = '/dashboard/projects'; }}
-                        onMouseEnter={() => setHoveredRow(i)}
-                        onMouseLeave={() => setHoveredRow(null)}
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '1fr 140px 90px 100px',
-                          gap: '10px',
-                          alignItems: 'center',
-                          padding: '12px 0',
-                          borderBottom: '1px solid #f0f0f0',
-                          cursor: 'pointer',
-                          background: hoveredRow === i ? '#fafafa' : 'transparent',
-                          transition: 'background 150ms ease',
-                        }}
-                      >
-                        <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
-                          <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
-                        </div>
-                        <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
-                        <div><span style={{ ...badgeStyle(s.bg, s.text), padding: '6px 10px' }}>{s.label}</span></div>
-                      </div>
-                    );
-                  })
-                }
-              </div>
-            </div>
-          </div>
-
-          {/* Traffic Management — mini Gantt preview */}
-          <div
-            onClick={() => { window.location.href = '/dashboard/gantt'; }}
-            onMouseEnter={() => setHoveredGantt(true)}
-            onMouseLeave={() => setHoveredGantt(false)}
-            style={{
-              background: 'white',
-              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: 20,
-              padding: '20px',
-              cursor: 'pointer',
-              border: hoveredGantt ? '1.5px solid #f97316' : '1.5px solid transparent',
-              transition: 'border-color 200ms ease',
-              minHeight: 380,
-              marginTop: 16,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '600' }}>Gantt</div>
-              <span style={{ color: '#f97316', fontSize: 13, fontFamily: 'Poppins', fontWeight: 600 }}>View full Gantt →</span>
-            </div>
-
-            {/* Column headers */}
-            <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 0 }}>
-              <div />
-              {ganttWeekHeaders.map((h, i) => (
-                <div key={i} style={{
-                  textAlign: 'center', fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
-                  color: 'rgba(0,0,0,0.5)', paddingBottom: 8,
-                  borderBottom: '1px solid #e8e8e8',
-                  borderLeft: i === 1 ? '1px solid #e8e8e8' : 'none',
-                }}>
-                  {h}
+                  <button onClick={() => setSortByDate(prev => !prev)} style={{
+                    padding: '5px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
+                    border: '1.5px solid #d1d5db', background: sortByDate ? '#f3f4f6' : 'transparent', color: '#374151',
+                  }}>Sort by Date</button>
                 </div>
-              ))}
-            </div>
-
-            {/* Gantt rows */}
-            {ganttEntries === null ? (
-              <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
-            ) : displayGanttRows.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 13, fontFamily: 'Poppins', padding: '20px 0' }}>No entries this week</div>
-            ) : displayGanttRows.map((row, ri) => (
-              <div key={ri} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center', borderBottom: ri < displayGanttRows.length - 1 ? '1px solid #f0f0f0' : 'none', padding: '10px 0' }}>
-                {/* Name cell */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: '50%', background: row.avatarBg,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0,
-                  }}>
-                    {row.initials}
-                  </div>
-                  <div style={{ fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, color: 'black' }}>{row.name}</div>
-                </div>
-                {/* Timeline area */}
-                <div style={{ position: 'relative', height: 32 }}>
-                  {/* Week divider at 50% */}
-                  <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', borderLeft: '1px solid #e8e8e8' }} />
-                  {/* Bars */}
-                  {row.bars.map((bar, bi) => (
-                    <div key={bi} style={{
-                      position: 'absolute',
-                      top: 4, bottom: 4,
-                      left: `${(bar.startWd / 10) * 100}%`,
-                      width: `${bar.widthPct}%`,
-                      background: bar.color,
-                      borderRadius: 6,
-                      display: 'flex', alignItems: 'center', paddingLeft: 8,
-                      fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
-                      color: bar.color === '#d1d5db' ? '#6b7280' : 'black',
-                      overflow: 'hidden', whiteSpace: 'nowrap',
-                    }}>
-                      {bar.label}
+                {/* Task rows */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {displayTasks.slice(0, 6).map((task, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
+                      <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.name}</div>
+                      {'assignee' in task && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).assignee}</div>}
+                      <span style={{ ...badgeStyle(priorityColors[task.priority].bg, priorityColors[task.priority].text), marginRight: 12 }}>{task.priority}</span>
+                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{task.due}</div>
                     </div>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
-          {/* Lead Scoring Panel */}
+
+              {/* Manage Projects Panel */}
+              <div style={{
+                background: 'white',
+                boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                borderRadius: 20,
+                padding: '20px',
+              }}>
+                <div style={{ color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '600', marginBottom: '20px' }}>Manage Projects</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 90px 100px', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid #eee', marginBottom: '10px' }}>
+                  <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Project</div>
+                  <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Owner</div>
+                  <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Due Date</div>
+                  <div style={{ color: 'rgba(0, 0, 0, 0.75)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '600' }}>Status</div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {liveProjectRows === null
+                    ? <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+                    : displayProjectRows.map((row, i) => {
+                      const s = PROJECT_STATUS_MAP[row.status] ?? PROJECT_STATUS_DEFAULT;
+                      return (
+                        <div
+                          key={i}
+                          onClick={() => { window.location.href = '/dashboard/projects'; }}
+                          onMouseEnter={() => setHoveredRow(i)}
+                          onMouseLeave={() => setHoveredRow(null)}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 140px 90px 100px',
+                            gap: '10px',
+                            alignItems: 'center',
+                            padding: '12px 0',
+                            borderBottom: '1px solid #f0f0f0',
+                            cursor: 'pointer',
+                            background: hoveredRow === i ? '#fafafa' : 'transparent',
+                            transition: 'background 150ms ease',
+                          }}
+                        >
+                          <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
+                            <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
+                          </div>
+                          <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
+                          <div><span style={{ ...badgeStyle(s.bg, s.text), padding: '6px 10px' }}>{s.label}</span></div>
+                        </div>
+                      );
+                    })
+                  }
+                </div>
+              </div>
+            </div>
+
+            {/* Traffic Management — mini Gantt preview */}
+            <div
+              onClick={() => { window.location.href = '/dashboard/gantt'; }}
+              onMouseEnter={() => setHoveredGantt(true)}
+              onMouseLeave={() => setHoveredGantt(false)}
+              style={{
+                background: 'white',
+                boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                borderRadius: 20,
+                padding: '20px',
+                cursor: 'pointer',
+                border: hoveredGantt ? '1.5px solid #f97316' : '1.5px solid transparent',
+                transition: 'border-color 200ms ease',
+                minHeight: 380,
+                marginTop: 16,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <div style={{ color: 'rgba(255, 89, 0, 0.80)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '600' }}>Gantt</div>
+                <span style={{ color: '#f97316', fontSize: 13, fontFamily: 'Poppins', fontWeight: 600 }}>View full Gantt →</span>
+              </div>
+
+              {/* Column headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 1fr', gap: 0 }}>
+                <div />
+                {ganttWeekHeaders.map((h, i) => (
+                  <div key={i} style={{
+                    textAlign: 'center', fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
+                    color: 'rgba(0,0,0,0.5)', paddingBottom: 8,
+                    borderBottom: '1px solid #e8e8e8',
+                    borderLeft: i === 1 ? '1px solid #e8e8e8' : 'none',
+                  }}>
+                    {h}
+                  </div>
+                ))}
+              </div>
+
+              {/* Gantt rows */}
+              {ganttEntries === null ? (
+                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+              ) : displayGanttRows.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 13, fontFamily: 'Poppins', padding: '20px 0' }}>No entries this week</div>
+              ) : displayGanttRows.map((row, ri) => (
+                <div key={ri} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center', borderBottom: ri < displayGanttRows.length - 1 ? '1px solid #f0f0f0' : 'none', padding: '10px 0' }}>
+                  {/* Name cell */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%', background: row.avatarBg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0,
+                    }}>
+                      {row.initials}
+                    </div>
+                    <div style={{ fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, color: 'black' }}>{row.name}</div>
+                  </div>
+                  {/* Timeline area */}
+                  <div style={{ position: 'relative', height: 32 }}>
+                    {/* Week divider at 50% */}
+                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', borderLeft: '1px solid #e8e8e8' }} />
+                    {/* Bars */}
+                    {row.bars.map((bar, bi) => (
+                      <div key={bi} style={{
+                        position: 'absolute',
+                        top: 4, bottom: 4,
+                        left: `${(bar.startWd / 10) * 100}%`,
+                        width: `${bar.widthPct}%`,
+                        background: bar.color,
+                        borderRadius: 6,
+                        display: 'flex', alignItems: 'center', paddingLeft: 8,
+                        fontSize: 11, fontFamily: 'Poppins', fontWeight: 600,
+                        color: bar.color === '#d1d5db' ? '#6b7280' : 'black',
+                        overflow: 'hidden', whiteSpace: 'nowrap',
+                      }}>
+                        {bar.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Lead Scoring Panel */}
             <div style={{
               background: 'white',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
@@ -733,8 +733,8 @@ export default function DashboardPage() {
                             item.details?.label === 'HIGH'
                               ? '#22C55E'
                               : item.details?.label === 'MEDIUM'
-                              ? '#F59E0B'
-                              : '#EF4444',
+                                ? '#F59E0B'
+                                : '#EF4444',
                             'white'
                           )
                         }}>

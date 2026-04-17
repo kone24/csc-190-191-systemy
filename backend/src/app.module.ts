@@ -46,4 +46,4 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
   controllers: [AppController, TestController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

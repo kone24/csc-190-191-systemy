@@ -259,7 +259,7 @@ export default function ProjectsPage() {
 
     const format_date = (date_string: string) => {
         return new Date(date_string).toLocaleDateString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric'
+            month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'
         });
     };
 
