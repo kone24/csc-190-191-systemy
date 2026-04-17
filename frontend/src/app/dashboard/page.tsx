@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import ReminderBanner from '@/components/dashboard/ReminderBanner';
 import { useUser } from '@/contexts/UserContext';
 
 // Copied from projects/page.tsx — maps raw DB project status values to display label + badge colors
@@ -394,6 +396,9 @@ export default function DashboardPage() {
 
         </div>
 
+        <ReminderBanner />
+
+        {/* Top Section - Stats Cards and Manage Projects */}
         {/* KPI Tiles — full width row */}
         <div style={{
           display: 'grid',
