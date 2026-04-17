@@ -54,7 +54,7 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
 };
 
 export default function Sidebar({ activePage }: SidebarProps) {
-    const { isAdmin } = useUser();
+    const { user, isAdmin } = useUser();
 
     return (
         <div style={{
@@ -176,13 +176,75 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 {/* Spacer */}
                 <div style={{ flex: 1 }} />
 
-                {/* Bottom Navigation */}
-                <NavItem
-                    href="/dashboard/account"
-                    icon="/images/images/account.png"
-                    label="Account"
-                    isActive={activePage === 'account'}
-                />
+
+                {/* Bottom Navigation - Account Icon with Avatar */}
+                <div style={{ alignSelf: 'stretch' }}>
+                    <Link href="/dashboard/account" style={{ textDecoration: 'none', alignSelf: 'stretch' }}>
+                        <div style={{
+                            alignSelf: 'stretch',
+                            height: 61.10,
+                            padding: 10,
+                            background: activePage === 'account'
+                                ? 'linear-gradient(90deg, rgba(255, 89, 0, 0.40) 0%, rgba(255, 255, 255, 0.40) 50%, rgba(255, 89, 0, 0.40) 100%), white'
+                                : 'transparent',
+                            boxShadow: activePage === 'account' ? '0px 4px 4px rgba(0, 0, 0, 0.25)' : 'none',
+                            borderRadius: activePage === 'account' ? 20 : undefined,
+                            justifyContent: 'flex-start',
+                            alignItems: 'center',
+                            gap: 10,
+                            display: 'flex',
+                            cursor: 'pointer'
+                        }}>
+                            <div style={{ width: 32, height: 32, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {user?.avatar ? (
+                                    <img
+                                        src={user.avatar}
+                                        alt="Account Avatar"
+                                        style={{
+                                            width: 32,
+                                            height: 32,
+                                            borderRadius: '50%',
+                                            objectFit: 'cover',
+                                            border: '2px solid #FF5900',
+                                        }}
+                                    />
+                                ) : user ? (
+                                    <div style={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #FF5900 0%, #FFAC80 100%)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: 'white',
+                                        fontSize: 16,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: '600'
+                                    }}>
+                                        {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                                    </div>
+                                ) : (
+                                    <img
+                                        src="/images/images/account.png"
+                                        alt="Account"
+                                        style={{ width: 32, height: 32, borderRadius: '50%' }}
+                                    />
+                                )}
+                            </div>
+                            <div style={{
+                                opacity: activePage === 'account' ? 1 : 0.75,
+                                color: 'black',
+                                fontSize: 18,
+                                fontFamily: 'Poppins',
+                                fontWeight: '500',
+                                wordWrap: 'break-word'
+                            }}>
+                                Account
+                            </div>
+                        </div>
+                    </Link>
+                </div>
 
                 <NavItem
                     href="/dashboard/settings"

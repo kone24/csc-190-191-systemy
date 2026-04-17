@@ -97,21 +97,35 @@ export default function AccountPage() {
                         borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
                     }}>
                         {/* Avatar */}
-                        <div style={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #FF5900 0%, #FFAC80 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: 32,
-                            fontFamily: 'Poppins',
-                            fontWeight: '600'
-                        }}>
-                            {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                        </div>
+                        {user.avatar ? (
+                            <img
+                                src={user.avatar}
+                                alt="User Avatar"
+                                style={{
+                                    width: 80,
+                                    height: 80,
+                                    borderRadius: '50%',
+                                    objectFit: 'cover',
+                                    border: '2px solid #FF5900',
+                                }}
+                            />
+                        ) : (
+                            <div style={{
+                                width: 80,
+                                height: 80,
+                                borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #FF5900 0%, #FFAC80 100%)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontSize: 32,
+                                fontFamily: 'Poppins',
+                                fontWeight: '600'
+                            }}>
+                                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                            </div>
+                        )}
 
                         {/* Profile Info */}
                         <div style={{ flex: 1 }}>
