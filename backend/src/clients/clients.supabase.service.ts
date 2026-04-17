@@ -7,6 +7,16 @@ import { SearchQueryDto } from './dto/search-query.dto';
 export class ClientsSupabaseService {
     private readonly logger = new Logger(ClientsSupabaseService.name);
 
+    constructor(private configService: ConfigService) {
+        const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+        const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+
+        if (!supabaseUrl || !supabaseKey) {
+            throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be provided');
+        }
+
+        this.supabase = createClient(supabaseUrl, supabaseKey);
+        this.logger.log('Supabase client initialized');
     constructor(private readonly supabaseService: SupabaseService) {
         this.logger.log('ClientsSupabaseService initialized');
     }
