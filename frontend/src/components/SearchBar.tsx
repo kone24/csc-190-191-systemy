@@ -36,9 +36,11 @@ export default function SearchBar({
         alignItems: 'center',
         background: 'white',
         borderRadius: 25,
-        padding: '10px 20px',
+        padding: '14px 20px',
         boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
         minWidth: '300px',
+        width: '100%',
+        boxSizing: 'border-box' as const,
         border: '1px solid #e0e0e0',
         transition: 'all 0.2s ease'
     };

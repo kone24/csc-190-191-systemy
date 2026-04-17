@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 export const DevRoleSwitcher: React.FC = () => {
     const { user, setUser } = useUser();
     const [isVisible, setIsVisible] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
 
     // Small delay to ensure UserContext has loaded
     useEffect(() => {
@@ -71,6 +72,31 @@ export const DevRoleSwitcher: React.FC = () => {
     const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
     // if (!isDevelopment) return null;
 
+    if (collapsed) {
+        return (
+            <button
+                onClick={() => setCollapsed(false)}
+                style={{
+                    position: 'fixed',
+                    top: '10px',
+                    right: '10px',
+                    background: 'white',
+                    border: '2px solid #FF5900',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    color: '#FF5900',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    zIndex: 9999,
+                    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.15)',
+                }}
+            >
+                🧪 {user.role}
+            </button>
+        );
+    }
+
     return (
         <div style={{
             position: 'fixed',
@@ -84,16 +110,31 @@ export const DevRoleSwitcher: React.FC = () => {
             zIndex: 9999,
             minWidth: '200px'
         }}>
-            <div style={{
-                fontSize: '14px',
-                fontWeight: 'bold',
-                marginBottom: '10px',
-                color: '#FF5900',
-                textAlign: 'center'
-            }}>
-                🧪 DEV: Test User Roles
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    color: '#FF5900',
+                }}>
+                    🧪 DEV: Test User Roles
+                </div>
+                <button
+                    onClick={() => setCollapsed(true)}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        color: '#FF5900',
+                        lineHeight: 1,
+                        padding: '0 0 0 8px',
+                    }}
+                    title="Hide panel"
+                >
+                    ✕
+                </button>
             </div>
-            
+
             <div style={{
                 fontSize: '12px',
                 marginBottom: '10px',
@@ -102,7 +143,7 @@ export const DevRoleSwitcher: React.FC = () => {
             }}>
                 Current: <strong>{user.role}</strong>
             </div>
-            
+
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -123,7 +164,7 @@ export const DevRoleSwitcher: React.FC = () => {
                 >
                     👑 Administrator
                 </button>
-                
+
                 <button
                     onClick={() => switchRole('Manager')}
                     style={{
@@ -139,7 +180,7 @@ export const DevRoleSwitcher: React.FC = () => {
                 >
                     👔 Manager
                 </button>
-                
+
                 <button
                     onClick={() => switchRole('User')}
                     style={{
@@ -156,7 +197,7 @@ export const DevRoleSwitcher: React.FC = () => {
                     👤 User
                 </button>
             </div>
-            
+
             <div style={{
                 fontSize: '10px',
                 marginTop: '10px',
