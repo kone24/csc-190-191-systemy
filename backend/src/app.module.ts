@@ -13,6 +13,7 @@ import { LeadsModule } from './leads/leads.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UsersModule } from './users/users.module';
 import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
+import { RecommendationsModule } from './recommendations/recommendations.module'
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
     ProjectsModule,
     UsersModule,
     GanttEntryModule,
+    RecommendationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
