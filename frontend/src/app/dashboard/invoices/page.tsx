@@ -176,8 +176,18 @@ export default function InvoicesPage() {
     const handleSearch = async (term: string) => {
         if (!term.trim()) { fetchInvoices(); return; }
         try {
-            const res = await fetch(`${API}/invoices/search?q=${encodeURIComponent(term)}`, { credentials: 'include' });
-            if (res.ok) setInvoices(await res.json());
+            const res = await fetch(`${API}/invoices`, { credentials: 'include' });
+            if (res.ok) {
+                const all: InvoiceRow[] = await res.json();
+                const q = term.toLowerCase();
+                setInvoices(all.filter(inv => {
+                    const name = inv.clients ? `${inv.clients.first_name} ${inv.clients.last_name}` : '';
+                    return inv.invoice_number?.toLowerCase().includes(q)
+                        || name.toLowerCase().includes(q)
+                        || inv.status?.toLowerCase().includes(q)
+                        || String(inv.amount).includes(q);
+                }));
+            }
         } catch { /* ignore */ }
     };
 
