@@ -1,5 +1,6 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Patch, Body, Query, Param } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
+import { PreferencesService } from './preferences.service';
 import { IsOptional, IsString } from 'class-validator';
 
 class ListNotificationsQuery {
@@ -10,11 +11,28 @@ class ListNotificationsQuery {
 
 @Controller('notifications')
 export class NotificationsController {
-  constructor(private readonly notifications: NotificationsService) {}
+  constructor(
+    private readonly notifications: NotificationsService,
+    private readonly preferences: PreferencesService,
+  ) { }
 
   @Get()
   list(@Query() q: ListNotificationsQuery) {
     if (!q.userId) return { notifications: [] };
     return { notifications: this.notifications.listForUser(q.userId) };
+  }
+
+  @Get('preferences/:userId')
+  getPreferences(@Param('userId') userId: string) {
+    return { ok: true, preferences: this.preferences.get(userId) };
+  }
+
+  @Patch('preferences/:userId')
+  updatePreferences(
+    @Param('userId') userId: string,
+    @Body() body: { followUpEnabled?: boolean; channels?: { email?: boolean; dashboard?: boolean } },
+  ) {
+    const updated = this.preferences.set(userId, body);
+    return { ok: true, preferences: updated };
   }
 }
