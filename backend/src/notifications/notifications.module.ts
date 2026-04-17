@@ -1,20 +1,15 @@
 import { Module } from '@nestjs/common';
-import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { PreferencesService } from './preferences.service';
 import { EmailService } from './email.service';
+import { RemindersService } from './reminders.service';
 import { ReminderProcessor } from './reminder.processor';
-import { RemindersModule } from '../reminders/reminders.module';
+import { RemindersController } from './reminders.controller';
+import { NotificationsController } from './notifications.controller';
 
 @Module({
-  imports: [RemindersModule],
-  controllers: [NotificationsController],
-  providers: [
-    NotificationsService,
-    PreferencesService,
-    EmailService,
-    ReminderProcessor,
-  ],
-  exports: [NotificationsService, EmailService],
+  controllers: [RemindersController, NotificationsController],
+  providers: [NotificationsService, PreferencesService, EmailService, RemindersService, ReminderProcessor],
+  exports: [RemindersService, NotificationsService, PreferencesService, EmailService],
 })
-export class NotificationsModule {}
+export class NotificationsModule { }

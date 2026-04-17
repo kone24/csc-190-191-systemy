@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AuditModule } from './audit/audit.module';
 import { LeadsModule } from './leads/leads.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UsersModule } from './users/users.module';
@@ -16,6 +17,8 @@ import { RemindersModule } from './reminders/reminders.module';
 import { TestController } from './test.controller';
 import { MailModule } from './mail/mail.module';
 import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
+import { InvoicesModule } from './invoices/invoices.module';
+import { RecommendationsModule } from './recommendations/recommendations.module'
 
 @Module({
   imports: [
@@ -24,6 +27,7 @@ import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
       envFilePath: '.env',
     }),
     ScheduleModule.forRoot(),
+    AuditModule,
     NotificationsModule,
     RemindersModule,
     AuthModule,
@@ -36,6 +40,8 @@ import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
     UsersModule,
     MailModule,
     GanttEntryModule,
+    InvoicesModule,
+    RecommendationsModule,
   ],
   controllers: [AppController, TestController],
   providers: [AppService],

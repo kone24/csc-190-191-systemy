@@ -40,6 +40,7 @@ export default function DashboardPage() {
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredGantt, setHoveredGantt] = useState(false);
+  const [recommendations, setRecommendations] = useState<any[] | null>(null);
   const [sortByDate, setSortByDate] = useState(false);
   const { user } = useUser();
   const isAdminOrManager = user?.role === 'Administrator' || user?.role === 'Manager';
@@ -47,6 +48,10 @@ export default function DashboardPage() {
   const [activeProjectsCount, setActiveProjectsCount] = useState<number | null>(null);
   const [activeContactsCount, setActiveContactsCount] = useState<number | null>(null);
   const [ganttEntries, setGanttEntries] = useState<GanttEntryPreview[] | null>(null);
+  const [openInvoicesCount, setOpenInvoicesCount] = useState<number | null>(null);
+  const [overdueInvoicesCount, setOverdueInvoicesCount] = useState<number | null>(null);
+  const [tasksDueCount, setTasksDueCount] = useState<number | null>(null);
+  const [tasksOverdueCount, setTasksOverdueCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
@@ -71,6 +76,41 @@ export default function DashboardPage() {
         setGanttEntries(Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []));
       })
       .catch(() => setGanttEntries([]));
+
+    // Fetch open invoices count (unpaid + overdue)
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/invoices`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : data.items ?? [];
+        const open = list.filter((i: { status: string }) => i.status === 'unpaid' || i.status === 'overdue');
+        const overdue = list.filter((i: { status: string }) => i.status === 'overdue');
+        setOpenInvoicesCount(open.length);
+        setOverdueInvoicesCount(overdue.length);
+      })
+      .catch(() => { setOpenInvoicesCount(0); setOverdueInvoicesCount(0); });
+
+    // Fetch tasks due this week from gantt-entries
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/gantt-entries`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
+        const now = new Date();
+        const endOfWeek = new Date(now);
+        endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()));
+        const due = list.filter((e: { end_date: string }) => {
+          const d = new Date(e.end_date);
+          return d <= endOfWeek;
+        });
+        const overdue = list.filter((e: { end_date: string }) => new Date(e.end_date) < now);
+        setTasksDueCount(due.length);
+        setTasksOverdueCount(overdue.length);
+      })
+      .catch(() => { setTasksDueCount(0); setTasksOverdueCount(0); });
+
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/recommendations`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setRecommendations(Array.isArray(data.recommendations) ? data.recommendations : []))
+      .catch(() => setRecommendations([]));
   }, []);
 
   const tileStyle = (index: number, borderColor: string, shadowColor: string): React.CSSProperties => ({
@@ -334,7 +374,7 @@ export default function DashboardPage() {
   const displayProjectRows = liveProjectRows ?? projectRows;
 
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', background: 'white', overflow: 'hidden' }}>
+    <div style={{ width: '100%', height: '100vh', display: 'flex', background: 'white' }}>
       {/* Development Role Switcher */}
       <DevRoleSwitcher />
 
@@ -387,8 +427,8 @@ export default function DashboardPage() {
               <div style={tileStyle(2, kpiColors.tasksDue.border, kpiColors.tasksDue.shadow)} onMouseEnter={() => setHoveredTile(2)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: '#FF928A', borderBottom: '1px solid #ef4444' }}><span style={{ ...tileLabelStyle, color: '#7f1d1d' }}>Tasks Due This Week</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>14</div>
-                  <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>3 overdue</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{tasksDueCount === null ? '...' : tasksDueCount}</div>
+                  {(tasksOverdueCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{tasksOverdueCount} overdue</div>}
                 </div>
               </div>
 
@@ -396,8 +436,8 @@ export default function DashboardPage() {
               <div style={tileStyle(3, kpiColors.openInvoices.border, kpiColors.openInvoices.shadow)} onMouseEnter={() => setHoveredTile(3)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: 'rgba(255, 246, 66, 0.6)', borderBottom: '1px solid rgba(220, 200, 0, 0.8)' }}><span style={{ ...tileLabelStyle, color: '#713f12' }}>Open Invoices</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>4</div>
-                  <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>1 overdue</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{openInvoicesCount === null ? '...' : openInvoicesCount}</div>
+                  {(overdueInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>{overdueInvoicesCount} overdue</div>}
                 </div>
               </div>
             </>
@@ -415,8 +455,8 @@ export default function DashboardPage() {
               <div style={tileStyle(2, kpiColors.tasksDue.border, kpiColors.tasksDue.shadow)} onMouseEnter={() => setHoveredTile(2)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: '#FF928A', borderBottom: '1px solid #ef4444' }}><span style={{ ...tileLabelStyle, color: '#7f1d1d' }}>My Tasks Due</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>5</div>
-                  <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>1 overdue</div>
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{tasksDueCount === null ? '...' : tasksDueCount}</div>
+                  {(tasksOverdueCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{tasksOverdueCount} overdue</div>}
                 </div>
               </div>
             </>
@@ -600,6 +640,112 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+          {/* Lead Scoring Panel */}
+            <div style={{
+              background: 'white',
+              boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+              borderRadius: 20,
+              padding: '20px',
+              marginTop: '20px',
+            }}>
+              <div style={{
+                color: 'rgba(255, 89, 0, 0.80)',
+                fontSize: 20,
+                fontFamily: 'Poppins',
+                fontWeight: '600',
+                marginBottom: '20px'
+              }}>
+                Lead Scoring
+              </div>
+
+              {recommendations === null ? (
+                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)' }}>...</div>
+              ) : recommendations.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)' }}>
+                  No recommendations available
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 80px 120px',
+                    gap: '10px',
+                    paddingBottom: '10px',
+                    borderBottom: '1px solid #eee',
+                    marginBottom: '10px'
+                  }}>
+                    <div style={{
+                      color: 'rgba(0, 0, 0, 0.75)',
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                      fontWeight: '600'
+                    }}>
+                      Contact Name
+                    </div>
+
+                    <div style={{
+                      color: 'rgba(0, 0, 0, 0.75)',
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                      fontWeight: '600',
+                      textAlign: 'center'
+                    }}>
+                      Score
+                    </div>
+
+                    <div style={{
+                      color: 'rgba(0, 0, 0, 0.75)',
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                      fontWeight: '600'
+                    }}>
+                      Success Potential
+                    </div>
+                  </div>
+                  {recommendations.slice(0, 5).map((item, i) => (
+                    <div key={i} style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 80px 120px',
+                      gap: '10px',
+                      padding: '10px 0',
+                      borderBottom: '1px solid #f0f0f0',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        fontWeight: 600
+                      }}>
+                        {item.clientName || item.clientId}
+                      </div>
+
+                      <div style={{
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        textAlign: 'center'
+                      }}>
+                        {item.score}
+                      </div>
+
+                      <div>
+                        <span style={{
+                          ...badgeStyle(
+                            item.details?.label === 'HIGH'
+                              ? '#22C55E'
+                              : item.details?.label === 'MEDIUM'
+                              ? '#F59E0B'
+                              : '#EF4444',
+                            'white'
+                          )
+                        }}>
+                          {item.details?.label}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>

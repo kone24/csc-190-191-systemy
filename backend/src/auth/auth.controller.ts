@@ -9,16 +9,19 @@ export class AuthController {
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
-    console.log('User logging out, clearing session cookie');
-
     res.clearCookie('access_token', { path: '/', httpOnly: true });
     return { ok: true, message: 'Logged out successfully', redirect: '/login' };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Req() req: Request) {
-    return req['user']; // payload: { username }
+  async me(@Req() req: Request) {
+    const payload = req['user'] as { username?: string };
+    if (!payload?.username) {
+      return { ok: false, message: 'Invalid token payload' };
+    }
+    // Look up full user profile from Supabase using the email in the JWT
+    return this.authService.findUserByEmail(payload.username);
   }
 
   @Get('google')
