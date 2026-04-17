@@ -10,6 +10,6 @@ import { NotificationsController } from './notifications.controller';
 @Module({
   controllers: [RemindersController, NotificationsController],
   providers: [NotificationsService, PreferencesService, EmailService, RemindersService, ReminderProcessor],
-  exports: [RemindersService, NotificationsService, PreferencesService],
+  exports: [RemindersService, NotificationsService, PreferencesService, EmailService],
 })
 export class NotificationsModule { }

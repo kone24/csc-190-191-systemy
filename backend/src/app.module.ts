@@ -14,6 +14,7 @@ import { LeadsModule } from './leads/leads.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UsersModule } from './users/users.module';
 import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
+import { InvoicesModule } from './invoices/invoices.module';
 import { RecommendationsModule } from './recommendations/recommendations.module'
 
 @Module({
@@ -35,6 +36,7 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
     ProjectsModule,
     UsersModule,
     GanttEntryModule,
+    InvoicesModule,
     RecommendationsModule,
   ],
   controllers: [AppController],
