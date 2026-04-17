@@ -8,10 +8,10 @@ export class SupabaseService {
 
   constructor(private configService: ConfigService) {
     const url = this.configService.get<string>('SUPABASE_URL');
-    const key = this.configService.get<string>('SUPABASE_ANON_KEY');
+    const key = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!url || !key) {
-      throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY must be provided');
+      throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be provided');
     }
 
     this.supabase = createClient(url, key);
