@@ -9,8 +9,6 @@ export class AuthController {
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
-    console.log('User logging out, clearing session cookie');
-
     res.clearCookie('access_token', { path: '/', httpOnly: true });
     return { ok: true, message: 'Logged out successfully', redirect: '/login' };
   }

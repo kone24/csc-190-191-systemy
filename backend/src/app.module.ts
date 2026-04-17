@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { WebhookModule } from './webhook/webhook.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AuditModule } from './audit/audit.module';
 import { LeadsModule } from './leads/leads.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { UsersModule } from './users/users.module';
@@ -22,6 +23,7 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
       envFilePath: '.env',
     }),
     ScheduleModule.forRoot(),
+    AuditModule,
     NotificationsModule,
     AuthModule,
     ClientsModule,
