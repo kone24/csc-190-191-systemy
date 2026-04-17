@@ -9,6 +9,8 @@ import { UsersService } from './users.service';
 const mockUsersService = {
     findAll: jest.fn(),
     updateRole: jest.fn(),
+    getTimezone: jest.fn(),
+    updateTimezone: jest.fn(),
 };
 
 // ---------------------------------------------------------------------------
@@ -41,7 +43,7 @@ describe('UsersController', () => {
         it('returns ok:true with items from the service', async () => {
             const fakeUsers = [
                 { user_id: 'u1', name: 'Alice', email: 'alice@ex.com', role: 'admin' },
-                { user_id: 'u2', name: 'Bob',   email: 'bob@ex.com',   role: 'staff' },
+                { user_id: 'u2', name: 'Bob', email: 'bob@ex.com', role: 'staff' },
             ];
             mockUsersService.findAll.mockResolvedValue(fakeUsers);
 
@@ -110,6 +112,64 @@ describe('UsersController', () => {
             mockUsersService.updateRole.mockRejectedValue(new Error('constraint violation'));
 
             await expect(controller.updateRole('u1', 'admin')).rejects.toThrow('constraint violation');
+        });
+    });
+
+    // =========================================================================
+    // GET /users/:id/timezone — getTimezone()
+    // =========================================================================
+    describe('GET /users/:id/timezone — getTimezone()', () => {
+        it('returns ok:true with timezone from the service', async () => {
+            mockUsersService.getTimezone.mockResolvedValue('America/New_York');
+
+            const result = await controller.getTimezone('u1');
+
+            expect(result).toEqual({ ok: true, timezone: 'America/New_York' });
+            expect(mockUsersService.getTimezone).toHaveBeenCalledWith('u1');
+        });
+
+        it('returns default timezone when service returns default', async () => {
+            mockUsersService.getTimezone.mockResolvedValue('America/Los_Angeles');
+
+            const result = await controller.getTimezone('u1');
+
+            expect(result).toEqual({ ok: true, timezone: 'America/Los_Angeles' });
+        });
+
+        it('propagates service errors', async () => {
+            mockUsersService.getTimezone.mockRejectedValue(new Error('DB down'));
+
+            await expect(controller.getTimezone('u1')).rejects.toThrow('DB down');
+        });
+    });
+
+    // =========================================================================
+    // PATCH /users/:id/timezone — updateTimezone()
+    // =========================================================================
+    describe('PATCH /users/:id/timezone — updateTimezone()', () => {
+        it('returns ok:true when a valid timezone is provided', async () => {
+            mockUsersService.updateTimezone.mockResolvedValue(undefined);
+
+            const result = await controller.updateTimezone('u1', 'America/Chicago');
+
+            expect(result).toEqual({ ok: true });
+            expect(mockUsersService.updateTimezone).toHaveBeenCalledWith('u1', 'America/Chicago');
+        });
+
+        it('throws BadRequestException when timezone is empty', async () => {
+            await expect(controller.updateTimezone('u1', '')).rejects.toThrow(BadRequestException);
+            expect(mockUsersService.updateTimezone).not.toHaveBeenCalled();
+        });
+
+        it('throws BadRequestException when timezone is undefined', async () => {
+            await expect(controller.updateTimezone('u1', undefined as any)).rejects.toThrow(BadRequestException);
+            expect(mockUsersService.updateTimezone).not.toHaveBeenCalled();
+        });
+
+        it('propagates service errors', async () => {
+            mockUsersService.updateTimezone.mockRejectedValue(new Error('DB down'));
+
+            await expect(controller.updateTimezone('u1', 'America/Denver')).rejects.toThrow('DB down');
         });
     });
 });

@@ -15,8 +15,13 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(@Req() req: Request) {
-    return req['user']; // payload: { username }
+  async me(@Req() req: Request) {
+    const payload = req['user'] as { username?: string };
+    if (!payload?.username) {
+      return { ok: false, message: 'Invalid token payload' };
+    }
+    // Look up full user profile from Supabase using the email in the JWT
+    return this.authService.findUserByEmail(payload.username);
   }
 
   @Get('google')

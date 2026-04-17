@@ -21,7 +21,7 @@ export class PreferencesService {
     );
   }
 
-  set(userId: string, update: Partial<NotificationPreferences>) {
+  set(userId: string, update: Partial<Omit<NotificationPreferences, 'channels'>> & { channels?: Partial<NotificationPreferences['channels']> }) {
     const current = this.get(userId);
     const merged: NotificationPreferences = {
       ...current,

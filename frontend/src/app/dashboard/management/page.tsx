@@ -23,11 +23,7 @@ export default function ManagementPage() {
         const fetchUsers = async () => {
             try {
                 setLoading(true);
-<<<<<<< HEAD
-                const res = await fetch('http://localhost:3001/users', { credentials: 'include' });
-=======
                 const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users`, { credentials: 'include' });
->>>>>>> 7fa1cbbdb929db8c7ef12008948515a7bc928ebe
                 if (!res.ok) throw new Error('Failed to fetch users');
                 const data = await res.json();
                 const mapped: UserData[] = (data.items ?? []).map((u: { user_id: string; name: string; email: string; role: string }) => ({
@@ -51,11 +47,7 @@ export default function ManagementPage() {
         setRoleUpdating(userId);
         setError(null);
         try {
-<<<<<<< HEAD
-            const res = await fetch(`http://localhost:3001/users/${userId}/role`, {
-=======
             const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/${userId}/role`, {
->>>>>>> 7fa1cbbdb929db8c7ef12008948515a7bc928ebe
                 method: 'PATCH',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -77,13 +69,13 @@ export default function ManagementPage() {
     };
 
     const ROLE_OPTIONS: { value: UserData['role']; label: string }[] = [
-        { value: 'admin',   label: 'Admin' },
+        { value: 'admin', label: 'Admin' },
         { value: 'manager', label: 'Manager' },
-        { value: 'staff',   label: 'Staff' },
+        { value: 'staff', label: 'Staff' },
     ];
 
     const roleColor = (role: string) => {
-        if (role === 'admin')   return { bg: '#FFF0E8', color: '#FF5900' };
+        if (role === 'admin') return { bg: '#FFF0E8', color: '#FF5900' };
         if (role === 'manager') return { bg: '#E8F0FF', color: '#2255CC' };
         return { bg: '#F0F0F0', color: '#333333' };
     };
@@ -96,13 +88,13 @@ export default function ManagementPage() {
             <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
                 <Sidebar activePage="management" />
 
-                <div style={{ 
-                    flex: 1, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    background: 'rgba(217, 217, 217, 0.15)', 
-                    padding: '20px 20px 20px 30px', 
-                    gap: '20px' 
+                <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    background: 'rgba(217, 217, 217, 0.15)',
+                    padding: '20px 20px 20px 30px',
+                    gap: '20px'
                 }}>
                     {/* Header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -217,71 +209,71 @@ export default function ManagementPage() {
                                         Loading users...
                                     </div>
                                 ) : (
-                                <div style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                            <tr style={{ background: 'rgba(217, 217, 217, 0.4)' }}>
-                                                <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Name</th>
-                                                <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Email</th>
-                                                <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Current Role</th>
-                                                <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Change Role</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {users.map(userData => {
-                                                const rc = roleColor(userData.role);
-                                                return (
-                                                <tr key={userData.id} style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.08)' }}>
-                                                    <td style={{ padding: '14px 16px', fontFamily: 'Poppins', fontWeight: '500', color: '#111111' }}>
-                                                        {userData.name}
-                                                    </td>
-                                                    <td style={{ padding: '14px 16px', fontFamily: 'Poppins', color: '#444444', fontSize: '14px' }}>
-                                                        {userData.email}
-                                                    </td>
-                                                    <td style={{ padding: '14px 16px' }}>
-                                                        <span style={{
-                                                            padding: '4px 12px',
-                                                            borderRadius: 20,
-                                                            fontSize: '12px',
-                                                            fontWeight: '600',
-                                                            fontFamily: 'Poppins',
-                                                            background: rc.bg,
-                                                            color: rc.color
-                                                        }}>
-                                                            {roleLabel(userData.role)}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '14px 16px' }}>
-                                                        <select
-                                                            value={userData.role}
-                                                            disabled={roleUpdating === userData.id}
-                                                            onChange={(e) => handleRoleChange(userData.id, e.target.value)}
-                                                            style={{
-                                                                padding: '7px 12px',
-                                                                border: '1px solid #CCCCCC',
-                                                                borderRadius: 8,
-                                                                fontFamily: 'Poppins',
-                                                                fontSize: '14px',
-                                                                color: '#111111',
-                                                                background: roleUpdating === userData.id ? '#F5F5F5' : 'white',
-                                                                cursor: roleUpdating === userData.id ? 'not-allowed' : 'pointer',
-                                                                outline: 'none'
-                                                            }}
-                                                        >
-                                                            {ROLE_OPTIONS.map(r => (
-                                                                <option key={r.value} value={r.value}>{r.label}</option>
-                                                            ))}
-                                                        </select>
-                                                        {roleUpdating === userData.id && (
-                                                            <span style={{ marginLeft: '8px', fontSize: '12px', color: '#888888', fontFamily: 'Poppins' }}>Saving...</span>
-                                                        )}
-                                                    </td>
+                                    <div style={{ overflowX: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr style={{ background: 'rgba(217, 217, 217, 0.4)' }}>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Name</th>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Email</th>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Current Role</th>
+                                                    <th style={{ padding: '14px 16px', textAlign: 'left', fontFamily: 'Poppins', fontWeight: '600', color: '#111111', fontSize: '14px' }}>Change Role</th>
                                                 </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                {users.map(userData => {
+                                                    const rc = roleColor(userData.role);
+                                                    return (
+                                                        <tr key={userData.id} style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.08)' }}>
+                                                            <td style={{ padding: '14px 16px', fontFamily: 'Poppins', fontWeight: '500', color: '#111111' }}>
+                                                                {userData.name}
+                                                            </td>
+                                                            <td style={{ padding: '14px 16px', fontFamily: 'Poppins', color: '#444444', fontSize: '14px' }}>
+                                                                {userData.email}
+                                                            </td>
+                                                            <td style={{ padding: '14px 16px' }}>
+                                                                <span style={{
+                                                                    padding: '4px 12px',
+                                                                    borderRadius: 20,
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '600',
+                                                                    fontFamily: 'Poppins',
+                                                                    background: rc.bg,
+                                                                    color: rc.color
+                                                                }}>
+                                                                    {roleLabel(userData.role)}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: '14px 16px' }}>
+                                                                <select
+                                                                    value={userData.role}
+                                                                    disabled={roleUpdating === userData.id}
+                                                                    onChange={(e) => handleRoleChange(userData.id, e.target.value)}
+                                                                    style={{
+                                                                        padding: '7px 12px',
+                                                                        border: '1px solid #CCCCCC',
+                                                                        borderRadius: 8,
+                                                                        fontFamily: 'Poppins',
+                                                                        fontSize: '14px',
+                                                                        color: '#111111',
+                                                                        background: roleUpdating === userData.id ? '#F5F5F5' : 'white',
+                                                                        cursor: roleUpdating === userData.id ? 'not-allowed' : 'pointer',
+                                                                        outline: 'none'
+                                                                    }}
+                                                                >
+                                                                    {ROLE_OPTIONS.map(r => (
+                                                                        <option key={r.value} value={r.value}>{r.label}</option>
+                                                                    ))}
+                                                                </select>
+                                                                {roleUpdating === userData.id && (
+                                                                    <span style={{ marginLeft: '8px', fontSize: '12px', color: '#888888', fontFamily: 'Poppins' }}>Saving...</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 )}
                             </div>
                         )}
