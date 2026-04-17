@@ -47,7 +47,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 if (!res.ok) throw new Error('Not authenticated');
                 return res.json();
             })
-            .then((data: { ok: boolean; user?: { user_id: string; name: string; email: string; role: string } }) => {
+            .then((data: { ok: boolean; user?: { user_id: string; name: string; email: string; role: string; avatar?: string } }) => {
                 if (data.ok && data.user) {
                     const nameParts = (data.user.name || '').split(' ');
                     const roleMap: Record<string, 'Administrator' | 'Manager' | 'User'> = {
@@ -63,6 +63,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                         company: 'Headword Inc.',
                         phone: '',
                         role: roleMap[data.user.role] || 'User',
+                        avatar: data.user.avatar || undefined,
                     };
                     setUser(mappedUser);
                     localStorage.setItem('user', JSON.stringify(mappedUser));

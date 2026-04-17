@@ -374,7 +374,7 @@ export default function DashboardPage() {
   const displayProjectRows = liveProjectRows ?? projectRows;
 
   return (
-    <div style={{ width: '100%', height: '100vh', display: 'flex', background: 'white' }}>
+    <div style={{ width: '100vw', minHeight: '100vh', display: 'flex', background: 'linear-gradient(180deg, #fff 0%, #ffe5d0 100%)', overflowX: 'hidden' }}>
       {/* Development Role Switcher */}
       <DevRoleSwitcher />
 
@@ -382,7 +382,7 @@ export default function DashboardPage() {
       <Sidebar activePage="dashboard" />
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px', minHeight: '100vh' }}>
         {/* Top Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
           {/* Search Container */}

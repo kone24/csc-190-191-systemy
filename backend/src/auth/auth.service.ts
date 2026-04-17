@@ -32,11 +32,12 @@ export class AuthService {
       return { ok: false, message: 'Failed to verify Google ID token' };
     }
 
-    const info = await infoRes.json() as { email?: string; aud?: string; error_description?: string };
+    const info = await infoRes.json() as { email?: string; aud?: string; error_description?: string; picture?: string };
 
     if (!info.email) {
       return { ok: false, message: 'No email found in Google token' };
     }
+    const avatarUrl = info.picture || null;
 
     // Dev allowlist: personal emails explicitly whitelisted via DEV_ALLOWED_EMAILS env var.
     const devAllowedEmails = (process.env.DEV_ALLOWED_EMAILS ?? '')
@@ -57,19 +58,16 @@ export class AuthService {
     // Check if the user already exists in the users table.
     const { data: dbUser } = await this.supabase
       .from('users')
-      .select('email')
+      .select('*')
       .eq('email', info.email.toLowerCase())
       .single();
 
-    // Auto-provision: if no DB row yet, create one.
     if (!dbUser) {
-      // Non-dev users without an allowed domain are already rejected above,
-      // so at this point the email is either allowed-domain or dev-allowlisted.
+      // Auto-provision new user with avatar
       const emailPrefix = info.email.split('@')[0];
       const { error: insertError } = await this.supabase
         .from('users')
-        .insert({ email: info.email.toLowerCase(), name: emailPrefix, role: 'staff' });
-
+        .insert({ email: info.email.toLowerCase(), name: emailPrefix, role: 'staff', avatar: avatarUrl });
       if (insertError) {
         console.error('Supabase insert error:', insertError);
         return {
@@ -77,6 +75,12 @@ export class AuthService {
           message: 'Failed to create user account. Please contact your administrator.',
         };
       }
+    } else if (avatarUrl && dbUser.avatar !== avatarUrl) {
+      // Update avatar if changed
+      await this.supabase
+        .from('users')
+        .update({ avatar: avatarUrl })
+        .eq('email', info.email.toLowerCase());
     }
 
     const user = { email: info.email };
