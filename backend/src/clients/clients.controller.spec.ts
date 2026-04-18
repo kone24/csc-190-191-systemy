@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ClientsController } from './clients.controller';
 import { ClientsSupabaseService } from './clients.supabase.service';
+import { AuditService } from '../audit/audit.service';
 
 // ---------------------------------------------------------------------------
 // Shared test data
@@ -44,6 +45,16 @@ const mockClientsService = {
 };
 
 // ---------------------------------------------------------------------------
+// Mock Audit Service
+// ---------------------------------------------------------------------------
+const mockAuditService = {
+  logCreate: jest.fn(),
+  logUpdate: jest.fn(),
+  logDelete: jest.fn(),
+  createAudit: jest.fn(),
+};
+
+// ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
 
@@ -57,6 +68,7 @@ describe('ClientsController', () => {
       controllers: [ClientsController],
       providers: [
         { provide: ClientsSupabaseService, useValue: mockClientsService },
+        { provide: AuditService, useValue: mockAuditService },
       ],
     }).compile();
 
