@@ -26,34 +26,34 @@ describe('NotificationsController', () => {
     // =========================================================================
     // GET /notifications
     // =========================================================================
-    describe('list()', () => {
+    describe('listForUser()', () => {
         it('returns empty array when userId is not provided', () => {
-            const result = controller.list({});
+            const result = controller.listForUser(undefined as any);
 
-            expect(result).toEqual({ notifications: [] });
+            expect(result).toEqual([]);
         });
 
         it('returns notifications for a given userId', () => {
             notificationsService.createDashboardAlert({
-                userId: 'user-1',
-                clientId: 'c1',
-                interactionId: 'i1',
-                title: 'Follow up',
-                body: 'Please follow up',
+            userId: 'user-1',
+            clientId: 'c1',
+            interactionId: 'i1',
+            title: 'Follow up',
+            body: 'Please follow up',
             });
 
-            const result = controller.list({ userId: 'user-1' });
+            const result = controller.listForUser('user-1');
 
-            expect(result.notifications).toHaveLength(1);
-            expect(result.notifications[0].title).toBe('Follow up');
+            expect(result).toHaveLength(1);
+            expect(result[0].title).toBe('Follow up');
         });
 
         it('returns empty array for a user with no notifications', () => {
-            const result = controller.list({ userId: 'user-no-notifs' });
+            const result = controller.listForUser('user-no-notifs');
 
-            expect(result).toEqual({ notifications: [] });
+            expect(result).toEqual([]);
         });
-    });
+        });
 
     // =========================================================================
     // GET /notifications/preferences/:userId
