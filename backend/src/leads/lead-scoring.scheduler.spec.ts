@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { LeadScoringScheduler } from './lead-scoring.scheduler';
-import { LeadScoringPipelineService } from './lead-scoring-pipeline.service';
+import { LeadScoringService } from './lead-scoring.service';
 
 describe('LeadScoringScheduler', () => {
   let scheduler: LeadScoringScheduler;
 
-  const mockBuildInputs = jest.fn();
+  const mockRunScoring = jest.fn();
 
   beforeAll(() => {
     jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
@@ -19,9 +19,9 @@ describe('LeadScoringScheduler', () => {
       providers: [
         LeadScoringScheduler,
         {
-          provide: LeadScoringPipelineService,
+          provide: LeadScoringService,
           useValue: {
-            buildInputs: mockBuildInputs,
+            runScoring: mockRunScoring,
           },
         },
       ],
@@ -34,30 +34,30 @@ describe('LeadScoringScheduler', () => {
     expect(scheduler).toBeDefined();
   });
 
-  it('should run lead pipeline daily and log prepared input count', async () => {
-    mockBuildInputs.mockResolvedValue([
-      { clientId: '1' },
-      { clientId: '2' },
-      { clientId: '3' },
+  it('should run lead scoring daily and log scored lead count', async () => {
+    mockRunScoring.mockResolvedValue([
+      { clientId: '1', score: 80 },
+      { clientId: '2', score: 65 },
+      { clientId: '3', score: 40 },
     ]);
 
     await scheduler.runDailyLeadScoring();
 
-    expect(mockBuildInputs).toHaveBeenCalledTimes(1);
+    expect(mockRunScoring).toHaveBeenCalledTimes(1);
     expect(Logger.prototype.log).toHaveBeenCalledWith(
       'Starting scheduled daily lead scoring run',
     );
     expect(Logger.prototype.log).toHaveBeenCalledWith(
-      'Scheduled daily lead scoring finished. 3 lead inputs were prepared',
+      'Scheduled daily lead scoring finished. 3 leads were scored',
     );
   });
 
-  it('should surface errors from pipeline execution', async () => {
-    mockBuildInputs.mockRejectedValue(new Error('pipeline failed'));
+  it('should surface errors from scoring execution', async () => {
+    mockRunScoring.mockRejectedValue(new Error('scoring failed'));
 
     await expect(scheduler.runDailyLeadScoring()).rejects.toThrow(
-      'pipeline failed',
+      'scoring failed',
     );
-    expect(mockBuildInputs).toHaveBeenCalledTimes(1);
+    expect(mockRunScoring).toHaveBeenCalledTimes(1);
   });
 });
