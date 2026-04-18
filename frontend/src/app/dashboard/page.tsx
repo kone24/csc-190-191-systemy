@@ -668,8 +668,8 @@ export default function DashboardPage() {
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: '1fr 80px 120px',
-                    gap: '10px',
+                    gridTemplateColumns: '1fr 80px 120px 110px',
+                    gap: '12px',
                     paddingBottom: '10px',
                     borderBottom: '1px solid #eee',
                     marginBottom: '10px'
@@ -678,9 +678,10 @@ export default function DashboardPage() {
                       color: 'rgba(0, 0, 0, 0.75)',
                       fontSize: 12,
                       fontFamily: 'Poppins',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      textAlign: 'left'
                     }}>
-                      Contact Name
+                      Contact
                     </div>
 
                     <div style={{
@@ -697,21 +698,32 @@ export default function DashboardPage() {
                       color: 'rgba(0, 0, 0, 0.75)',
                       fontSize: 12,
                       fontFamily: 'Poppins',
-                      fontWeight: '600'
+                      fontWeight: '600',
+                      textAlign: 'center'
                     }}>
-                      Success Potential
+                      Potential
+                    </div>
+                    <div style={{
+                      color: 'rgba(0, 0, 0, 0.75)',
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                      fontWeight: '600',
+                      textAlign: 'center'
+                    }}>
+                      Updated
                     </div>
                   </div>
                   {recommendations.slice(0, 5).map((item, i) => (
                     <div key={i} style={{
                       display: 'grid',
-                      gridTemplateColumns: '1fr 80px 120px',
-                      gap: '10px',
+                      gridTemplateColumns: '1fr 80px 120px 110px',
+                      gap: '12px',
                       padding: '10px 0',
                       borderBottom: '1px solid #f0f0f0',
                       alignItems: 'center'
                     }}>
                       <div style={{
+                        textAlign: 'left',
                         fontSize: 13,
                         fontFamily: 'Poppins',
                         fontWeight: 600
@@ -720,14 +732,14 @@ export default function DashboardPage() {
                       </div>
 
                       <div style={{
+                        textAlign: 'center',
                         fontSize: 13,
-                        fontFamily: 'Poppins',
-                        textAlign: 'center'
+                        fontFamily: 'Poppins'
                       }}>
                         {item.score}
                       </div>
 
-                      <div>
+                      <div style={{ textAlign: 'center' }}>
                         <span style={{
                           ...badgeStyle(
                             item.details?.label === 'HIGH'
@@ -740,6 +752,20 @@ export default function DashboardPage() {
                         }}>
                           {item.details?.label}
                         </span>
+                      </div>
+
+                      <div style={{
+                        textAlign: 'center',
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {item.updatedAt
+                          ? new Date(item.updatedAt).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })
+                          : '—'}
                       </div>
                     </div>
                   ))}
