@@ -197,7 +197,7 @@ describe('ClientsController', () => {
       const updatedClient = { ...MOCK_CLIENT, ...updateDto };
       mockClientsService.update.mockResolvedValue(updatedClient);
 
-      const result = await controller.update(MOCK_CLIENT.id, updateDto as any);
+      const result = await controller.update(MOCK_CLIENT.id, updateDto as any, {} as any);
 
       expect(mockClientsService.update).toHaveBeenCalledWith(
         MOCK_CLIENT.id,
@@ -211,7 +211,7 @@ describe('ClientsController', () => {
       const updatedClient = { ...MOCK_CLIENT, ...updateDto };
       mockClientsService.update.mockResolvedValue(updatedClient);
 
-      const result = await controller.update(MOCK_CLIENT.id, updateDto as any);
+      const result = await controller.update(MOCK_CLIENT.id, updateDto as any, {} as any);
 
       expect((result as any).client.first_name).toBe('Janet');
       expect((result as any).client.business_name).toBe('Updated Corp');
@@ -225,7 +225,7 @@ describe('ClientsController', () => {
       );
 
       await expect(
-        controller.update('bad-id', { first_name: 'X' } as any),
+        controller.update('bad-id', { first_name: 'X' } as any, {} as any),
       ).rejects.toThrow('not found');
     });
 
@@ -234,7 +234,7 @@ describe('ClientsController', () => {
       const updatedClient = { ...MOCK_CLIENT, tags: tagUpdate.tags };
       mockClientsService.update.mockResolvedValue(updatedClient);
 
-      const result = await controller.update(MOCK_CLIENT.id, tagUpdate as any);
+      const result = await controller.update(MOCK_CLIENT.id, tagUpdate as any, {} as any);
 
       expect((result as any).client.tags).toEqual(tagUpdate.tags);
     });
