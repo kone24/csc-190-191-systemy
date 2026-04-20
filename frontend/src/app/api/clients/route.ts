@@ -98,14 +98,7 @@ export async function POST(request: Request) {
       email,
       phone_number: phone_number || '',
       business_name: business_name || '',
-      address: address || {
-        street: "",
-        city: "",
-        state: { code: "", name: "" },
-        postalCode: "",
-        country: { code: "", name: "" },
-        additionalInfo: ""
-      },
+      address: address as unknown as import('@/types/client').ApiAddress || undefined,
       // Optional fields
       title: undefined,
       industry: undefined,
