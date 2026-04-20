@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -41,7 +41,7 @@ function parseTag(raw: string): { name: string; color: string } {
 
 type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated' | 'potential-high-low' | 'potential-low-high';
 
-export default function ClientsPage() {
+function ClientsPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialSearch = searchParams.get('search') || '';
@@ -643,5 +643,13 @@ export default function ClientsPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function ClientsPage() {
+    return (
+        <Suspense>
+            <ClientsPageInner />
+        </Suspense>
     );
 }
