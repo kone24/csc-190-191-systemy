@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Select from 'react-select';
@@ -191,7 +190,6 @@ export default function ClientProfilePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
