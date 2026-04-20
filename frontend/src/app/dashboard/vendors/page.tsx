@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
@@ -22,7 +22,7 @@ interface Vendor {
 
 type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'date-created' | 'date-updated';
 
-export default function VendorsPage() {
+function VendorsPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const initialSearch = searchParams.get('search') || '';
@@ -265,5 +265,13 @@ export default function VendorsPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function VendorsPage() {
+    return (
+        <Suspense>
+            <VendorsPageInner />
+        </Suspense>
     );
 }
