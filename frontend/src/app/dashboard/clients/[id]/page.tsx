@@ -97,13 +97,11 @@ interface ClientData {
   status?: string;
   relationship_status?: string;
   relationship_owner?: string;
-  status?: string;
   contact_medium?: string;
   date_of_contact?: string;
   where_met?: string;
   chat_summary?: string;
   outcome?: string;
-  relationship_status?: string;
   address?: {
     street?: string;
     city?: string;
