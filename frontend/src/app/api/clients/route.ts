@@ -28,7 +28,7 @@ interface CreateClientRequest {
 export async function POST(request: Request) {
   try {
     const body = await request.json() as CreateClientRequest;
-    const { first_name, last_name, email, phone_number, business_name, address, social_links, additional_info } = body;
+    const { first_name, last_name, email, phone_number, business_name, address, socialLinks: social_links, notes: additional_info } = body;
 
     // Server-side validation (will move to backend)
 
