@@ -1313,7 +1313,7 @@ export default function GanttPage() {
                                                                             minConstraints={[colWidth - BAR_H_PAD * 2, BAR_HEIGHT]}
                                                                             maxConstraints={[maxWidth, BAR_HEIGHT]}
                                                                             resizeHandles={['e']}
-                                                                            onResizeStop={(_e, { size }) => {
+                                                                            onResizeStop={(_e: React.SyntheticEvent, { size }: { size: { width: number; height: number } }) => {
                                                                                 const newFullWidth = size.width + BAR_H_PAD * 2;
                                                                                 handleResizeStop(
                                                                                     clientIdx, projectIdx,

@@ -4,7 +4,7 @@ import { useState } from "react";
 import SearchInput from "./SearchInput";
 
 export default function SearchPage() {
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<any[]>([]);
 
   return (
     <div style={{
