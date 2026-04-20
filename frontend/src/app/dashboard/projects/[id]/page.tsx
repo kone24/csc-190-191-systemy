@@ -136,6 +136,10 @@ export default function ProjectDetailPage() {
     const [edit_task_form, set_edit_task_form] = useState({
         title: '', priority: '', status: '', due_date: '', description: '', assignees: [] as string[],
     });
+    const [task_assignee_search, set_task_assignee_search] = useState('');
+    const [task_assignee_open, set_task_assignee_open] = useState(false);
+    const [edit_task_assignee_search, set_edit_task_assignee_search] = useState('');
+    const [edit_task_assignee_open, set_edit_task_assignee_open] = useState(false);
 
     useEffect(() => {
         async function load() {
@@ -192,6 +196,8 @@ export default function ProjectDetailPage() {
     useEffect(() => {
         if (active_modal_phase !== null) {
             set_task_form({ title: '', priority: '', status: '', due_date: '', description: '', assignees: [] });
+            set_task_assignee_search('');
+            set_task_assignee_open(false);
         }
     }, [active_modal_phase]);
 
@@ -207,6 +213,8 @@ export default function ProjectDetailPage() {
                 description: t.description ?? '',
                 assignees: t.assignees ?? [],
             });
+            set_edit_task_assignee_search('');
+            set_edit_task_assignee_open(false);
         }
     }, [detail_editing, detail_task]);
 
@@ -774,19 +782,65 @@ export default function ProjectDetailPage() {
                                 <div style={{ display: 'flex', gap: '12px' }}>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Assignees</label>
-                                        <select multiple value={task_form.assignees} onChange={(e) => update_task_form('assignees', Array.from(e.target.selectedOptions, o => o.value))} style={{
-                                            padding: '10px 14px',
-                                            borderRadius: '12px',
-                                            border: '1px solid #ddd',
-                                            fontSize: 14,
-                                            fontFamily: 'Poppins',
-                                            color: '#666',
-                                            background: 'white',
-                                            cursor: 'pointer',
-                                            minHeight: '80px',
-                                        }}>
-                                            {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
-                                        </select>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            {task_form.assignees.length > 0 && (
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                    {task_form.assignees.map(id => {
+                                                        const u = users_list.find(u => u.user_id === id);
+                                                        return u ? (
+                                                            <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,89,0,0.1)', borderRadius: '20px', padding: '2px 8px 2px 10px', fontSize: 12, fontFamily: 'Poppins', color: '#FF5900' }}>
+                                                                {u.name}
+                                                                <button
+                                                                    onMouseDown={() => update_task_form('assignees', task_form.assignees.filter(a => a !== id))}
+                                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#FF5900', fontSize: 14, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ) : null;
+                                                    })}
+                                                </div>
+                                            )}
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search assignees..."
+                                                    value={task_assignee_search}
+                                                    onChange={(e) => { set_task_assignee_search(e.target.value); set_task_assignee_open(true); }}
+                                                    onFocus={() => set_task_assignee_open(true)}
+                                                    onBlur={() => setTimeout(() => set_task_assignee_open(false), 150)}
+                                                    style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                                                />
+                                                {task_assignee_open && (
+                                                    <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'white', border: '1px solid #ddd', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, maxHeight: '180px', overflowY: 'auto' }}>
+                                                        {users_list
+                                                            .filter(u => u.name.toLowerCase().includes(task_assignee_search.toLowerCase()))
+                                                            .map(u => {
+                                                                const selected = task_form.assignees.includes(u.user_id);
+                                                                return (
+                                                                    <div
+                                                                        key={u.user_id}
+                                                                        onMouseDown={() => {
+                                                                            const next = selected
+                                                                                ? task_form.assignees.filter(a => a !== u.user_id)
+                                                                                : [...task_form.assignees, u.user_id];
+                                                                            update_task_form('assignees', next);
+                                                                            set_task_assignee_search('');
+                                                                        }}
+                                                                        style={{ padding: '10px 14px', fontSize: 14, fontFamily: 'Poppins', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', background: selected ? 'rgba(255,89,0,0.08)' : 'white', color: selected ? '#FF5900' : '#333' }}
+                                                                    >
+                                                                        <span style={{ fontSize: 12, opacity: selected ? 1 : 0.25 }}>✓</span>
+                                                                        {u.name}
+                                                                    </div>
+                                                                );
+                                                            })
+                                                        }
+                                                        {users_list.filter(u => u.name.toLowerCase().includes(task_assignee_search.toLowerCase())).length === 0 && (
+                                                            <div style={{ padding: '10px 14px', fontSize: 14, fontFamily: 'Poppins', color: '#999' }}>No users found</div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Priority</label>
@@ -977,9 +1031,65 @@ export default function ProjectDetailPage() {
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Assignees</label>
-                                                <select multiple value={edit_task_form.assignees} onChange={(e) => update_edit_task_form('assignees', Array.from(e.target.selectedOptions, o => o.value))} style={{ ...select_style, minHeight: '80px' }}>
-                                                    {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
-                                                </select>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                    {edit_task_form.assignees.length > 0 && (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                                            {edit_task_form.assignees.map(id => {
+                                                                const u = users_list.find(u => u.user_id === id);
+                                                                return u ? (
+                                                                    <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,89,0,0.1)', borderRadius: '20px', padding: '2px 8px 2px 10px', fontSize: 12, fontFamily: 'Poppins', color: '#FF5900' }}>
+                                                                        {u.name}
+                                                                        <button
+                                                                            onMouseDown={() => update_edit_task_form('assignees', edit_task_form.assignees.filter(a => a !== id))}
+                                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#FF5900', fontSize: 14, lineHeight: 1, display: 'flex', alignItems: 'center' }}>
+                                                                            ×
+                                                                        </button>
+                                                                    </div>
+                                                                ) : null;
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                    <div style={{ position: 'relative' }}>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search assignees..."
+                                                            value={edit_task_assignee_search}
+                                                            onChange={(e) => { set_edit_task_assignee_search(e.target.value); set_edit_task_assignee_open(true); }}
+                                                            onFocus={() => set_edit_task_assignee_open(true)}
+                                                            onBlur={() => setTimeout(() => set_edit_task_assignee_open(false), 150)}
+                                                            style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                                                        />
+                                                        {edit_task_assignee_open && (
+                                                            <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'white', border: '1px solid #ddd', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, maxHeight: '180px', overflowY: 'auto' }}>
+                                                                {users_list
+                                                                    .filter(u => u.name.toLowerCase().includes(edit_task_assignee_search.toLowerCase()))
+                                                                    .map(u => {
+                                                                        const selected = edit_task_form.assignees.includes(u.user_id);
+                                                                        return (
+                                                                            <div
+                                                                                key={u.user_id}
+                                                                                onMouseDown={() => {
+                                                                                    const next = selected
+                                                                                        ? edit_task_form.assignees.filter(a => a !== u.user_id)
+                                                                                        : [...edit_task_form.assignees, u.user_id];
+                                                                                    update_edit_task_form('assignees', next);
+                                                                                    set_edit_task_assignee_search('');
+                                                                                }}
+                                                                                style={{ padding: '10px 14px', fontSize: 14, fontFamily: 'Poppins', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', background: selected ? 'rgba(255,89,0,0.08)' : 'white', color: selected ? '#FF5900' : '#333' }}
+                                                                            >
+                                                                                <span style={{ fontSize: 12, opacity: selected ? 1 : 0.25 }}>✓</span>
+                                                                                {u.name}
+                                                                            </div>
+                                                                        );
+                                                                    })
+                                                                }
+                                                                {users_list.filter(u => u.name.toLowerCase().includes(edit_task_assignee_search.toLowerCase())).length === 0 && (
+                                                                    <div style={{ padding: '10px 14px', fontSize: 14, fontFamily: 'Poppins', color: '#999' }}>No users found</div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <label style={label_style}>Priority</label>

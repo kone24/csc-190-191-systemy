@@ -57,6 +57,7 @@ export default function ProjectsPage() {
     const [hovered_card, set_hovered_card] = useState<string | null>(null);
     const [show_modal, set_show_modal] = useState(false);
     const [create_hover, set_create_hover] = useState(false);
+    const [ghost_hover, set_ghost_hover] = useState(false);
     const [edit_project, set_edit_project] = useState<Project | null>(null);
     const [edit_save_hover, set_edit_save_hover] = useState(false);
     const [show_delete_confirm, set_show_delete_confirm] = useState(false);
@@ -73,6 +74,10 @@ export default function ProjectsPage() {
         name: '', client_id: '', owner_id: '', service_type: '', status: '',
         start_date: '', end_date: '', budget: '', description: '',
     });
+    const [create_owner_search, set_create_owner_search] = useState('');
+    const [create_owner_open, set_create_owner_open] = useState(false);
+    const [edit_owner_search, set_edit_owner_search] = useState('');
+    const [edit_owner_open, set_edit_owner_open] = useState(false);
 
     useEffect(() => {
         const fetch_projects = async () => {
@@ -123,6 +128,8 @@ export default function ProjectsPage() {
                 budget: edit_project.budget != null ? String(edit_project.budget) : '',
                 description: edit_project.description ?? '',
             });
+            set_edit_owner_search(edit_project.owner_name ?? '');
+            set_edit_owner_open(false);
         }
     }, [edit_project]);
 
@@ -585,6 +592,51 @@ export default function ProjectsPage() {
                                 </Link>
                             );
                         })}
+
+                        {/* Ghost / Add New Project card */}
+                        <div
+                            onClick={() => { set_create_form({ name: '', client_id: '', owner_id: '', service_type: '', status: '', start_date: '', end_date: '', budget: '', description: '' }); set_show_modal(true); }}
+                            onMouseEnter={() => set_ghost_hover(true)}
+                            onMouseLeave={() => set_ghost_hover(false)}
+                            style={{
+                                height: '190px',
+                                borderRadius: '15px',
+                                border: `2px dashed ${ghost_hover ? '#FF5900' : '#d1d5db'}`,
+                                background: ghost_hover ? 'rgba(255, 89, 0, 0.03)' : 'transparent',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                cursor: 'pointer',
+                                transition: 'border-color 200ms ease, background 200ms ease',
+                            }}
+                        >
+                            <div style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: '50%',
+                                border: `2px dashed ${ghost_hover ? '#FF5900' : '#d1d5db'}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'border-color 200ms ease',
+                            }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={ghost_hover ? '#FF5900' : '#9ca3af'} strokeWidth="2.5" strokeLinecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                            </div>
+                            <span style={{
+                                fontSize: 14,
+                                fontFamily: 'Poppins',
+                                fontWeight: '500',
+                                color: ghost_hover ? '#FF5900' : '#9ca3af',
+                                transition: 'color 200ms ease',
+                            }}>
+                                Add New Project
+                            </span>
+                        </div>
                     </div>
                 )}
 
@@ -694,19 +746,72 @@ export default function ProjectsPage() {
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <select value={create_form.owner_id} onChange={(e) => update_create('owner_id', e.target.value)} style={{
-                                        padding: '10px 14px',
-                                        borderRadius: '12px',
-                                        border: '1px solid #ddd',
-                                        fontSize: 14,
-                                        fontFamily: 'Poppins',
-                                        color: '#666',
-                                        background: 'white',
-                                        cursor: 'pointer',
-                                    }}>
-                                        <option value="">Select owner</option>
-                                        {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
-                                    </select>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="Search owner..."
+                                            value={create_owner_search}
+                                            onChange={(e) => {
+                                                set_create_owner_search(e.target.value);
+                                                set_create_owner_open(true);
+                                                if (!e.target.value) update_create('owner_id', '');
+                                            }}
+                                            onFocus={() => set_create_owner_open(true)}
+                                            onBlur={() => setTimeout(() => set_create_owner_open(false), 150)}
+                                            style={{
+                                                padding: '10px 14px',
+                                                borderRadius: '12px',
+                                                border: '1px solid #ddd',
+                                                fontSize: 14,
+                                                fontFamily: 'Poppins',
+                                                outline: 'none',
+                                                width: '100%',
+                                                boxSizing: 'border-box',
+                                            }}
+                                        />
+                                        {create_owner_open && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: 'calc(100% + 4px)',
+                                                left: 0,
+                                                right: 0,
+                                                background: 'white',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                zIndex: 20,
+                                                maxHeight: '180px',
+                                                overflowY: 'auto',
+                                            }}>
+                                                {users_list
+                                                    .filter(u => u.name.toLowerCase().includes(create_owner_search.toLowerCase()))
+                                                    .map(u => (
+                                                        <div
+                                                            key={u.user_id}
+                                                            onMouseDown={() => {
+                                                                update_create('owner_id', u.user_id);
+                                                                set_create_owner_search(u.name);
+                                                                set_create_owner_open(false);
+                                                            }}
+                                                            style={{
+                                                                padding: '10px 14px',
+                                                                fontSize: 14,
+                                                                fontFamily: 'Poppins',
+                                                                cursor: 'pointer',
+                                                                background: create_form.owner_id === u.user_id ? 'rgba(255,89,0,0.08)' : 'white',
+                                                                color: create_form.owner_id === u.user_id ? '#FF5900' : '#333',
+                                                            }}
+                                                        >
+                                                            {u.name}
+                                                        </div>
+                                                    ))
+                                                }
+                                                {users_list.filter(u => u.name.toLowerCase().includes(create_owner_search.toLowerCase())).length === 0 && (
+                                                    <div style={{ padding: '10px 14px', fontSize: 14, fontFamily: 'Poppins', color: '#999' }}>No users found</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -904,10 +1009,72 @@ export default function ProjectsPage() {
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <label style={{ fontSize: 12, color: '#888', fontFamily: 'Poppins', fontWeight: '500' }}>Owner</label>
-                                    <select value={edit_form.owner_id} onChange={(e) => update_edit('owner_id', e.target.value)} style={{ padding: '10px 14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: 14, fontFamily: 'Poppins', color: '#666', background: 'white', cursor: 'pointer' }}>
-                                        <option value="">Select owner</option>
-                                        {users_list.map(u => <option key={u.user_id} value={u.user_id}>{u.name}</option>)}
-                                    </select>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="Search owner..."
+                                            value={edit_owner_search}
+                                            onChange={(e) => {
+                                                set_edit_owner_search(e.target.value);
+                                                set_edit_owner_open(true);
+                                                if (!e.target.value) update_edit('owner_id', '');
+                                            }}
+                                            onFocus={() => set_edit_owner_open(true)}
+                                            onBlur={() => setTimeout(() => set_edit_owner_open(false), 150)}
+                                            style={{
+                                                padding: '10px 14px',
+                                                borderRadius: '12px',
+                                                border: '1px solid #ddd',
+                                                fontSize: 14,
+                                                fontFamily: 'Poppins',
+                                                outline: 'none',
+                                                width: '100%',
+                                                boxSizing: 'border-box',
+                                            }}
+                                        />
+                                        {edit_owner_open && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: 'calc(100% + 4px)',
+                                                left: 0,
+                                                right: 0,
+                                                background: 'white',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                zIndex: 20,
+                                                maxHeight: '180px',
+                                                overflowY: 'auto',
+                                            }}>
+                                                {users_list
+                                                    .filter(u => u.name.toLowerCase().includes(edit_owner_search.toLowerCase()))
+                                                    .map(u => (
+                                                        <div
+                                                            key={u.user_id}
+                                                            onMouseDown={() => {
+                                                                update_edit('owner_id', u.user_id);
+                                                                set_edit_owner_search(u.name);
+                                                                set_edit_owner_open(false);
+                                                            }}
+                                                            style={{
+                                                                padding: '10px 14px',
+                                                                fontSize: 14,
+                                                                fontFamily: 'Poppins',
+                                                                cursor: 'pointer',
+                                                                background: edit_form.owner_id === u.user_id ? 'rgba(255,89,0,0.08)' : 'white',
+                                                                color: edit_form.owner_id === u.user_id ? '#FF5900' : '#333',
+                                                            }}
+                                                        >
+                                                            {u.name}
+                                                        </div>
+                                                    ))
+                                                }
+                                                {users_list.filter(u => u.name.toLowerCase().includes(edit_owner_search.toLowerCase())).length === 0 && (
+                                                    <div style={{ padding: '10px 14px', fontSize: 14, fontFamily: 'Poppins', color: '#999' }}>No users found</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 

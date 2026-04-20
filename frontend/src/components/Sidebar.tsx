@@ -30,15 +30,15 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
             display: 'flex',
             cursor: 'pointer'
         }}>
-            <div style={{ width: 20, height: 20, position: 'relative' }}>
-                <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src={icon} alt={label} />
+            <div style={{ width: 24, height: 24, position: 'relative' }}>
+                <img style={{ width: 24, height: 24, left: 0, top: 0, position: 'absolute' }} src={icon} alt={label} />
             </div>
             <div style={{
                 opacity: isActive ? 1 : 0.75,
                 color: 'black',
-                fontSize: 18,
+                fontSize: 20,
                 fontFamily: 'Poppins',
-                fontWeight: '500',
+                fontWeight: '700',
                 wordWrap: 'break-word'
             }}>
                 {label}
@@ -70,6 +70,8 @@ export default function Sidebar({ activePage }: SidebarProps) {
         }}>
             <div style={{
                 padding: 10,
+                paddingBottom: 20,
+                boxSizing: 'border-box',
                 flexDirection: 'column',
                 justifyContent: 'flex-start',
                 alignItems: 'flex-start',
@@ -101,9 +103,9 @@ export default function Sidebar({ activePage }: SidebarProps) {
                     <div style={{
                         opacity: 0.75,
                         color: 'black',
-                        fontSize: 18,
+                        fontSize: 20,
                         fontFamily: 'Poppins',
-                        fontWeight: '500',
+                        fontWeight: '700',
                         wordWrap: 'break-word'
                     }}>
                         Headword!
@@ -134,7 +136,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
                 <NavItem
                     href="/dashboard/gantt"
-                    icon="/images/icons/projects.png"
+                    icon="/images/icons/gantt-chart.png"
                     label="Gantt Chart"
                     isActive={activePage === 'gantt'}
                 />
@@ -148,7 +150,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
                 <NavItem
                     href="/dashboard/vendors"
-                    icon="/images/icons/vendors.png"
+                    icon="/images/icons/vendor.png"
                     label="Vendors"
                     isActive={activePage === 'vendors'}
                 />
@@ -162,7 +164,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
                 <NavItem
                     href="/dashboard/recommendations"
-                    icon="/images/icons/analytics.png"
+                    icon="/images/icons/recommendations.png"
                     label="Recommendations"
                     isActive={activePage === 'recommendations'}
                 />
@@ -171,7 +173,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 {isAdmin && (
                     <NavItem
                         href="/dashboard/management"
-                        icon="/images/icons/settings.png"
+                        icon="/images/icons/management.png"
                         label="Management"
                         isActive={activePage === 'management'}
                     />
@@ -239,9 +241,9 @@ export default function Sidebar({ activePage }: SidebarProps) {
                             <div style={{
                                 opacity: activePage === 'account' ? 1 : 0.75,
                                 color: 'black',
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontFamily: 'Poppins',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 wordWrap: 'break-word'
                             }}>
                                 Account

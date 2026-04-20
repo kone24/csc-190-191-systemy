@@ -270,7 +270,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -300,7 +301,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -330,7 +332,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -360,7 +363,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -390,7 +394,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -419,7 +424,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             >
                                 <option value="Administrator">Administrator</option>
