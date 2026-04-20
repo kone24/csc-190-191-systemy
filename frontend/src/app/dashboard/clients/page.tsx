@@ -229,6 +229,7 @@ function ClientsPageInner() {
             <div style={{
                 flex: 1,
                 minWidth: 0,
+                marginLeft: 320,
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'rgba(217, 217, 217, 0.15)',
@@ -237,7 +238,7 @@ function ClientsPageInner() {
                 overflowX: 'hidden'
             }}>
                 {/* Top Bar */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {/* Search Container */}
                     <SearchBar
                         placeholder="Type a name, email, company, note, or tag..."

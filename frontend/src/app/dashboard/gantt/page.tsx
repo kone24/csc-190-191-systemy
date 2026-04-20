@@ -927,12 +927,14 @@ export default function GanttPage() {
 
                 <div style={{
                     flex: 1,
+                    minWidth: 0,
+                    marginLeft: 320,
                     display: 'flex',
                     flexDirection: 'column',
                     background: 'rgba(217, 217, 217, 0.15)',
                     padding: '20px 20px 20px 30px',
                     gap: 20,
-                    overflow: 'hidden',
+                    overflowX: 'hidden',
                 }}>
                     {/* Error toast */}
                     {error && (

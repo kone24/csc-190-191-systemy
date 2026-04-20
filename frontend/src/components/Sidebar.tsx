@@ -58,11 +58,15 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
     return (
         <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
             width: 320,
-            minHeight: '100vh',
+            height: '100vh',
+            overflowY: 'hidden',
+            zIndex: 100,
             background: 'linear-gradient(180deg, rgba(255, 172, 128, 0) 1%, rgba(255, 172, 128, 0.30) 100%), white',
             boxShadow: '0px 4px 5px black',
-            flexShrink: 0
         }}>
             <div style={{
                 padding: 10,

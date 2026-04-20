@@ -58,14 +58,17 @@ export default function AccountPage() {
             {/* Main Content Area */}
             <div style={{
                 flex: 1,
+                minWidth: 0,
+                marginLeft: 320,
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'rgba(217, 217, 217, 0.15)',
                 padding: '20px 20px 20px 30px',
-                gap: '20px'
+                gap: '20px',
+                overflowX: 'hidden',
             }}>
                 {/* Top Bar */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {/* Page Title */}
                     <div style={{
                         color: 'black',
