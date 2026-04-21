@@ -36,6 +36,32 @@ interface GanttEntryPreview {
   end_date: string;
 }
 
+interface ActivityEvent {
+  type: 'task' | 'project' | 'invoice';
+  description: string;
+  timestamp: string | null;
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return '—';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+const ACTIVITY_ICON: Record<string, string> = {
+  task: '📋',
+  project: '📁',
+  invoice: '🧾',
+};
+
 export default function DashboardPage() {
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
@@ -52,6 +78,7 @@ export default function DashboardPage() {
   const [overdueInvoicesCount, setOverdueInvoicesCount] = useState<number | null>(null);
   const [tasksDueCount, setTasksDueCount] = useState<number | null>(null);
   const [tasksOverdueCount, setTasksOverdueCount] = useState<number | null>(null);
+  const [activityFeed, setActivityFeed] = useState<ActivityEvent[] | null>(null);
 
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
@@ -111,6 +138,11 @@ export default function DashboardPage() {
       .then(r => r.json())
       .then(data => setRecommendations(Array.isArray(data.recommendations) ? data.recommendations : []))
       .catch(() => setRecommendations([]));
+
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/activity/feed`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setActivityFeed(Array.isArray(data) ? data : []))
+      .catch(() => setActivityFeed([]));
   }, []);
 
   const tileStyle = (index: number, borderColor: string, shadowColor: string): React.CSSProperties => ({
@@ -443,11 +475,32 @@ export default function DashboardPage() {
             </>
           ) : (
             <>
-              {/* Coming Soon placeholder */}
+              {/* Recent Activity feed */}
               <div style={tileStyle(1, kpiColors.comingSoon.border, kpiColors.comingSoon.shadow)} onMouseEnter={() => setHoveredTile(1)} onMouseLeave={() => setHoveredTile(null)}>
-                <div style={{ ...tileTopZone, background: 'rgba(137, 121, 255, 0.4)', borderBottom: '1px solid #8979FF' }}><span style={{ ...tileLabelStyle, color: '#3730a3' }}>Coming Soon</span></div>
-                <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.25)', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>—</div>
+                <div style={{ ...tileTopZone, background: 'rgba(137, 121, 255, 0.4)', borderBottom: '1px solid #8979FF' }}><span style={{ ...tileLabelStyle, color: '#3730a3' }}>Recent Activity</span></div>
+                <div style={{ ...tileBodyZone, padding: '10px 16px', alignItems: 'stretch', justifyContent: 'center' }}>
+                  {activityFeed === null ? (
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+                      {[0, 1, 2].map(i => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#8979FF', opacity: 0.4 }} />)}
+                    </div>
+                  ) : activityFeed.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.3)', fontSize: 14, fontFamily: 'Poppins' }}>No recent activity</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                      {activityFeed.slice(0, 3).map((ev, i) => {
+                        const accentColor = ev.type === 'task' ? '#f97316' : ev.type === 'project' ? '#8979FF' : '#eab308';
+                        return (
+                          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />
+                              <div style={{ fontSize: 15, fontFamily: 'Poppins', fontWeight: 600, color: '#1e1e1e', textAlign: 'center' }}>{ev.description}</div>
+                            </div>
+                            <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', fontFamily: 'Poppins' }}>{timeAgo(ev.timestamp)}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 

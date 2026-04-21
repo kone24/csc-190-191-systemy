@@ -19,6 +19,7 @@ import { MailModule } from './mail/mail.module';
 import { GanttEntryModule } from './gantt-entry/gantt-entry.module';
 import { InvoicesModule } from './invoices/invoices.module';
 import { RecommendationsModule } from './recommendations/recommendations.module'
+import { ActivityModule } from './activity/activity.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { RecommendationsModule } from './recommendations/recommendations.module'
     GanttEntryModule,
     InvoicesModule,
     RecommendationsModule,
+    ActivityModule,
   ],
   controllers: [AppController, TestController],
   providers: [AppService],
