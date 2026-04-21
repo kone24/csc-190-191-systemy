@@ -549,6 +549,75 @@ export class ProjectsService {
         }
     }
 
+    async findDashboardTasks(assignedTo?: string): Promise<{
+        task_id: string; title: string; priority: number | null;
+        status: string | null; due_date: string | null;
+        assigned_to: string | null; assignee_name: string | null;
+        project_id: string; project_name: string | null;
+    }[]> {
+        try {
+            let query = this.supabase
+                .from('task')
+                .select('task_id, project_id, title, priority, status, due_date, assigned_to')
+                .neq('status', 'done')
+                .order('priority', { ascending: false, nullsFirst: false })
+                .order('due_date', { ascending: true, nullsFirst: false })
+                .limit(6);
+
+            if (assignedTo) {
+                query = query.eq('assigned_to', assignedTo);
+            }
+
+            const { data: tasks, error: tasksError } = await query;
+
+            if (tasksError) {
+                this.logger.error('Error fetching dashboard tasks:', tasksError);
+                throw new Error(`Failed to fetch tasks: ${tasksError.message}`);
+            }
+
+            if (!tasks || tasks.length === 0) {
+                return [];
+            }
+
+            const projectIds = [...new Set(tasks.map(t => t.project_id).filter(Boolean))];
+            const assigneeIds = [...new Set(tasks.map(t => t.assigned_to).filter(Boolean))];
+
+            const [projectsResult, usersResult] = await Promise.all([
+                projectIds.length > 0
+                    ? this.supabase.from('project').select('project_id, name').in('project_id', projectIds)
+                    : { data: [], error: null },
+                assigneeIds.length > 0
+                    ? this.supabase.from('users').select('user_id, name').in('user_id', assigneeIds)
+                    : { data: [], error: null },
+            ]);
+
+            const projectMap = new Map<string, string>();
+            for (const p of projectsResult.data || []) {
+                projectMap.set(p.project_id, p.name);
+            }
+
+            const userMap = new Map<string, string>();
+            for (const u of usersResult.data || []) {
+                userMap.set(u.user_id, u.name);
+            }
+
+            return tasks.map(t => ({
+                task_id: t.task_id,
+                title: t.title,
+                priority: t.priority,
+                status: t.status,
+                due_date: t.due_date,
+                assigned_to: t.assigned_to,
+                assignee_name: t.assigned_to ? (userMap.get(t.assigned_to) ?? null) : null,
+                project_id: t.project_id,
+                project_name: projectMap.get(t.project_id) ?? null,
+            }));
+        } catch (error) {
+            this.logger.error('Error in findDashboardTasks method:', error);
+            throw error;
+        }
+    }
+
     async removeTask(taskId: string): Promise<void> {
         try {
             const { error: deleteError } = await this.supabase

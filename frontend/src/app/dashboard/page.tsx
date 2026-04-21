@@ -42,6 +42,13 @@ interface ActivityEvent {
   timestamp: string | null;
 }
 
+interface DashboardTask {
+  task_id: string; title: string; priority: number | null;
+  status: string | null; due_date: string | null;
+  assigned_to: string | null; assignee_name: string | null;
+  project_id: string; project_name: string | null;
+}
+
 function timeAgo(iso: string | null): string {
   if (!iso) return '—';
   const diff = Date.now() - new Date(iso).getTime();
@@ -67,7 +74,6 @@ export default function DashboardPage() {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredGantt, setHoveredGantt] = useState(false);
   const [recommendations, setRecommendations] = useState<any[] | null>(null);
-  const [sortByDate, setSortByDate] = useState(false);
   const { user } = useUser();
   const isAdminOrManager = user?.role === 'Administrator' || user?.role === 'Manager';
   const [taskView, setTaskView] = useState<'my' | 'company'>('my');
@@ -79,10 +85,23 @@ export default function DashboardPage() {
   const [tasksDueCount, setTasksDueCount] = useState<number | null>(null);
   const [tasksOverdueCount, setTasksOverdueCount] = useState<number | null>(null);
   const [activityFeed, setActivityFeed] = useState<ActivityEvent[] | null>(null);
+  const [dashboardTasks, setDashboardTasks] = useState<DashboardTask[] | null>(null);
 
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
   }, [isAdminOrManager]);
+
+  useEffect(() => {
+    if (!user) return;
+    const url = taskView === 'my'
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks?assigned_to=${user.id}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks`;
+    setDashboardTasks(null);
+    fetch(url, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setDashboardTasks(Array.isArray(data.items) ? data.items : []))
+      .catch(() => setDashboardTasks([]));
+  }, [user, taskView]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' })
@@ -209,6 +228,17 @@ export default function DashboardPage() {
     Low: { bg: '#00F5A0', text: 'black' },
   };
 
+  const priorityLabel = (p: number | null): string => {
+    if (p === null) return 'Low';
+    if (p >= 3) return 'High';
+    if (p === 2) return 'Med';
+    return 'Low';
+  };
+  const formatTaskDate = (iso: string | null): string => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  };
+
   const projectRows = [
     { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.', assigneeInitials: 'JK', assigneeBg: '#f97316', due: 'Dec 31', status: 'open' },
     { project: 'Q1 Campaign', task: 'Research', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Jan 10', status: 'on_hold' },
@@ -218,41 +248,6 @@ export default function DashboardPage() {
     { project: 'App Launch', task: 'QA Testing', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Mar 15', status: 'completed' },
   ];
   const [liveProjectRows, setLiveProjectRows] = useState<typeof projectRows | null>(null);
-
-  const adminMyTasks = [
-    { name: 'Send Campaign debrief', priority: 'High', due: 'Oct 3', sortKey: 3 },
-    { name: 'Review Design Draft', priority: 'Med', due: 'Oct 4', sortKey: 4 },
-    { name: 'Approve Invoice', priority: 'Low', due: 'Oct 5', sortKey: 5 },
-    { name: 'Client Check-in', priority: 'High', due: 'Oct 6', sortKey: 6 },
-    { name: 'Update Content Brief', priority: 'Med', due: 'Oct 7', sortKey: 7 },
-    { name: 'Team Sync Prep', priority: 'Low', due: 'Oct 8', sortKey: 8 },
-    { name: 'Finalize Q2 Budget', priority: 'High', due: 'Oct 9', sortKey: 9 },
-  ];
-
-  const userMyTasks = [
-    { name: 'Send Campaign debrief', project: 'Website Rebrand', priority: 'High', due: 'Oct 3', sortKey: 3 },
-    { name: 'Review Design Draft', project: 'Q1 Campaign', priority: 'Med', due: 'Oct 4', sortKey: 4 },
-    { name: 'Approve Invoice', project: 'App Launch', priority: 'Low', due: 'Oct 5', sortKey: 5 },
-    { name: 'Client Check-in', project: 'Brand Refresh', priority: 'High', due: 'Oct 6', sortKey: 6 },
-    { name: 'Update Content Brief', project: 'Q1 Campaign', priority: 'Med', due: 'Oct 7', sortKey: 7 },
-    { name: 'Prepare Slide Deck', project: 'Website Rebrand', priority: 'High', due: 'Oct 8', sortKey: 8 },
-  ];
-
-  const companyTasks = [
-    { name: 'Send Campaign debrief', project: 'Website Rebrand', assignee: 'Jez K.', priority: 'High', due: 'Oct 3', sortKey: 3 },
-    { name: 'Review Design Draft', project: 'Q1 Campaign', assignee: 'Rachel S.', priority: 'Med', due: 'Oct 4', sortKey: 4 },
-    { name: 'Brand Refresh', project: 'Brand Refresh', assignee: 'Matthew T.', priority: 'Low', due: 'Oct 5', sortKey: 5 },
-    { name: 'Client Onboarding', project: 'App Launch', assignee: 'Ashley S.', priority: 'High', due: 'Oct 6', sortKey: 6 },
-    { name: 'Write Case Study', project: 'Q1 Campaign', assignee: 'Xavier M.', priority: 'Med', due: 'Oct 7', sortKey: 7 },
-    { name: 'Team Sync Prep', project: 'Case Study', assignee: 'Jez K.', priority: 'Low', due: 'Oct 8', sortKey: 8 },
-    { name: 'Finalize Q2 Budget', project: 'App Launch', assignee: 'Ashley S.', priority: 'High', due: 'Oct 9', sortKey: 9 },
-  ];
-
-  const myTasks = isAdminOrManager ? adminMyTasks : userMyTasks;
-  const currentTasks = taskView === 'my' ? myTasks : companyTasks;
-  const displayTasks = sortByDate
-    ? [...currentTasks].sort((a, b) => a.sortKey - b.sortKey)
-    : currentTasks;
 
   const ganttWeekHeaders = useMemo(() => {
     const today = new Date();
@@ -389,7 +384,7 @@ export default function DashboardPage() {
           const db = b.start_date ? new Date(b.start_date).getTime() : 0;
           return db - da;
         });
-        const rows = sorted.slice(0, 4).map((p, i) => ({
+        const rows = sorted.slice(0, 5).map((p, i) => ({
           project: p.name ?? '—',
           task: '',
           assignee: p.owner_name ?? (p.owner_id ? String(p.owner_id) : '—'),
@@ -527,7 +522,7 @@ export default function DashboardPage() {
                 borderRadius: 20,
                 padding: '20px',
               }}>
-                {/* Header: toggle + sort */}
+                {/* Header: toggle */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => setTaskView('my')} style={{
@@ -543,21 +538,24 @@ export default function DashboardPage() {
                       color: taskView === 'company' ? 'white' : '#f97316',
                     }}>Company Wide</button>
                   </div>
-                  <button onClick={() => setSortByDate(prev => !prev)} style={{
-                    padding: '5px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
-                    border: '1.5px solid #d1d5db', background: sortByDate ? '#f3f4f6' : 'transparent', color: '#374151',
-                  }}>Sort by Date</button>
                 </div>
                 {/* Task rows */}
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {displayTasks.slice(0, 6).map((task, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
-                      <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.name}</div>
-                      {'assignee' in task && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).assignee}</div>}
-                      <span style={{ ...badgeStyle(priorityColors[task.priority].bg, priorityColors[task.priority].text), marginRight: 12 }}>{task.priority}</span>
-                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{task.due}</div>
-                    </div>
-                  ))}
+                  {dashboardTasks === null ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+                  ) : dashboardTasks.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>No upcoming tasks</div>
+                  ) : dashboardTasks.map((task, i) => {
+                    const pl = priorityLabel(task.priority);
+                    return (
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
+                        <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.title}</div>
+                        {taskView === 'company' && task.assignee_name && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.assignee_name}</div>}
+                        <span style={{ ...badgeStyle(priorityColors[pl].bg, priorityColors[pl].text), marginRight: 12 }}>{pl}</span>
+                        <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{formatTaskDate(task.due_date)}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -836,7 +834,7 @@ export default function DashboardPage() {
               borderRadius: 20,
               padding: '20px'
             }}>
-              {/* Header: toggle + sort */}
+              {/* Header: toggle */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => setTaskView('my')} style={{
@@ -852,22 +850,25 @@ export default function DashboardPage() {
                     color: taskView === 'company' ? 'white' : '#f97316',
                   }}>Company Wide</button>
                 </div>
-                <button onClick={() => setSortByDate(prev => !prev)} style={{
-                  padding: '5px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
-                  border: '1.5px solid #d1d5db', background: sortByDate ? '#f3f4f6' : 'transparent', color: '#374151',
-                }}>Sort by Date</button>
               </div>
               {/* Task rows */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {displayTasks.map((task, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
-                    <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.name}</div>
-                    {'project' in task && <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).project}</div>}
-                    {'assignee' in task && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).assignee}</div>}
-                    <span style={{ ...badgeStyle(priorityColors[task.priority].bg, priorityColors[task.priority].text), marginRight: 12 }}>{task.priority}</span>
-                    <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{task.due}</div>
-                  </div>
-                ))}
+                {dashboardTasks === null ? (
+                  <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+                ) : dashboardTasks.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>No upcoming tasks</div>
+                ) : dashboardTasks.map((task, i) => {
+                  const pl = priorityLabel(task.priority);
+                  return (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
+                      <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.title}</div>
+                      {task.project_name && <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.project_name}</div>}
+                      {taskView === 'company' && task.assignee_name && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.assignee_name}</div>}
+                      <span style={{ ...badgeStyle(priorityColors[pl].bg, priorityColors[pl].text), marginRight: 12 }}>{pl}</span>
+                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{formatTaskDate(task.due_date)}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
