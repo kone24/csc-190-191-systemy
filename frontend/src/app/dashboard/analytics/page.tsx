@@ -142,9 +142,9 @@ export default function AnalyticsPage() {
             <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
           </div>
           {/* Skeleton cards */}
-          <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(auto-fill, minmax(366px, 1fr))', justifyItems: 'center' }}>
+          <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(3, 1fr)' }}>
             {[1, 2, 3].map((i) => (
-              <div key={i} style={{ minWidth: 366, height: 180, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <div key={i} style={{ height: 160, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
             ))}
           </div>
           {/* Skeleton charts */}
@@ -228,58 +228,59 @@ export default function AnalyticsPage() {
         </div>
 
         {/* KPI Cards */}
-        <div style={{ display: 'grid', gap: '28px', marginBottom: '30px', width: '100%', gridTemplateColumns: 'repeat(auto-fill, minmax(366px, 1fr))', justifyItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '28px' }}>
           {/* Total Revenue Card */}
-          <div style={{ minWidth: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
-            <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>$</div>
-            </div>
-            <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 160 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>Total Revenue </span>
-                <span style={{ color: changeColor(summary?.revenueChange || 0), fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>
-                  {changePrefix(summary?.revenueChange || 0)}{summary?.revenueChange || 0}%
+                <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>Total Revenue</div>
+                <span style={{ color: changeColor(summary?.revenueChange || 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
+                  {changePrefix(summary?.revenueChange || 0)}{summary?.revenueChange || 0}% vs last period
                 </span>
               </div>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600' }}>$</span>
+              </div>
             </div>
-            <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>{formatCurrency(summary?.totalRevenue || 0)}</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.invoiceCount || 0} invoices</div>
+            <div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{formatCurrency(summary?.totalRevenue || 0)}</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.invoiceCount || 0} invoices</div>
             </div>
           </div>
 
           {/* New Clients Card */}
-          <div style={{ minWidth: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
-            <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>👤</div>
-            </div>
-            <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 160 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>New Clients </span>
-                <span style={{ color: changeColor(summary?.clientChange || 0), fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>
-                  {changePrefix(summary?.clientChange || 0)}{summary?.clientChange || 0}%
+                <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>New Clients</div>
+                <span style={{ color: changeColor(summary?.clientChange || 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
+                  {changePrefix(summary?.clientChange || 0)}{summary?.clientChange || 0}% vs last period
                 </span>
               </div>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 18 }}>👤</span>
+              </div>
             </div>
-            <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.newClients || 0}</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.totalClients || 0} total clients</div>
+            <div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.newClients || 0}</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.totalClients || 0} total clients</div>
             </div>
           </div>
 
           {/* Conversion Rate Card */}
-          <div style={{ width: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
-            <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>%</div>
-            </div>
-            <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 160 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>Conversion Rate </span>
+                <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>Conversion Rate</div>
+                <span style={{ color: 'rgba(0, 0, 0, 0.35)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>paid / total invoices</span>
+              </div>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600' }}>%</span>
               </div>
             </div>
-            <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.conversionRate || 0}%</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>paid / total invoices</div>
+            <div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.conversionRate || 0}%</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>of invoices fulfilled</div>
             </div>
           </div>
         </div>
