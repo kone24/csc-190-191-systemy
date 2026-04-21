@@ -549,6 +549,32 @@ export class ProjectsService {
         }
     }
 
+    async findTaskStats(assignedTo: string): Promise<{ total: number; high: number }> {
+        try {
+            const [totalResult, highResult] = await Promise.all([
+                this.supabase
+                    .from('task')
+                    .select('*', { count: 'exact', head: true })
+                    .neq('status', 'done')
+                    .eq('assigned_to', assignedTo),
+                this.supabase
+                    .from('task')
+                    .select('*', { count: 'exact', head: true })
+                    .neq('status', 'done')
+                    .eq('assigned_to', assignedTo)
+                    .eq('priority', 1),
+            ]);
+
+            return {
+                total: totalResult.count ?? 0,
+                high: highResult.count ?? 0,
+            };
+        } catch (error) {
+            this.logger.error('Error in findTaskStats method:', error);
+            throw error;
+        }
+    }
+
     async findDashboardTasks(assignedTo?: string): Promise<{
         task_id: string; title: string; priority: number | null;
         status: string | null; due_date: string | null;
@@ -560,7 +586,7 @@ export class ProjectsService {
                 .from('task')
                 .select('task_id, project_id, title, priority, status, due_date, assigned_to')
                 .neq('status', 'done')
-                .order('priority', { ascending: false, nullsFirst: false })
+                .order('priority', { ascending: true, nullsFirst: false })
                 .order('due_date', { ascending: true, nullsFirst: false })
                 .limit(6);
 

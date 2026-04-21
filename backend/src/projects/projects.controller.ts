@@ -33,6 +33,12 @@ export class ProjectsController {
         return { ok: true };
     }
 
+    @Get('tasks/stats')
+    async taskStats(@Query('assigned_to') assignedTo: string) {
+        const stats = await this.projectsService.findTaskStats(assignedTo);
+        return { ok: true, ...stats };
+    }
+
     @Get('tasks')
     async listTasks(@Query('assigned_to') assignedTo?: string) {
         const items = await this.projectsService.findDashboardTasks(assignedTo);

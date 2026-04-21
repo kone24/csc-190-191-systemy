@@ -86,10 +86,20 @@ export default function DashboardPage() {
   const [tasksOverdueCount, setTasksOverdueCount] = useState<number | null>(null);
   const [activityFeed, setActivityFeed] = useState<ActivityEvent[] | null>(null);
   const [dashboardTasks, setDashboardTasks] = useState<DashboardTask[] | null>(null);
+  const [myTasksTotal, setMyTasksTotal] = useState<number | null>(null);
+  const [myTasksHigh, setMyTasksHigh] = useState<number | null>(null);
 
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
   }, [isAdminOrManager]);
+
+  useEffect(() => {
+    if (!user || isAdminOrManager) return;
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks/stats?assigned_to=${user.id}`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => { setMyTasksTotal(data.total ?? 0); setMyTasksHigh(data.high ?? 0); })
+      .catch(() => { setMyTasksTotal(0); setMyTasksHigh(0); });
+  }, [user, isAdminOrManager]);
 
   useEffect(() => {
     if (!user) return;
@@ -222,16 +232,17 @@ export default function DashboardPage() {
     color: text,
   });
 
+  // Priority: 1 = High, 2 = Med, 3 = Low (matches project task editor)
   const priorityColors: Record<string, { bg: string; text: string }> = {
-    High: { bg: '#FFAC80', text: 'black' },
-    Med: { bg: 'rgba(255, 246, 66, 0.32)', text: 'black' },
-    Low: { bg: '#00F5A0', text: 'black' },
+    High: { bg: '#FF0000', text: 'white' },
+    Med:  { bg: '#FFF631', text: 'black' },
+    Low:  { bg: '#28CC95', text: 'white' },
   };
 
   const priorityLabel = (p: number | null): string => {
-    if (p === null) return 'Low';
-    if (p >= 3) return 'High';
+    if (p === 1) return 'High';
     if (p === 2) return 'Med';
+    if (p === 3) return 'Low';
     return 'Low';
   };
   const formatTaskDate = (iso: string | null): string => {
@@ -503,8 +514,8 @@ export default function DashboardPage() {
               <div style={tileStyle(2, kpiColors.tasksDue.border, kpiColors.tasksDue.shadow)} onMouseEnter={() => setHoveredTile(2)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: '#FF928A', borderBottom: '1px solid #ef4444' }}><span style={{ ...tileLabelStyle, color: '#7f1d1d' }}>My Tasks Due</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{tasksDueCount === null ? '...' : tasksDueCount}</div>
-                  {(tasksOverdueCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{tasksOverdueCount} overdue</div>}
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{myTasksTotal === null ? '...' : myTasksTotal}</div>
+                  {(myTasksHigh ?? 0) > 0 && <div style={badgeStyle('#FF0000', 'white')}>{myTasksHigh} High</div>}
                 </div>
               </div>
             </>
