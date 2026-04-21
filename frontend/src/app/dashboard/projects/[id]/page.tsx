@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProvided, type DroppableStateSnapshot } from '@hello-pangea/dnd';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import Avatar from '@/components/Avatar';
 
 
 // Types
@@ -18,8 +19,10 @@ interface Task {
     due_date: string | null;
     assigned_to: string | null;
     assignee_name: string | null;
+    assignee_avatar: string | null;
     assignees: string[];
     assignee_names: string[];
+    assignee_avatars: (string | null)[];
 }
 
 interface Phase {
@@ -562,6 +565,7 @@ export default function ProjectDetailPage() {
                                                             const sstyle = get_status(task.status);
                                                             const is_done = task.status === 'done';
                                                             const display_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
+                                                            const display_avatars = task.assignee_avatars?.length > 0 ? task.assignee_avatars : (task.assignee_avatar ? [task.assignee_avatar] : []);
                                                             return (
                                                                 <Draggable key={task.task_id} draggableId={task.task_id} index={original_index}>
                                                                     {(drag_provided, drag_snapshot) => (
@@ -619,27 +623,14 @@ export default function ProjectDetailPage() {
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                                                                     {display_names.map((name, ai) => (
-                                                                                        <div key={ai} style={{
-                                                                                            width: 26,
-                                                                                            height: 26,
-                                                                                            borderRadius: '50%',
-                                                                                            background: '#999',
-                                                                                            display: 'flex',
-                                                                                            alignItems: 'center',
-                                                                                            justifyContent: 'center',
-                                                                                            color: 'white',
-                                                                                            fontSize: 11,
-                                                                                            fontWeight: '600',
-                                                                                            fontFamily: 'Poppins',
-                                                                                            flexShrink: 0,
-                                                                                            marginLeft: ai > 0 ? '-8px' : '0px',
-                                                                                            border: '2px solid white',
-                                                                                            boxSizing: 'content-box',
-                                                                                            zIndex: display_names.length - ai,
-                                                                                            position: 'relative',
-                                                                                        }}>
-                                                                                            {get_initials(name)}
-                                                                                        </div>
+                                                                                        <Avatar
+                                                                                            key={ai}
+                                                                                            name={name}
+                                                                                            avatarUrl={display_avatars[ai]}
+                                                                                            size={26}
+                                                                                            border="2px solid white"
+                                                                                            style={{ marginLeft: ai > 0 ? -8 : 0, zIndex: display_names.length - ai, position: 'relative' }}
+                                                                                        />
                                                                                     ))}
                                                                                 </div>
                                                                                 <span style={{
@@ -967,6 +958,7 @@ export default function ProjectDetailPage() {
                 const pstyle = get_priority(task.priority);
                 const sstyle = get_status(task.status);
                 const detail_names = task.assignee_names.length > 0 ? task.assignee_names : (task.assignee_name ? [task.assignee_name] : []);
+                const detail_avatars = task.assignee_avatars?.length > 0 ? task.assignee_avatars : (task.assignee_avatar ? [task.assignee_avatar] : []);
 
                 const close_modal = () => { set_detail_task(null); set_detail_editing(false); set_save_hover(false); set_edit_hover(false); set_delete_task_hover(false); set_confirm_delete_task(false); set_confirm_delete_hover(false); };
 
@@ -1190,18 +1182,14 @@ export default function ProjectDetailPage() {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                                     {detail_names.map((name, ai) => (
-                                                        <div key={ai} style={{
-                                                            width: 28, height: 28, borderRadius: '50%', background: '#999',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            color: 'white', fontSize: 11, fontWeight: '600', fontFamily: 'Poppins', flexShrink: 0,
-                                                            marginLeft: ai > 0 ? '-8px' : '0px',
-                                                            border: '2px solid white',
-                                                            boxSizing: 'content-box',
-                                                            zIndex: detail_names.length - ai,
-                                                            position: 'relative',
-                                                        }}>
-                                                            {get_initials(name)}
-                                                        </div>
+                                                        <Avatar
+                                                            key={ai}
+                                                            name={name}
+                                                            avatarUrl={detail_avatars[ai]}
+                                                            size={28}
+                                                            border="2px solid white"
+                                                            style={{ marginLeft: ai > 0 ? -8 : 0, zIndex: detail_names.length - ai, position: 'relative' }}
+                                                        />
                                                     ))}
                                                 </div>
                                                 <span style={{ fontSize: 14, color: 'black', fontFamily: 'Poppins', fontWeight: '500' }}>

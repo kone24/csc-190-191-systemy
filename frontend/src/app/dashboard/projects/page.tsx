@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
+import Avatar from '@/components/Avatar';
 
 
 interface Project {
@@ -16,6 +17,7 @@ interface Project {
     client_name: string | null;
     owner_id: string | null;
     owner_name: string | null;
+    owner_avatar: string | null;
     task_count: number;
     budget: number | null;
     description: string | null;
@@ -536,21 +538,11 @@ export default function ProjectsPage() {
                                         }}>
                                             {/* Owner */}
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <div style={{
-                                                    width: 32,
-                                                    height: 32,
-                                                    borderRadius: '50%',
-                                                    background: '#999',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    color: 'white',
-                                                    fontSize: 12,
-                                                    fontWeight: '600',
-                                                    fontFamily: 'Poppins',
-                                                }}>
-                                                    {get_initials(project.owner_name ?? '?')}
-                                                </div>
+                                                <Avatar
+                                                    name={project.owner_name ?? '?'}
+                                                    avatarUrl={project.owner_avatar}
+                                                    size={32}
+                                                />
                                                 <span style={{
                                                     fontSize: 13,
                                                     color: '#555',

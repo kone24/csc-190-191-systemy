@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
+import Avatar from '@/components/Avatar';
 
 interface SidebarProps {
     activePage: 'dashboard' | 'analytics' | 'projects' | 'gantt' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management' | 'recommendations';
@@ -56,7 +56,6 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
 
 export default function Sidebar({ activePage }: SidebarProps) {
     const { user, isAdmin } = useUser();
-    const [avatarError, setAvatarError] = useState(false);
 
     return (
         <div style={{
@@ -206,38 +205,12 @@ export default function Sidebar({ activePage }: SidebarProps) {
                             display: 'flex',
                             cursor: 'pointer'
                         }}>
-                            <div style={{ width: 32, height: 32, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {user?.avatar && !avatarError ? (
-                                    <img
-                                        src={user.avatar}
-                                        alt="Account Avatar"
-                                        onError={() => setAvatarError(true)}
-                                        style={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: '50%',
-                                            objectFit: 'cover',
-                                            border: '2px solid #FF5900',
-                                        }}
-                                    />
-                                ) : (
-                                    <div style={{
-                                        width: 32,
-                                        height: 32,
-                                        borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, #FF5900 0%, #FFAC80 100%)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: 'white',
-                                        fontSize: 16,
-                                        fontFamily: 'Poppins',
-                                        fontWeight: '600'
-                                    }}>
-                                        {user?.firstName?.charAt(0) ?? ''}{user?.lastName?.charAt(0) ?? ''}
-                                    </div>
-                                )}
-                            </div>
+                            <Avatar
+                                name={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || '?'}
+                                avatarUrl={user?.avatar}
+                                size={32}
+                                border="2px solid #FF5900"
+                            />
                             <div style={{
                                 opacity: activePage === 'account' ? 1 : 0.75,
                                 color: 'black',

@@ -7,6 +7,7 @@ import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import ReminderBanner from '@/components/dashboard/ReminderBanner';
 import { useUser } from '@/contexts/UserContext';
+import Avatar from '@/components/Avatar';
 
 // Copied from projects/page.tsx — maps raw DB project status values to display label + badge colors
 const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
@@ -251,12 +252,12 @@ export default function DashboardPage() {
   };
 
   const projectRows = [
-    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.', assigneeInitials: 'JK', assigneeBg: '#f97316', due: 'Dec 31', status: 'open' },
-    { project: 'Q1 Campaign', task: 'Research', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Jan 10', status: 'on_hold' },
-    { project: 'App Launch', task: 'Build', assignee: 'Matthew T.', assigneeInitials: 'MT', assigneeBg: '#00C980', due: 'Jan 20', status: 'in_progress' },
-    { project: 'Brand Refresh', task: 'Strategy', assignee: 'Ashley S.', assigneeInitials: 'AS', assigneeBg: '#537FF1', due: 'Feb 5', status: 'behind' },
-    { project: 'Case Study', task: 'Copywriting', assignee: 'Xavier M.', assigneeInitials: 'XM', assigneeBg: '#FF928A', due: 'Mar 1', status: 'open' },
-    { project: 'App Launch', task: 'QA Testing', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Mar 15', status: 'completed' },
+    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.', assigneeAvatar: null as string | null, due: 'Dec 31', status: 'open' },
+    { project: 'Q1 Campaign', task: 'Research', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Jan 10', status: 'on_hold' },
+    { project: 'App Launch', task: 'Build', assignee: 'Matthew T.', assigneeAvatar: null as string | null, due: 'Jan 20', status: 'in_progress' },
+    { project: 'Brand Refresh', task: 'Strategy', assignee: 'Ashley S.', assigneeAvatar: null as string | null, due: 'Feb 5', status: 'behind' },
+    { project: 'Case Study', task: 'Copywriting', assignee: 'Xavier M.', assigneeAvatar: null as string | null, due: 'Mar 1', status: 'open' },
+    { project: 'App Launch', task: 'QA Testing', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Mar 15', status: 'completed' },
   ];
   const [liveProjectRows, setLiveProjectRows] = useState<typeof projectRows | null>(null);
 
@@ -376,12 +377,6 @@ export default function DashboardPage() {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   };
-  const getOwnerInitials = (name: string | null) => {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    return (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : parts[0].slice(0, 2)).toUpperCase();
-  };
-
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' })
       .then(r => r.json())
@@ -395,12 +390,11 @@ export default function DashboardPage() {
           const db = b.start_date ? new Date(b.start_date).getTime() : 0;
           return db - da;
         });
-        const rows = sorted.slice(0, 5).map((p, i) => ({
+        const rows = sorted.slice(0, 5).map((p) => ({
           project: p.name ?? '—',
           task: '',
           assignee: p.owner_name ?? (p.owner_id ? String(p.owner_id) : '—'),
-          assigneeInitials: getOwnerInitials(p.owner_name ?? null),
-          assigneeBg: avatarPalette[i % avatarPalette.length],
+          assigneeAvatar: p.owner_avatar ?? null,
           due: formatProjectDate(p.end_date ?? null),
           status: p.status ?? 'On Track',
         }));
@@ -609,7 +603,7 @@ export default function DashboardPage() {
                         >
                           <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
+                            <Avatar name={row.assignee} avatarUrl={row.assigneeAvatar} size={28} />
                             <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
                           </div>
                           <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
@@ -668,13 +662,7 @@ export default function DashboardPage() {
                 <div key={ri} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center', borderBottom: ri < displayGanttRows.length - 1 ? '1px solid #f0f0f0' : 'none', padding: '10px 0' }}>
                   {/* Name cell */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%', background: row.avatarBg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0,
-                    }}>
-                      {row.initials}
-                    </div>
+                    <Avatar name={row.name} size={32} />
                     <div style={{ fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, color: 'black' }}>{row.name}</div>
                   </div>
                   {/* Timeline area */}
@@ -923,7 +911,7 @@ export default function DashboardPage() {
                       >
                         <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
+                          <Avatar name={row.assignee} avatarUrl={row.assigneeAvatar} size={28} />
                           <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
                         </div>
                         <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>

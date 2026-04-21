@@ -1,14 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+import Avatar from '@/components/Avatar';
 import { useUser, User } from '@/contexts/UserContext';
 
 export default function AccountPage() {
     const { user, setUser, logout } = useUser();
     const [isEditing, setIsEditing] = useState(false);
     const [tempProfile, setTempProfile] = useState<User | null>(user);
-    const [avatarError, setAvatarError] = useState(false);
-
     useEffect(() => {
         if (user) {
             setTempProfile(user);
@@ -101,36 +100,12 @@ export default function AccountPage() {
                         borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
                     }}>
                         {/* Avatar */}
-                        {user.avatar && !avatarError ? (
-                            <img
-                                src={user.avatar}
-                                alt="User Avatar"
-                                onError={() => setAvatarError(true)}
-                                style={{
-                                    width: 80,
-                                    height: 80,
-                                    borderRadius: '50%',
-                                    objectFit: 'cover',
-                                    border: '2px solid #FF5900',
-                                }}
-                            />
-                        ) : (
-                            <div style={{
-                                width: 80,
-                                height: 80,
-                                borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #FF5900 0%, #FFAC80 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                fontSize: 32,
-                                fontFamily: 'Poppins',
-                                fontWeight: '600'
-                            }}>
-                                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                            </div>
-                        )}
+                        <Avatar
+                            name={`${user.firstName} ${user.lastName}`.trim() || '?'}
+                            avatarUrl={user.avatar}
+                            size={80}
+                            border="2px solid #FF5900"
+                        />
 
                         {/* Profile Info */}
                         <div style={{ flex: 1 }}>

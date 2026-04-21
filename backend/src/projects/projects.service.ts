@@ -53,7 +53,7 @@ export class ProjectsService {
                     ? this.supabase.from('clients').select('id, first_name, last_name').in('id', clientIds)
                     : { data: [], error: null },
                 ownerIds.length > 0
-                    ? this.supabase.from('users').select('user_id, name').in('user_id', ownerIds)
+                    ? this.supabase.from('users').select('user_id, name, avatar').in('user_id', ownerIds)
                     : { data: [], error: null },
                 this.supabase.from('task').select('project_id').in('project_id', projectIds),
             ]);
@@ -77,9 +77,9 @@ export class ProjectsService {
                 clientMap.set(c.id, `${c.first_name} ${c.last_name}`.trim());
             }
 
-            const ownerMap = new Map<string, string>();
+            const ownerMap = new Map<string, { name: string; avatar: string | null }>();
             for (const u of usersResult.data || []) {
-                ownerMap.set(u.user_id, u.name);
+                ownerMap.set(u.user_id, { name: u.name, avatar: u.avatar ?? null });
             }
 
             const taskCountMap = new Map<string, number>();
@@ -98,7 +98,8 @@ export class ProjectsService {
                 client_id: p.client_id,
                 client_name: clientMap.get(p.client_id) || null,
                 owner_id: p.owner_id,
-                owner_name: ownerMap.get(p.owner_id) || null,
+                owner_name: ownerMap.get(p.owner_id)?.name ?? null,
+                owner_avatar: ownerMap.get(p.owner_id)?.avatar ?? null,
                 task_count: taskCountMap.get(p.project_id) || 0,
                 budget: p.budget ?? null,
                 description: p.description ?? null,
@@ -129,11 +130,11 @@ export class ProjectsService {
             // Batch-fetch assignee names
             const assigneeIds = [...new Set(phases.map(p => p.assignee_id).filter(Boolean))];
 
-            let userMap = new Map<string, string>();
+            let userMap = new Map<string, { name: string; avatar: string | null }>();
             if (assigneeIds.length > 0) {
                 const { data: users, error: usersError } = await this.supabase
                     .from('users')
-                    .select('user_id, name')
+                    .select('user_id, name, avatar')
                     .in('user_id', assigneeIds);
 
                 if (usersError) {
@@ -142,7 +143,7 @@ export class ProjectsService {
                 }
 
                 for (const u of users || []) {
-                    userMap.set(u.user_id, u.name);
+                    userMap.set(u.user_id, { name: u.name, avatar: u.avatar ?? null });
                 }
             }
 
@@ -152,7 +153,8 @@ export class ProjectsService {
                 name: p.name,
                 order_index: p.order_index,
                 assignee_id: p.assignee_id,
-                assignee_name: userMap.get(p.assignee_id) || null,
+                assignee_name: userMap.get(p.assignee_id)?.name ?? null,
+                assignee_avatar: userMap.get(p.assignee_id)?.avatar ?? null,
             }));
         } catch (error) {
             this.logger.error('Error in findPhasesByProjectId method:', error);
@@ -185,11 +187,11 @@ export class ProjectsService {
                 }
             }
 
-            let userMap = new Map<string, string>();
+            let userMap = new Map<string, { name: string; avatar: string | null }>();
             if (allUserIds.size > 0) {
                 const { data: users, error: usersError } = await this.supabase
                     .from('users')
-                    .select('user_id, name')
+                    .select('user_id, name, avatar')
                     .in('user_id', [...allUserIds]);
 
                 if (usersError) {
@@ -198,7 +200,7 @@ export class ProjectsService {
                 }
 
                 for (const u of users || []) {
-                    userMap.set(u.user_id, u.name);
+                    userMap.set(u.user_id, { name: u.name, avatar: u.avatar ?? null });
                 }
             }
 
@@ -212,9 +214,11 @@ export class ProjectsService {
                 status: t.status,
                 due_date: t.due_date,
                 assigned_to: t.assigned_to,
-                assignee_name: userMap.get(t.assigned_to) || null,
+                assignee_name: t.assigned_to ? (userMap.get(t.assigned_to)?.name ?? null) : null,
+                assignee_avatar: t.assigned_to ? (userMap.get(t.assigned_to)?.avatar ?? null) : null,
                 assignees: t.assignees ?? [],
-                assignee_names: (t.assignees ?? []).map((uid: string) => userMap.get(uid)).filter(Boolean) as string[],
+                assignee_names: (t.assignees ?? []).map((uid: string) => userMap.get(uid)?.name).filter(Boolean) as string[],
+                assignee_avatars: (t.assignees ?? []).map((uid: string) => userMap.get(uid)?.avatar ?? null),
             }));
         } catch (error) {
             this.logger.error('Error in findTasksByPhaseId method:', error);
@@ -269,7 +273,7 @@ export class ProjectsService {
                     ? this.supabase.from('clients').select('id, first_name, last_name').eq('id', project.client_id).single()
                     : { data: null, error: null },
                 project.owner_id
-                    ? this.supabase.from('users').select('user_id, name').eq('user_id', project.owner_id).single()
+                    ? this.supabase.from('users').select('user_id, name, avatar').eq('user_id', project.owner_id).single()
                     : { data: null, error: null },
             ]);
 
@@ -284,6 +288,7 @@ export class ProjectsService {
                 client_name: clientResult.data ? `${clientResult.data.first_name} ${clientResult.data.last_name}`.trim() : null,
                 owner_id: project.owner_id,
                 owner_name: ownerResult.data?.name ?? null,
+                owner_avatar: ownerResult.data?.avatar ?? null,
                 task_count: 0,
                 budget: project.budget ?? null,
                 description: project.description ?? null,
@@ -330,7 +335,7 @@ export class ProjectsService {
                     ? this.supabase.from('clients').select('id, first_name, last_name').eq('id', project.client_id).single()
                     : { data: null, error: null },
                 project.owner_id
-                    ? this.supabase.from('users').select('user_id, name').eq('user_id', project.owner_id).single()
+                    ? this.supabase.from('users').select('user_id, name, avatar').eq('user_id', project.owner_id).single()
                     : { data: null, error: null },
                 this.supabase.from('task').select('project_id').eq('project_id', projectId),
             ]);
@@ -346,6 +351,7 @@ export class ProjectsService {
                 client_name: clientResult.data ? `${clientResult.data.first_name} ${clientResult.data.last_name}`.trim() : null,
                 owner_id: project.owner_id,
                 owner_name: ownerResult.data?.name ?? null,
+                owner_avatar: ownerResult.data?.avatar ?? null,
                 task_count: tasksResult.data?.length ?? 0,
                 budget: project.budget ?? null,
                 description: project.description ?? null,
@@ -440,11 +446,11 @@ export class ProjectsService {
                 if (uid) allUserIds.add(uid);
             }
 
-            let userMap = new Map<string, string>();
+            let userMap = new Map<string, { name: string; avatar: string | null }>();
             if (allUserIds.size > 0) {
                 const { data: users, error: usersError } = await this.supabase
                     .from('users')
-                    .select('user_id, name')
+                    .select('user_id, name, avatar')
                     .in('user_id', [...allUserIds]);
 
                 if (usersError) {
@@ -453,7 +459,7 @@ export class ProjectsService {
                 }
 
                 for (const u of users || []) {
-                    userMap.set(u.user_id, u.name);
+                    userMap.set(u.user_id, { name: u.name, avatar: u.avatar ?? null });
                 }
             }
 
@@ -467,9 +473,11 @@ export class ProjectsService {
                 status: task.status,
                 due_date: task.due_date,
                 assigned_to: task.assigned_to,
-                assignee_name: userMap.get(task.assigned_to) || null,
+                assignee_name: task.assigned_to ? (userMap.get(task.assigned_to)?.name ?? null) : null,
+                assignee_avatar: task.assigned_to ? (userMap.get(task.assigned_to)?.avatar ?? null) : null,
                 assignees: task.assignees ?? [],
-                assignee_names: (task.assignees ?? []).map((uid: string) => userMap.get(uid)).filter(Boolean) as string[],
+                assignee_names: (task.assignees ?? []).map((uid: string) => userMap.get(uid)?.name).filter(Boolean) as string[],
+                assignee_avatars: (task.assignees ?? []).map((uid: string) => userMap.get(uid)?.avatar ?? null),
             };
         } catch (error) {
             this.logger.error('Error in createTask method:', error);
@@ -512,11 +520,11 @@ export class ProjectsService {
                 if (uid) allUserIds.add(uid);
             }
 
-            let userMap = new Map<string, string>();
+            let userMap = new Map<string, { name: string; avatar: string | null }>();
             if (allUserIds.size > 0) {
                 const { data: users, error: usersError } = await this.supabase
                     .from('users')
-                    .select('user_id, name')
+                    .select('user_id, name, avatar')
                     .in('user_id', [...allUserIds]);
 
                 if (usersError) {
@@ -525,7 +533,7 @@ export class ProjectsService {
                 }
 
                 for (const u of users || []) {
-                    userMap.set(u.user_id, u.name);
+                    userMap.set(u.user_id, { name: u.name, avatar: u.avatar ?? null });
                 }
             }
 
@@ -539,9 +547,11 @@ export class ProjectsService {
                 status: task.status,
                 due_date: task.due_date,
                 assigned_to: task.assigned_to,
-                assignee_name: userMap.get(task.assigned_to) || null,
+                assignee_name: task.assigned_to ? (userMap.get(task.assigned_to)?.name ?? null) : null,
+                assignee_avatar: task.assigned_to ? (userMap.get(task.assigned_to)?.avatar ?? null) : null,
                 assignees: task.assignees ?? [],
-                assignee_names: (task.assignees ?? []).map((uid: string) => userMap.get(uid)).filter(Boolean) as string[],
+                assignee_names: (task.assignees ?? []).map((uid: string) => userMap.get(uid)?.name).filter(Boolean) as string[],
+                assignee_avatars: (task.assignees ?? []).map((uid: string) => userMap.get(uid)?.avatar ?? null),
             };
         } catch (error) {
             this.logger.error('Error in updateTask method:', error);
@@ -579,6 +589,7 @@ export class ProjectsService {
         task_id: string; title: string; priority: number | null;
         status: string | null; due_date: string | null;
         assigned_to: string | null; assignee_name: string | null;
+        assignee_avatar: string | null;
         project_id: string; project_name: string | null;
     }[]> {
         try {
@@ -613,7 +624,7 @@ export class ProjectsService {
                     ? this.supabase.from('project').select('project_id, name').in('project_id', projectIds)
                     : { data: [], error: null },
                 assigneeIds.length > 0
-                    ? this.supabase.from('users').select('user_id, name').in('user_id', assigneeIds)
+                    ? this.supabase.from('users').select('user_id, name, avatar').in('user_id', assigneeIds)
                     : { data: [], error: null },
             ]);
 
@@ -622,9 +633,9 @@ export class ProjectsService {
                 projectMap.set(p.project_id, p.name);
             }
 
-            const userMap = new Map<string, string>();
+            const userMap = new Map<string, { name: string; avatar: string | null }>();
             for (const u of usersResult.data || []) {
-                userMap.set(u.user_id, u.name);
+                userMap.set(u.user_id, { name: u.name, avatar: u.avatar ?? null });
             }
 
             return tasks.map(t => ({
@@ -634,7 +645,8 @@ export class ProjectsService {
                 status: t.status,
                 due_date: t.due_date,
                 assigned_to: t.assigned_to,
-                assignee_name: t.assigned_to ? (userMap.get(t.assigned_to) ?? null) : null,
+                assignee_name: t.assigned_to ? (userMap.get(t.assigned_to)?.name ?? null) : null,
+                assignee_avatar: t.assigned_to ? (userMap.get(t.assigned_to)?.avatar ?? null) : null,
                 project_id: t.project_id,
                 project_name: projectMap.get(t.project_id) ?? null,
             }));
