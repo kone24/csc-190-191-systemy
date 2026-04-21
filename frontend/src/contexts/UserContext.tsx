@@ -16,6 +16,7 @@ interface UserContextType {
     user: User | null;
     setUser: (user: User | null) => void;
     isAuthenticated: boolean;
+    isLoading: boolean;
     isAdmin: boolean;
     isManager: boolean;
     logout: () => void;
@@ -37,6 +38,7 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     // Initialize user: try fetching from backend (cookie-based auth), fall back to localStorage
     useEffect(() => {
@@ -72,28 +74,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 }
             })
             .catch(() => {
-                // No valid session cookie — fall back to localStorage or default
-                const storedUser = localStorage.getItem('user');
-                if (storedUser) {
-                    try {
-                        setUser(JSON.parse(storedUser));
-                    } catch {
-                        localStorage.removeItem('user');
-                    }
-                } else {
-                    // Default dev user (only used when no auth cookie and no localStorage)
-                    const defaultUser: User = {
-                        id: 'df287192-f89c-4784-9fdb-b6254ca114f4',
-                        firstName: 'Admin',
-                        lastName: 'User',
-                        email: 'tonthattuanst@gmail.com',
-                        company: 'Headword Inc.',
-                        phone: '+1 (555) 123-4567',
-                        role: 'Administrator'
-                    };
-                    setUser(defaultUser);
-                    localStorage.setItem('user', JSON.stringify(defaultUser));
-                }
+                // No valid session cookie — clear stored user
+                localStorage.removeItem('user');
+                setUser(null);
+            })
+            .finally(() => {
+                setIsLoading(false);
             });
     }, []);
 
@@ -123,6 +109,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 user,
                 setUser,
                 isAuthenticated,
+                isLoading,
                 isAdmin,
                 isManager,
                 logout

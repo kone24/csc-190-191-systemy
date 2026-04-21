@@ -82,6 +82,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 height: '100%'
             }}>
                 {/* Logo */}
+                <a href="https://headword.co" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', alignSelf: 'stretch' }}>
                 <div style={{
                     alignSelf: 'stretch',
                     height: 61.10,
@@ -89,7 +90,8 @@ export default function Sidebar({ activePage }: SidebarProps) {
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                     gap: 10,
-                    display: 'flex'
+                    display: 'flex',
+                    cursor: 'pointer'
                 }}>
                     <div style={{ width: 20, height: 20, position: 'relative' }}>
                         <img style={{
@@ -113,6 +115,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                         Headword!
                     </div>
                 </div>
+                </a>
 
                 {/* Navigation Items */}
                 <NavItem

@@ -1,67 +1,65 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 
-// Define which top-level routes should be considered protected.
-const PROTECTED_PREFIXES = ["/dashboard", "/profile", "/settings", "/protected"];
+// Routes that require a valid session cookie to access.
+// Note: middleware only checks cookie *presence* — JWT signature and expiry
+// validation happens on the backend (NestJS JwtAuthGuard) which issues a
+// fresh 20-min sliding token on every authenticated request.
+const PROTECTED_PREFIXES = ["/dashboard"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
- // Redirect root "/" to "/login"
+  // Redirect root "/" to "/login"
   if (pathname === "/") {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Allow Next internals, static files, and API routes to pass through.
+  // Allow Next.js internals, static files, and public assets to pass through.
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
-    pathname.startsWith("/static") ||
+    pathname.startsWith("/images") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // Handle redirect after login.
-  const token = req.cookies.get("access_token")?.value; // cookie from Nest backend
+  const token = req.cookies.get("access_token")?.value;
   const isLoginPage = pathname === "/login";
 
-  // If user is already logged in and goes to /login -> redirect to dashboard.
-  if(token && isLoginPage) {
+  // Already logged in and going to /login → send to dashboard.
+  if (token && isLoginPage) {
     const dashboardUrl = req.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashboardUrl);
   }
 
-  // Only run guard for configured protected prefixes.
+  // Check if the route is protected.
   const isProtected = PROTECTED_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
   );
 
   if (!isProtected) return NextResponse.next();
 
-  // No cookie and route is protected -> redirect to /login and preserve original path in `from` query.
-  if(!token) {
+  // No token on a protected route → redirect to /login, preserve destination.
+  if (!token) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Authenticated or unprotected -> continue.
+  // Authenticated → continue.
   return NextResponse.next();
 }
 
 export const config = {
-  // Apply middleware only to protected route patterns for efficiency.
   matcher: [
     "/",
     "/login",
     "/dashboard/:path*",
-    "/profile/:path*",
-    "/settings/:path*",
-    "/protected/:path*",
   ],
 };
