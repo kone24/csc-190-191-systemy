@@ -7,6 +7,7 @@ export default function AccountPage() {
     const { user, setUser, logout } = useUser();
     const [isEditing, setIsEditing] = useState(false);
     const [tempProfile, setTempProfile] = useState<User | null>(user);
+    const [avatarError, setAvatarError] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -100,10 +101,11 @@ export default function AccountPage() {
                         borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
                     }}>
                         {/* Avatar */}
-                        {user.avatar ? (
+                        {user.avatar && !avatarError ? (
                             <img
                                 src={user.avatar}
                                 alt="User Avatar"
+                                onError={() => setAvatarError(true)}
                                 style={{
                                     width: 80,
                                     height: 80,

@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 
 interface SidebarProps {
@@ -55,6 +56,7 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
 
 export default function Sidebar({ activePage }: SidebarProps) {
     const { user, isAdmin } = useUser();
+    const [avatarError, setAvatarError] = useState(false);
 
     return (
         <div style={{
@@ -202,10 +204,11 @@ export default function Sidebar({ activePage }: SidebarProps) {
                             cursor: 'pointer'
                         }}>
                             <div style={{ width: 32, height: 32, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {user?.avatar ? (
+                                {user?.avatar && !avatarError ? (
                                     <img
                                         src={user.avatar}
                                         alt="Account Avatar"
+                                        onError={() => setAvatarError(true)}
                                         style={{
                                             width: 32,
                                             height: 32,
@@ -214,7 +217,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                                             border: '2px solid #FF5900',
                                         }}
                                     />
-                                ) : user ? (
+                                ) : (
                                     <div style={{
                                         width: 32,
                                         height: 32,
@@ -228,14 +231,8 @@ export default function Sidebar({ activePage }: SidebarProps) {
                                         fontFamily: 'Poppins',
                                         fontWeight: '600'
                                     }}>
-                                        {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                                        {user?.firstName?.charAt(0) ?? ''}{user?.lastName?.charAt(0) ?? ''}
                                     </div>
-                                ) : (
-                                    <img
-                                        src="/images/images/account.png"
-                                        alt="Account"
-                                        style={{ width: 32, height: 32, borderRadius: '50%' }}
-                                    />
                                 )}
                             </div>
                             <div style={{
