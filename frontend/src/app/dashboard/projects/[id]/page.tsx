@@ -1,6 +1,6 @@
 'use client';
 import { useState, useCallback, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable, type DropResult, type DroppableProvided, type DroppableStateSnapshot } from '@hello-pangea/dnd';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -118,8 +118,10 @@ const COLUMN_COLORS_HOVER = [
 export default function ProjectDetailPage() {
     const params = useParams();
     const project_id = params.id as string;
+    const search_params = useSearchParams();
 
     const [project, set_project] = useState<Project | null>(null);
+    const [highlighted_task_id, set_highlighted_task_id] = useState<string | null>(null);
     const [phases, set_phases] = useState<Phase[]>([]);
     const [loading, set_loading] = useState(true);
     const [active_modal_phase, set_active_modal_phase] = useState<number | null>(null);
@@ -194,6 +196,15 @@ export default function ProjectDetailPage() {
         };
         fetch_users();
     }, []);
+
+    // Highlight a task from the ?task= query param for 2.5s on load
+    useEffect(() => {
+        const task_param = search_params.get('task');
+        if (!task_param) return;
+        set_highlighted_task_id(task_param);
+        const timer = setTimeout(() => set_highlighted_task_id(null), 5000);
+        return () => clearTimeout(timer);
+    }, [search_params]);
 
     // Reset create form when Add Task modal opens
     useEffect(() => {
@@ -583,7 +594,10 @@ export default function ProjectDetailPage() {
                                                                                 cursor: 'pointer',
                                                                                 boxShadow: drag_snapshot.isDragging
                                                                                     ? '0 8px 20px rgba(0,0,0,0.18)'
-                                                                                    : '0 2px 6px rgba(0,0,0,0.08)',
+                                                                                    : highlighted_task_id === task.task_id
+                                                                                        ? '0 0 0 2.5px #FF5900, 0 0 18px rgba(255, 89, 0, 0.45)'
+                                                                                        : '0 2px 6px rgba(0,0,0,0.08)',
+                                                                                transition: 'box-shadow 600ms ease',
                                                                                 opacity: is_done ? 0.5 : (drag_snapshot.isDragging ? 0.95 : 1),
                                                                                 ...drag_provided.draggableProps.style,
                                                                             }}>

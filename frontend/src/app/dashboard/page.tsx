@@ -72,6 +72,7 @@ const ACTIVITY_ICON: Record<string, string> = {
 export default function DashboardPage() {
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredTask, setHoveredTask] = useState<number | null>(null);
   const [hoveredGantt, setHoveredGantt] = useState(false);
   const [recommendations, setRecommendations] = useState<any[] | null>(null);
   const { user } = useUser();
@@ -261,12 +262,12 @@ export default function DashboardPage() {
   };
 
   const projectRows = [
-    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.', assigneeAvatar: null as string | null, due: 'Dec 31', status: 'open' },
-    { project: 'Q1 Campaign', task: 'Research', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Jan 10', status: 'on_hold' },
-    { project: 'App Launch', task: 'Build', assignee: 'Matthew T.', assigneeAvatar: null as string | null, due: 'Jan 20', status: 'in_progress' },
-    { project: 'Brand Refresh', task: 'Strategy', assignee: 'Ashley S.', assigneeAvatar: null as string | null, due: 'Feb 5', status: 'behind' },
-    { project: 'Case Study', task: 'Copywriting', assignee: 'Xavier M.', assigneeAvatar: null as string | null, due: 'Mar 1', status: 'open' },
-    { project: 'App Launch', task: 'QA Testing', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Mar 15', status: 'completed' },
+    { project: 'Website Rebrand', project_id: '', task: 'Design Sprint', assignee: 'Jez K.', assigneeAvatar: null as string | null, due: 'Dec 31', status: 'open' },
+    { project: 'Q1 Campaign', project_id: '', task: 'Research', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Jan 10', status: 'on_hold' },
+    { project: 'App Launch', project_id: '', task: 'Build', assignee: 'Matthew T.', assigneeAvatar: null as string | null, due: 'Jan 20', status: 'in_progress' },
+    { project: 'Brand Refresh', project_id: '', task: 'Strategy', assignee: 'Ashley S.', assigneeAvatar: null as string | null, due: 'Feb 5', status: 'behind' },
+    { project: 'Case Study', project_id: '', task: 'Copywriting', assignee: 'Xavier M.', assigneeAvatar: null as string | null, due: 'Mar 1', status: 'open' },
+    { project: 'App Launch', project_id: '', task: 'QA Testing', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Mar 15', status: 'completed' },
   ];
   const [liveProjectRows, setLiveProjectRows] = useState<typeof projectRows | null>(null);
 
@@ -401,6 +402,7 @@ export default function DashboardPage() {
         });
         const rows = sorted.slice(0, 5).map((p) => ({
           project: p.name ?? '—',
+          project_id: p.project_id ?? '',
           task: '',
           assignee: p.owner_name ?? (p.owner_id ? String(p.owner_id) : '—'),
           assigneeAvatar: p.owner_avatar ?? null,
@@ -550,7 +552,19 @@ export default function DashboardPage() {
                   ) : dashboardTasks.map((task, i) => {
                     const pl = priorityLabel(task.priority);
                     return (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
+                      <div
+                        key={i}
+                        onClick={() => { window.location.href = `/dashboard/projects/${task.project_id}?task=${task.task_id}`; }}
+                        onMouseEnter={() => setHoveredTask(i)}
+                        onMouseLeave={() => setHoveredTask(null)}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '10px 0', borderBottom: '1px solid #f0f0f0',
+                          cursor: 'pointer',
+                          background: hoveredTask === i ? '#fafafa' : 'transparent',
+                          transition: 'background 150ms ease',
+                        }}
+                      >
                         <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.title}</div>
                         {taskView === 'company' && task.assignee_name && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.assignee_name}</div>}
                         <span style={{ ...badgeStyle(priorityColors[pl].bg, priorityColors[pl].text), marginRight: 12 }}>{pl}</span>
@@ -583,7 +597,7 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={i}
-                          onClick={() => { window.location.href = '/dashboard/projects'; }}
+                          onClick={() => { window.location.href = row.project_id ? `/dashboard/projects/${row.project_id}` : '/dashboard/projects'; }}
                           onMouseEnter={() => setHoveredRow(i)}
                           onMouseLeave={() => setHoveredRow(null)}
                           style={{
@@ -859,7 +873,19 @@ export default function DashboardPage() {
                 ) : dashboardTasks.map((task, i) => {
                   const pl = priorityLabel(task.priority);
                   return (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
+                    <div
+                      key={i}
+                      onClick={() => { window.location.href = `/dashboard/projects/${task.project_id}?task=${task.task_id}`; }}
+                      onMouseEnter={() => setHoveredTask(i)}
+                      onMouseLeave={() => setHoveredTask(null)}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '10px 0', borderBottom: '1px solid #f0f0f0',
+                        cursor: 'pointer',
+                        background: hoveredTask === i ? '#fafafa' : 'transparent',
+                        transition: 'background 150ms ease',
+                      }}
+                    >
                       <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.title}</div>
                       {task.project_name && <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.project_name}</div>}
                       {taskView === 'company' && task.assignee_name && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.assignee_name}</div>}
@@ -894,7 +920,7 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={i}
-                        onClick={() => { window.location.href = '/dashboard/projects'; }}
+                        onClick={() => { window.location.href = row.project_id ? `/dashboard/projects/${row.project_id}` : '/dashboard/projects'; }}
                         onMouseEnter={() => setHoveredRow(i)}
                         onMouseLeave={() => setHoveredRow(null)}
                         style={{
