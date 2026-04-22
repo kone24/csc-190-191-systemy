@@ -33,51 +33,51 @@ export class ActivityService {
     const isPrivileged = ['admin', 'manager'].includes(userRow.role ?? '');
     const events: ActivityEvent[] = [];
 
-    // Tasks assigned to this user — use due_date as timestamp proxy
+    // Tasks assigned to this user — order by when the task was created
     const { data: tasks } = await this.supabase
       .from('task')
-      .select('task_id, title, status, due_date')
+      .select('task_id, title, status, created_at')
       .eq('assigned_to', userId)
-      .order('due_date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false, nullsFirst: false })
       .limit(10);
 
     for (const t of tasks ?? []) {
       events.push({
         type: 'task',
-        description: `Task: "${t.title}" — ${t.status ?? 'open'}`,
-        timestamp: t.due_date ?? null,
+        description: `Task assigned: "${t.title}" — ${t.status ?? 'open'}`,
+        timestamp: t.created_at ?? null,
       });
     }
 
-    // Projects owned by this user — use start_date as timestamp proxy
+    // Projects owned by this user — order by when the project was created
     const { data: projects } = await this.supabase
       .from('project')
-      .select('project_id, name, status, start_date')
+      .select('project_id, name, status, created_at')
       .eq('owner_id', userId)
-      .order('start_date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false, nullsFirst: false })
       .limit(5);
 
     for (const p of projects ?? []) {
       events.push({
         type: 'project',
-        description: `Project: "${p.name}" — ${p.status ?? 'active'}`,
-        timestamp: p.start_date ?? null,
+        description: `Project created: "${p.name}" — ${p.status ?? 'active'}`,
+        timestamp: p.created_at ?? null,
       });
     }
 
-    // Invoices — admin/manager only — use date_issued as timestamp proxy
+    // Invoices — admin/manager only — order by when the invoice was created
     if (isPrivileged) {
       const { data: invoices } = await this.supabase
         .from('invoice')
-        .select('invoice_id, invoice_number, status, date_issued')
-        .order('date_issued', { ascending: false, nullsFirst: false })
+        .select('invoice_id, invoice_number, status, created_at')
+        .order('created_at', { ascending: false, nullsFirst: false })
         .limit(5);
 
       for (const inv of invoices ?? []) {
         events.push({
           type: 'invoice',
           description: `Invoice #${inv.invoice_number ?? inv.invoice_id} — ${inv.status}`,
-          timestamp: inv.date_issued ?? null,
+          timestamp: inv.created_at ?? null,
         });
       }
     }
