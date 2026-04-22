@@ -92,7 +92,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         }
     }, [user]);
 
-    const logout = () => {
+    const logout = async () => {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+        try {
+            await fetch(`${backendUrl}/auth/logout`, { method: 'POST', credentials: 'include' });
+        } catch {
+            // ignore network errors — still clear local state
+        }
         setUser(null);
         localStorage.removeItem('user');
         // Redirect to login page
