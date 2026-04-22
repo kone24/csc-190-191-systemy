@@ -54,6 +54,34 @@ function ClientsPageInner() {
     const [isSearching, setIsSearching] = useState(!!initialSearch);
     const [sortBy, setSortBy] = useState<SortOption>('name-asc');
 
+    // Filter states
+    const [statusFilter, setStatusFilter] = useState('');
+    const [relationshipStatusFilter, setRelationshipStatusFilter] = useState('');
+    const [contactMediumFilter, setContactMediumFilter] = useState('');
+    const [relationshipOwnerFilter, setRelationshipOwnerFilter] = useState('');
+    const [tagsFilter, setTagsFilter] = useState<string[]>([]);
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
+
+    const hasActiveFilters = !!(statusFilter || relationshipStatusFilter || contactMediumFilter || relationshipOwnerFilter || tagsFilter.length || dateFrom || dateTo);
+
+    const clearAllFilters = () => {
+        setStatusFilter('');
+        setRelationshipStatusFilter('');
+        setContactMediumFilter('');
+        setRelationshipOwnerFilter('');
+        setTagsFilter([]);
+        setDateFrom('');
+        setDateTo('');
+    };
+
+    // Unique values for filter dropdowns
+    const uniqueStatuses = useMemo(() => [...new Set(allClients.map(c => c.status).filter(Boolean))].sort(), [allClients]);
+    const uniqueRelStatuses = useMemo(() => [...new Set(allClients.map(c => c.relationship_status).filter(Boolean))].sort(), [allClients]);
+    const uniqueMediums = useMemo(() => [...new Set(allClients.map(c => c.contact_medium).filter(Boolean))].sort(), [allClients]);
+    const uniqueOwners = useMemo(() => [...new Set(allClients.map(c => c.relationship_owner).filter(Boolean))].sort(), [allClients]);
+    const uniqueTags = useMemo(() => [...new Set(allClients.flatMap(c => (c.tags || []).map(t => parseTag(t).name)))].sort(), [allClients]);
+
     // Fetch all clients on page load
     useEffect(() => {
         const fetchAllClients = async () => {
@@ -157,6 +185,21 @@ function ClientsPageInner() {
     const displayedClients = useMemo(() => {
         let result = isSearching ? searchResults : allClients;
 
+        // Apply filters
+        result = result.filter(c => {
+            if (statusFilter && c.status !== statusFilter) return false;
+            if (relationshipStatusFilter && c.relationship_status !== relationshipStatusFilter) return false;
+            if (contactMediumFilter && c.contact_medium !== contactMediumFilter) return false;
+            if (relationshipOwnerFilter && c.relationship_owner !== relationshipOwnerFilter) return false;
+            if (tagsFilter.length > 0) {
+                const clientTagNames = (c.tags || []).map(t => parseTag(t).name);
+                if (!tagsFilter.some(tf => clientTagNames.includes(tf))) return false;
+            }
+            if (dateFrom && (!c.date_of_contact || c.date_of_contact < dateFrom)) return false;
+            if (dateTo && (!c.date_of_contact || c.date_of_contact > dateTo)) return false;
+            return true;
+        });
+
         // Apply sorting
         const sorted = [...result];
         switch (sortBy) {
@@ -204,7 +247,7 @@ function ClientsPageInner() {
         }
 
         return sorted;
-    }, [isSearching, searchResults, allClients, sortBy]);
+    }, [isSearching, searchResults, allClients, sortBy, statusFilter, relationshipStatusFilter, contactMediumFilter, relationshipOwnerFilter, tagsFilter, dateFrom, dateTo]);
 
     // Compute the minimum prefix length that uniquely identifies each client's ID
     const shortIdMap = useMemo(() => {
@@ -219,6 +262,27 @@ function ClientsPageInner() {
         }
         return map;
     }, [displayedClients]);
+
+    const filterSelectStyle = (active: boolean) => ({
+        padding: '6px 10px',
+        borderRadius: '8px',
+        border: active ? '1.5px solid #FF5900' : '1px solid #ddd',
+        background: 'white',
+        fontSize: '13px',
+        fontFamily: 'Poppins',
+        cursor: 'pointer',
+        color: active ? '#FF5900' : '#666',
+    });
+
+    const filterInputStyle = (active: boolean) => ({
+        padding: '5px 8px',
+        borderRadius: '8px',
+        border: active ? '1.5px solid #FF5900' : '1px solid #ddd',
+        background: 'white',
+        fontSize: '13px',
+        fontFamily: 'Poppins',
+        color: '#333',
+    });
 
     return (
         <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -374,6 +438,95 @@ function ClientsPageInner() {
                                 </button>
                             </Link>
                         </div>
+                    </div>
+
+                    {/* Filter Bar */}
+                    <div style={{
+                        padding: '10px 20px',
+                        borderBottom: '1px solid #f0f0f0',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                        alignItems: 'center',
+                    }}>
+                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={filterSelectStyle(!!statusFilter)}>
+                            <option value="">Status: All</option>
+                            {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+
+                        <select value={relationshipStatusFilter} onChange={e => setRelationshipStatusFilter(e.target.value)} style={filterSelectStyle(!!relationshipStatusFilter)}>
+                            <option value="">Rel. Status: All</option>
+                            {uniqueRelStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+
+                        <select value={contactMediumFilter} onChange={e => setContactMediumFilter(e.target.value)} style={filterSelectStyle(!!contactMediumFilter)}>
+                            <option value="">Medium: All</option>
+                            {uniqueMediums.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+
+                        <select value={relationshipOwnerFilter} onChange={e => setRelationshipOwnerFilter(e.target.value)} style={filterSelectStyle(!!relationshipOwnerFilter)}>
+                            <option value="">Owner: All</option>
+                            {uniqueOwners.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+
+                        <select
+                            value=""
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val && !tagsFilter.includes(val)) setTagsFilter([...tagsFilter, val]);
+                            }}
+                            style={filterSelectStyle(tagsFilter.length > 0)}
+                        >
+                            <option value="">Tags: {tagsFilter.length ? `${tagsFilter.length} selected` : 'All'}</option>
+                            {uniqueTags.filter(t => !tagsFilter.includes(t)).map(t => <option key={t} value={t}>{t}</option>)}
+                        </select>
+
+                        {tagsFilter.map(t => (
+                            <span
+                                key={t}
+                                onClick={() => setTagsFilter(tagsFilter.filter(x => x !== t))}
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '3px 10px',
+                                    borderRadius: '12px',
+                                    background: '#FF5900',
+                                    color: 'white',
+                                    fontSize: '12px',
+                                    fontFamily: 'Poppins',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {t} &times;
+                            </span>
+                        ))}
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '13px', fontFamily: 'Poppins', color: '#666' }}>From</span>
+                            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={filterInputStyle(!!dateFrom)} />
+                            <span style={{ fontSize: '13px', fontFamily: 'Poppins', color: '#666' }}>To</span>
+                            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} style={filterInputStyle(!!dateTo)} />
+                        </div>
+
+                        {hasActiveFilters && (
+                            <button
+                                onClick={clearAllFilters}
+                                style={{
+                                    background: 'transparent',
+                                    border: '1px solid #FF5900',
+                                    borderRadius: '15px',
+                                    padding: '6px 12px',
+                                    color: '#FF5900',
+                                    fontSize: 14,
+                                    fontFamily: 'Poppins',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'nowrap',
+                                }}
+                            >
+                                Clear Filters
+                            </button>
+                        )}
                     </div>
 
                     {/* Clients Table/List */}
@@ -605,8 +758,39 @@ function ClientsPageInner() {
                                         fontFamily: 'Poppins',
                                         margin: 0
                                     }}>
-                                        No contacts found for "{searchQuery}"
+                                        No contacts found for &quot;{searchQuery}&quot;
                                     </p>
+                                </>
+                            ) : hasActiveFilters ? (
+                                <>
+                                    <div style={{
+                                        fontSize: 48,
+                                        marginBottom: '15px'
+                                    }}></div>
+                                    <p style={{
+                                        color: 'rgba(26, 26, 26, 0.50)',
+                                        fontSize: 16,
+                                        fontFamily: 'Poppins',
+                                        margin: 0
+                                    }}>
+                                        No contacts match the current filters
+                                    </p>
+                                    <button
+                                        onClick={clearAllFilters}
+                                        style={{
+                                            marginTop: '12px',
+                                            background: 'transparent',
+                                            border: '1px solid #FF5900',
+                                            borderRadius: '25px',
+                                            padding: '8px 16px',
+                                            color: '#FF5900',
+                                            fontSize: 14,
+                                            fontFamily: 'Poppins',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        Clear All Filters
+                                    </button>
                                 </>
                             ) : (
                                 <>
