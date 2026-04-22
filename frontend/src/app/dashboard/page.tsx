@@ -627,7 +627,7 @@ export default function DashboardPage() {
                 border: hoveredGantt ? '1.5px solid #f97316' : '1.5px solid transparent',
                 transition: 'border-color 200ms ease',
                 minHeight: 380,
-                marginTop: 16,
+                marginTop: 36,
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -773,7 +773,8 @@ export default function DashboardPage() {
                         textAlign: 'left',
                         fontSize: 13,
                         fontFamily: 'Poppins',
-                        fontWeight: 600
+                        fontWeight: 600,
+                        color: 'black'
                       }}>
                         {item.clientName || item.clientId}
                       </div>
@@ -781,7 +782,8 @@ export default function DashboardPage() {
                       <div style={{
                         textAlign: 'center',
                         fontSize: 13,
-                        fontFamily: 'Poppins'
+                        fontFamily: 'Poppins',
+                        color: 'black'
                       }}>
                         {item.score}
                       </div>
@@ -805,7 +807,8 @@ export default function DashboardPage() {
                         textAlign: 'center',
                         fontSize: 13,
                         fontFamily: 'Poppins',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        color: 'rgba(0,0,0,0.6)'
                       }}>
                         {item.updatedAt
                           ? new Date(item.updatedAt).toLocaleDateString('en-US', {
