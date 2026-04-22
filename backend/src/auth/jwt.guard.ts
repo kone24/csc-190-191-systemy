@@ -18,8 +18,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
             const freshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '20m' });
             res.cookie('access_token', freshToken, {
                 httpOnly: true,
-                sameSite: 'lax',
-                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'none',
+                secure: true,
                 maxAge: 1000 * 60 * 20,
                 path: '/',
             });
