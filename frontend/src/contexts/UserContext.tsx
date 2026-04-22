@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface User {
     id: string;
@@ -39,6 +40,7 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
 
     // Initialize user: try fetching from backend (cookie-based auth), fall back to localStorage
     useEffect(() => {
@@ -101,8 +103,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         }
         setUser(null);
         localStorage.removeItem('user');
-        // Redirect to login page
-        window.location.href = '/login';
+        // Use soft navigation so UserContext stays mounted with user=null.
+        // This prevents /auth/me from being re-fetched and bouncing the user back.
+        router.replace('/login');
     };
 
     const isAuthenticated = !!user;
