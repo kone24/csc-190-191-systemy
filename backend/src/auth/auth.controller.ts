@@ -3,6 +3,10 @@ import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
 
+function normalizeFrontendUrl(url: string) {
+  return url.replace(/\/+$/, '');
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
@@ -44,7 +48,9 @@ export class AuthController {
     @Res() res: Response,
   ) {
     const code = req.query.code as string;
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = normalizeFrontendUrl(
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+    );
 
     if (!code) {
       return res.redirect(`${frontendUrl}/login?error=oauth`);
