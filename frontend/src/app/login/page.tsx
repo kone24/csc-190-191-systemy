@@ -1,6 +1,20 @@
 ﻿"use client";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';
 
 export default function LoginPage() {
+  const { isAuthenticated, isLoading } = useUser();
+  const router = useRouter();
+
+  // If the user already has a valid session (e.g. returning after OAuth),
+  // send them straight to the dashboard instead of showing the login form.
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
   return (
     <div style={{
       width: '100%',
