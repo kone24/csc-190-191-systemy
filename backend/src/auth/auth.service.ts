@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt'; // needed for JSON tokens
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const ALLOWED_DOMAIN = '@futureandsuns.com';
+const ALLOWED_DOMAIN = '@gmail.com';
 
 @Injectable()
 export class AuthService {
