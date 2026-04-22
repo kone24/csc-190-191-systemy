@@ -384,7 +384,6 @@ export default function ProjectDetailPage() {
                 padding: '20px 30px',
                 gap: '24px',
                 overflowX: 'hidden',
-                overflowX: 'hidden',
             }}>
                 {loading ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>

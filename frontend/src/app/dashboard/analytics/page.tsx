@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { usePermissions } from '@/components/RoleGuard';
+import { useUser } from '@/contexts/UserContext';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend,
@@ -56,6 +57,7 @@ const PIE_COLORS: Record<string, string> = {
 };
 
 export default function AnalyticsPage() {
+  const { user } = useUser();
   const { canViewReports } = usePermissions();
   const router = useRouter();
   const [range, setRange] = useState<RangeOption>('30d');
@@ -99,10 +101,10 @@ export default function AnalyticsPage() {
         invoiceRes.json(),
       ]);
 
-      setSummary(summaryJson.data);
-      setRevenueData(revenueJson.data);
-      setClientData(clientJson.data);
-      setInvoiceStatus(invoiceJson.data);
+      setSummary(summaryJson.data ?? null);
+      setRevenueData(revenueJson.data ?? []);
+      setClientData(clientJson.data ?? []);
+      setInvoiceStatus(invoiceJson.data ?? null);
     } catch (err) {
       console.error('Analytics fetch error:', err);
       setError('Unable to connect to the server. Please check your connection.');
@@ -117,22 +119,7 @@ export default function AnalyticsPage() {
     }
   }, [canViewReports, fetchAnalytics]);
 
-  if (!canViewReports) {
-    return (
-      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
-        <Sidebar activePage="analytics" />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(217, 217, 217, 0.15)', padding: '20px' }}>
-          <div style={{ fontSize: 48, marginBottom: 20 }}>🚫</div>
-          <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#333', fontFamily: 'Poppins' }}>Access Denied</div>
-          <div style={{ fontSize: 16, color: '#666', maxWidth: 400, textAlign: 'center', fontFamily: 'Poppins' }}>
-            You don&apos;t have permission to view analytics. Please contact your administrator.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
+  if (!user || loading) {
     return (
       <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
         <Sidebar activePage="analytics" />
@@ -153,6 +140,21 @@ export default function AnalyticsPage() {
             <div style={{ height: 400, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
           </div>
           <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canViewReports) {
+    return (
+      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
+        <Sidebar activePage="analytics" />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(217, 217, 217, 0.15)', padding: '20px' }}>
+          <div style={{ fontSize: 48, marginBottom: 20 }}>🚫</div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#333', fontFamily: 'Poppins' }}>Access Denied</div>
+          <div style={{ fontSize: 16, color: '#666', maxWidth: 400, textAlign: 'center', fontFamily: 'Poppins' }}>
+            You don&apos;t have permission to view analytics. Please contact your administrator.
+          </div>
         </div>
       </div>
     );
@@ -234,8 +236,8 @@ export default function AnalyticsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>Total Revenue</div>
-                <span style={{ color: changeColor(summary?.revenueChange || 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
-                  {changePrefix(summary?.revenueChange || 0)}{summary?.revenueChange || 0}% vs last period
+                <span style={{ color: changeColor(summary?.revenueChange ?? 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
+                  {changePrefix(summary?.revenueChange ?? 0)}{summary?.revenueChange ?? 0}% vs last period
                 </span>
               </div>
               <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -243,8 +245,8 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div>
-              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{formatCurrency(summary?.totalRevenue || 0)}</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.invoiceCount || 0} invoices</div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{formatCurrency(summary?.totalRevenue ?? 0)}</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.invoiceCount ?? 0} invoices</div>
             </div>
           </div>
 
@@ -253,8 +255,8 @@ export default function AnalyticsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>New Clients</div>
-                <span style={{ color: changeColor(summary?.clientChange || 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
-                  {changePrefix(summary?.clientChange || 0)}{summary?.clientChange || 0}% vs last period
+                <span style={{ color: changeColor(summary?.clientChange ?? 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
+                  {changePrefix(summary?.clientChange ?? 0)}{summary?.clientChange ?? 0}% vs last period
                 </span>
               </div>
               <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -262,8 +264,8 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div>
-              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.newClients || 0}</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.totalClients || 0} total clients</div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.newClients ?? 0}</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.totalClients ?? 0} total clients</div>
             </div>
           </div>
 
@@ -279,7 +281,7 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div>
-              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.conversionRate || 0}%</div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.conversionRate ?? 0}%</div>
               <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>of invoices fulfilled</div>
             </div>
           </div>
@@ -357,11 +359,11 @@ export default function AnalyticsPage() {
             Invoice Status Breakdown
           </div>
           {pieData.length > 0 ? (
-            <ResponsiveContainer width="90%" height={200}>
+            <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
                   data={pieData}
-                  cx="50%"
+                  cx="35%"
                   cy="50%"
                   outerRadius={70}
                   innerRadius={30}
@@ -379,7 +381,6 @@ export default function AnalyticsPage() {
                   layout="vertical"
                   iconType="circle"
                   iconSize={10}
-                  wrapperStyle={{ right: 200, top: 50 }}
                   formatter={(value) => {
                     const dataItem = pieData.find(item => item.name === value);
                     const count = dataItem ? dataItem.value : 0;

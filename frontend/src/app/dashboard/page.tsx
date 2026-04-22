@@ -83,8 +83,8 @@ export default function DashboardPage() {
   const [ganttEntries, setGanttEntries] = useState<GanttEntryPreview[] | null>(null);
   const [openInvoicesCount, setOpenInvoicesCount] = useState<number | null>(null);
   const [overdueInvoicesCount, setOverdueInvoicesCount] = useState<number | null>(null);
-  const [tasksDueCount, setTasksDueCount] = useState<number | null>(null);
-  const [tasksOverdueCount, setTasksOverdueCount] = useState<number | null>(null);
+  const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState<number | null>(null);
+
   const [activityFeed, setActivityFeed] = useState<ActivityEvent[] | null>(null);
   const [dashboardTasks, setDashboardTasks] = useState<DashboardTask[] | null>(null);
   const [myTasksTotal, setMyTasksTotal] = useState<number | null>(null);
@@ -139,30 +139,13 @@ export default function DashboardPage() {
       .then(r => r.json())
       .then(data => {
         const list = Array.isArray(data) ? data : data.items ?? [];
-        const open = list.filter((i: { status: string }) => i.status === 'unpaid' || i.status === 'overdue');
+        const unpaid = list.filter((i: { status: string }) => i.status === 'unpaid');
         const overdue = list.filter((i: { status: string }) => i.status === 'overdue');
-        setOpenInvoicesCount(open.length);
+        setOpenInvoicesCount(unpaid.length + overdue.length);
         setOverdueInvoicesCount(overdue.length);
+        setUnpaidInvoicesCount(unpaid.length);
       })
-      .catch(() => { setOpenInvoicesCount(0); setOverdueInvoicesCount(0); });
-
-    // Fetch tasks due this week from gantt-entries
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/gantt-entries`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        const list = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
-        const now = new Date();
-        const endOfWeek = new Date(now);
-        endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()));
-        const due = list.filter((e: { end_date: string }) => {
-          const d = new Date(e.end_date);
-          return d <= endOfWeek;
-        });
-        const overdue = list.filter((e: { end_date: string }) => new Date(e.end_date) < now);
-        setTasksDueCount(due.length);
-        setTasksOverdueCount(overdue.length);
-      })
-      .catch(() => { setTasksDueCount(0); setTasksOverdueCount(0); });
+      .catch(() => { setOpenInvoicesCount(0); setOverdueInvoicesCount(0); setUnpaidInvoicesCount(0); });
 
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/recommendations`, { credentials: 'include' })
       .then(r => r.json())
@@ -174,6 +157,33 @@ export default function DashboardPage() {
       .then(data => setActivityFeed(Array.isArray(data) ? data : []))
       .catch(() => setActivityFeed([]));
   }, []);
+
+  // Derive "Tasks Due This Week" count from real task data reactively
+  const tasksDueCount = useMemo(() => {
+    if (dashboardTasks === null) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
+    sunday.setHours(23, 59, 59, 999);
+    return dashboardTasks.filter(t => {
+      if (!t.due_date) return false;
+      if (t.status === 'done' || t.status === 'completed') return false;
+      const d = new Date(t.due_date);
+      return d >= today && d <= sunday;
+    }).length;
+  }, [dashboardTasks]);
+
+  const tasksOverdueCount = useMemo(() => {
+    if (dashboardTasks === null) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return dashboardTasks.filter(t => {
+      if (!t.due_date) return false;
+      if (t.status === 'done' || t.status === 'completed') return false;
+      return new Date(t.due_date) < today;
+    }).length;
+  }, [dashboardTasks]);
 
   const tileStyle = (index: number, borderColor: string, shadowColor: string): React.CSSProperties => ({
     minHeight: 140,
@@ -469,7 +479,8 @@ export default function DashboardPage() {
                 <div style={{ ...tileTopZone, background: 'rgba(255, 246, 66, 0.6)', borderBottom: '1px solid rgba(220, 200, 0, 0.8)' }}><span style={{ ...tileLabelStyle, color: '#713f12' }}>Open Invoices</span></div>
                 <div style={tileBodyZone}>
                   <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{openInvoicesCount === null ? '...' : openInvoicesCount}</div>
-                  {(overdueInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>{overdueInvoicesCount} overdue</div>}
+                  {(unpaidInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>{unpaidInvoicesCount} unpaid</div>}
+                  {(overdueInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{overdueInvoicesCount} overdue</div>}
                 </div>
               </div>
             </>
