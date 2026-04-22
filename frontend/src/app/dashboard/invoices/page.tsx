@@ -235,11 +235,11 @@ export default function InvoicesPage() {
             <Sidebar activePage="invoices" />
 
             <div style={{
-                flex: 1, display: 'flex', flexDirection: 'column',
-                background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px',
+                flex: 1, minWidth: 0, marginLeft: 320, display: 'flex', flexDirection: 'column',
+                background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px', overflowX: 'hidden',
             }}>
                 {/* Top Bar */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <SearchBar placeholder="Search invoices..." onSearch={handleSearch} />
                         <button onClick={openCreate} style={{
@@ -298,7 +298,6 @@ export default function InvoicesPage() {
                 {/* Invoices Table */}
                 <div style={{
                     background: 'white', borderRadius: '15px', boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                    overflow: 'hidden', flex: 1,
                 }}>
                     <div style={{
                         display: 'grid', gridTemplateColumns: '120px 200px 120px 120px 120px 120px 1fr 140px',
@@ -309,7 +308,7 @@ export default function InvoicesPage() {
                         <div>Created</div><div>Due Date</div><div>Project</div><div>Actions</div>
                     </div>
 
-                    <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    <div>
                         {loading ? (
                             <div style={{ padding: 40, textAlign: 'center', color: '#999', fontFamily: 'Poppins' }}>Loading...</div>
                         ) : filteredInvoices.length === 0 ? (

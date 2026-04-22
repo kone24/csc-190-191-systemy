@@ -11,4 +11,6 @@ export interface PhaseResponseDto {
     assignee_id: string | null;
     /** Resolved name from users table (nullable) */
     assignee_name: string | null;
+    /** Resolved avatar URL from users table (nullable) */
+    assignee_avatar: string | null;
 }

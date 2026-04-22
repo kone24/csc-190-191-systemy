@@ -2,11 +2,11 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import ReminderBanner from '@/components/dashboard/ReminderBanner';
 import { useUser } from '@/contexts/UserContext';
+import Avatar from '@/components/Avatar';
 
 // Copied from projects/page.tsx — maps raw DB project status values to display label + badge colors
 const PROJECT_STATUS_MAP: Record<string, { label: string; bg: string; text: string; shadow: string }> = {
@@ -36,12 +36,45 @@ interface GanttEntryPreview {
   end_date: string;
 }
 
+interface ActivityEvent {
+  type: 'task' | 'project' | 'invoice';
+  description: string;
+  timestamp: string | null;
+}
+
+interface DashboardTask {
+  task_id: string; title: string; priority: number | null;
+  status: string | null; due_date: string | null;
+  assigned_to: string | null; assignee_name: string | null;
+  project_id: string; project_name: string | null;
+}
+
+function timeAgo(iso: string | null): string {
+  if (!iso) return '—';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+const ACTIVITY_ICON: Record<string, string> = {
+  task: '📋',
+  project: '📁',
+  invoice: '🧾',
+};
+
 export default function DashboardPage() {
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredTask, setHoveredTask] = useState<number | null>(null);
   const [hoveredGantt, setHoveredGantt] = useState(false);
   const [recommendations, setRecommendations] = useState<any[] | null>(null);
-  const [sortByDate, setSortByDate] = useState(false);
   const { user } = useUser();
   const isAdminOrManager = user?.role === 'Administrator' || user?.role === 'Manager';
   const [taskView, setTaskView] = useState<'my' | 'company'>('my');
@@ -50,12 +83,36 @@ export default function DashboardPage() {
   const [ganttEntries, setGanttEntries] = useState<GanttEntryPreview[] | null>(null);
   const [openInvoicesCount, setOpenInvoicesCount] = useState<number | null>(null);
   const [overdueInvoicesCount, setOverdueInvoicesCount] = useState<number | null>(null);
-  const [tasksDueCount, setTasksDueCount] = useState<number | null>(null);
-  const [tasksOverdueCount, setTasksOverdueCount] = useState<number | null>(null);
+  const [unpaidInvoicesCount, setUnpaidInvoicesCount] = useState<number | null>(null);
+
+  const [activityFeed, setActivityFeed] = useState<ActivityEvent[] | null>(null);
+  const [dashboardTasks, setDashboardTasks] = useState<DashboardTask[] | null>(null);
+  const [myTasksTotal, setMyTasksTotal] = useState<number | null>(null);
+  const [myTasksHigh, setMyTasksHigh] = useState<number | null>(null);
 
   useEffect(() => {
     if (isAdminOrManager) setTaskView('company');
   }, [isAdminOrManager]);
+
+  useEffect(() => {
+    if (!user || isAdminOrManager) return;
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks/stats?assigned_to=${user.id}`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => { setMyTasksTotal(data.total ?? 0); setMyTasksHigh(data.high ?? 0); })
+      .catch(() => { setMyTasksTotal(0); setMyTasksHigh(0); });
+  }, [user, isAdminOrManager]);
+
+  useEffect(() => {
+    if (!user) return;
+    const url = taskView === 'my'
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks?assigned_to=${user.id}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/tasks`;
+    setDashboardTasks(null);
+    fetch(url, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setDashboardTasks(Array.isArray(data.items) ? data.items : []))
+      .catch(() => setDashboardTasks([]));
+  }, [user, taskView]);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' })
@@ -82,36 +139,51 @@ export default function DashboardPage() {
       .then(r => r.json())
       .then(data => {
         const list = Array.isArray(data) ? data : data.items ?? [];
-        const open = list.filter((i: { status: string }) => i.status === 'unpaid' || i.status === 'overdue');
+        const unpaid = list.filter((i: { status: string }) => i.status === 'unpaid');
         const overdue = list.filter((i: { status: string }) => i.status === 'overdue');
-        setOpenInvoicesCount(open.length);
+        setOpenInvoicesCount(unpaid.length + overdue.length);
         setOverdueInvoicesCount(overdue.length);
+        setUnpaidInvoicesCount(unpaid.length);
       })
-      .catch(() => { setOpenInvoicesCount(0); setOverdueInvoicesCount(0); });
-
-    // Fetch tasks due this week from gantt-entries
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/gantt-entries`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        const list = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
-        const now = new Date();
-        const endOfWeek = new Date(now);
-        endOfWeek.setDate(endOfWeek.getDate() + (7 - endOfWeek.getDay()));
-        const due = list.filter((e: { end_date: string }) => {
-          const d = new Date(e.end_date);
-          return d <= endOfWeek;
-        });
-        const overdue = list.filter((e: { end_date: string }) => new Date(e.end_date) < now);
-        setTasksDueCount(due.length);
-        setTasksOverdueCount(overdue.length);
-      })
-      .catch(() => { setTasksDueCount(0); setTasksOverdueCount(0); });
+      .catch(() => { setOpenInvoicesCount(0); setOverdueInvoicesCount(0); setUnpaidInvoicesCount(0); });
 
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/recommendations`, { credentials: 'include' })
       .then(r => r.json())
       .then(data => setRecommendations(Array.isArray(data.recommendations) ? data.recommendations : []))
       .catch(() => setRecommendations([]));
+
+    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/activity/feed`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setActivityFeed(Array.isArray(data) ? data : []))
+      .catch(() => setActivityFeed([]));
   }, []);
+
+  // Derive "Tasks Due This Week" count from real task data reactively
+  const tasksDueCount = useMemo(() => {
+    if (dashboardTasks === null) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() + (7 - today.getDay()) % 7);
+    sunday.setHours(23, 59, 59, 999);
+    return dashboardTasks.filter(t => {
+      if (!t.due_date) return false;
+      if (t.status === 'done' || t.status === 'completed') return false;
+      const d = new Date(t.due_date);
+      return d >= today && d <= sunday;
+    }).length;
+  }, [dashboardTasks]);
+
+  const tasksOverdueCount = useMemo(() => {
+    if (dashboardTasks === null) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return dashboardTasks.filter(t => {
+      if (!t.due_date) return false;
+      if (t.status === 'done' || t.status === 'completed') return false;
+      return new Date(t.due_date) < today;
+    }).length;
+  }, [dashboardTasks]);
 
   const tileStyle = (index: number, borderColor: string, shadowColor: string): React.CSSProperties => ({
     minHeight: 140,
@@ -171,56 +243,33 @@ export default function DashboardPage() {
     color: text,
   });
 
+  // Priority: 1 = High, 2 = Med, 3 = Low (matches project task editor)
   const priorityColors: Record<string, { bg: string; text: string }> = {
-    High: { bg: '#FFAC80', text: 'black' },
-    Med: { bg: 'rgba(255, 246, 66, 0.32)', text: 'black' },
-    Low: { bg: '#00F5A0', text: 'black' },
+    High: { bg: '#FF0000', text: 'white' },
+    Med:  { bg: '#FFF631', text: 'black' },
+    Low:  { bg: '#28CC95', text: 'white' },
+  };
+
+  const priorityLabel = (p: number | null): string => {
+    if (p === 1) return 'High';
+    if (p === 2) return 'Med';
+    if (p === 3) return 'Low';
+    return 'Low';
+  };
+  const formatTaskDate = (iso: string | null): string => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   };
 
   const projectRows = [
-    { project: 'Website Rebrand', task: 'Design Sprint', assignee: 'Jez K.', assigneeInitials: 'JK', assigneeBg: '#f97316', due: 'Dec 31', status: 'open' },
-    { project: 'Q1 Campaign', task: 'Research', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Jan 10', status: 'on_hold' },
-    { project: 'App Launch', task: 'Build', assignee: 'Matthew T.', assigneeInitials: 'MT', assigneeBg: '#00C980', due: 'Jan 20', status: 'in_progress' },
-    { project: 'Brand Refresh', task: 'Strategy', assignee: 'Ashley S.', assigneeInitials: 'AS', assigneeBg: '#537FF1', due: 'Feb 5', status: 'behind' },
-    { project: 'Case Study', task: 'Copywriting', assignee: 'Xavier M.', assigneeInitials: 'XM', assigneeBg: '#FF928A', due: 'Mar 1', status: 'open' },
-    { project: 'App Launch', task: 'QA Testing', assignee: 'Rachel S.', assigneeInitials: 'RS', assigneeBg: '#8979FF', due: 'Mar 15', status: 'completed' },
+    { project: 'Website Rebrand', project_id: '', task: 'Design Sprint', assignee: 'Jez K.', assigneeAvatar: null as string | null, due: 'Dec 31', status: 'open' },
+    { project: 'Q1 Campaign', project_id: '', task: 'Research', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Jan 10', status: 'on_hold' },
+    { project: 'App Launch', project_id: '', task: 'Build', assignee: 'Matthew T.', assigneeAvatar: null as string | null, due: 'Jan 20', status: 'in_progress' },
+    { project: 'Brand Refresh', project_id: '', task: 'Strategy', assignee: 'Ashley S.', assigneeAvatar: null as string | null, due: 'Feb 5', status: 'behind' },
+    { project: 'Case Study', project_id: '', task: 'Copywriting', assignee: 'Xavier M.', assigneeAvatar: null as string | null, due: 'Mar 1', status: 'open' },
+    { project: 'App Launch', project_id: '', task: 'QA Testing', assignee: 'Rachel S.', assigneeAvatar: null as string | null, due: 'Mar 15', status: 'completed' },
   ];
   const [liveProjectRows, setLiveProjectRows] = useState<typeof projectRows | null>(null);
-
-  const adminMyTasks = [
-    { name: 'Send Campaign debrief', priority: 'High', due: 'Oct 3', sortKey: 3 },
-    { name: 'Review Design Draft', priority: 'Med', due: 'Oct 4', sortKey: 4 },
-    { name: 'Approve Invoice', priority: 'Low', due: 'Oct 5', sortKey: 5 },
-    { name: 'Client Check-in', priority: 'High', due: 'Oct 6', sortKey: 6 },
-    { name: 'Update Content Brief', priority: 'Med', due: 'Oct 7', sortKey: 7 },
-    { name: 'Team Sync Prep', priority: 'Low', due: 'Oct 8', sortKey: 8 },
-    { name: 'Finalize Q2 Budget', priority: 'High', due: 'Oct 9', sortKey: 9 },
-  ];
-
-  const userMyTasks = [
-    { name: 'Send Campaign debrief', project: 'Website Rebrand', priority: 'High', due: 'Oct 3', sortKey: 3 },
-    { name: 'Review Design Draft', project: 'Q1 Campaign', priority: 'Med', due: 'Oct 4', sortKey: 4 },
-    { name: 'Approve Invoice', project: 'App Launch', priority: 'Low', due: 'Oct 5', sortKey: 5 },
-    { name: 'Client Check-in', project: 'Brand Refresh', priority: 'High', due: 'Oct 6', sortKey: 6 },
-    { name: 'Update Content Brief', project: 'Q1 Campaign', priority: 'Med', due: 'Oct 7', sortKey: 7 },
-    { name: 'Prepare Slide Deck', project: 'Website Rebrand', priority: 'High', due: 'Oct 8', sortKey: 8 },
-  ];
-
-  const companyTasks = [
-    { name: 'Send Campaign debrief', project: 'Website Rebrand', assignee: 'Jez K.', priority: 'High', due: 'Oct 3', sortKey: 3 },
-    { name: 'Review Design Draft', project: 'Q1 Campaign', assignee: 'Rachel S.', priority: 'Med', due: 'Oct 4', sortKey: 4 },
-    { name: 'Brand Refresh', project: 'Brand Refresh', assignee: 'Matthew T.', priority: 'Low', due: 'Oct 5', sortKey: 5 },
-    { name: 'Client Onboarding', project: 'App Launch', assignee: 'Ashley S.', priority: 'High', due: 'Oct 6', sortKey: 6 },
-    { name: 'Write Case Study', project: 'Q1 Campaign', assignee: 'Xavier M.', priority: 'Med', due: 'Oct 7', sortKey: 7 },
-    { name: 'Team Sync Prep', project: 'Case Study', assignee: 'Jez K.', priority: 'Low', due: 'Oct 8', sortKey: 8 },
-    { name: 'Finalize Q2 Budget', project: 'App Launch', assignee: 'Ashley S.', priority: 'High', due: 'Oct 9', sortKey: 9 },
-  ];
-
-  const myTasks = isAdminOrManager ? adminMyTasks : userMyTasks;
-  const currentTasks = taskView === 'my' ? myTasks : companyTasks;
-  const displayTasks = sortByDate
-    ? [...currentTasks].sort((a, b) => a.sortKey - b.sortKey)
-    : currentTasks;
 
   const ganttWeekHeaders = useMemo(() => {
     const today = new Date();
@@ -338,12 +387,6 @@ export default function DashboardPage() {
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   };
-  const getOwnerInitials = (name: string | null) => {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    return (parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}` : parts[0].slice(0, 2)).toUpperCase();
-  };
-
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/projects`, { credentials: 'include' })
       .then(r => r.json())
@@ -357,12 +400,12 @@ export default function DashboardPage() {
           const db = b.start_date ? new Date(b.start_date).getTime() : 0;
           return db - da;
         });
-        const rows = sorted.slice(0, 4).map((p, i) => ({
+        const rows = sorted.slice(0, 5).map((p) => ({
           project: p.name ?? '—',
+          project_id: p.project_id ?? '',
           task: '',
           assignee: p.owner_name ?? (p.owner_id ? String(p.owner_id) : '—'),
-          assigneeInitials: getOwnerInitials(p.owner_name ?? null),
-          assigneeBg: avatarPalette[i % avatarPalette.length],
+          assigneeAvatar: p.owner_avatar ?? null,
           due: formatProjectDate(p.end_date ?? null),
           status: p.status ?? 'On Track',
         }));
@@ -374,7 +417,7 @@ export default function DashboardPage() {
   const displayProjectRows = liveProjectRows ?? projectRows;
 
   return (
-    <div style={{ width: '100vw', minHeight: '100vh', display: 'flex', background: 'linear-gradient(180deg, #fff 0%, #ffe5d0 100%)', overflowX: 'hidden' }}>
+    <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'linear-gradient(180deg, #fff 0%, #ffe5d0 100%)', overflowX: 'hidden' }}>
       {/* Development Role Switcher */}
       <DevRoleSwitcher />
 
@@ -382,20 +425,7 @@ export default function DashboardPage() {
       <Sidebar activePage="dashboard" />
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px', minHeight: '100vh' }}>
-        {/* Top Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-          {/* Search Container */}
-          <div style={{ flex: 1 }}>
-            <SearchBar placeholder="Search contacts, projects, and more..." onSearch={(value) => {
-              if (value.trim()) {
-                window.location.href = `/dashboard/clients?search=${encodeURIComponent(value)}`;
-              }
-            }} />
-          </div>
-
-        </div>
-
+      <div style={{ flex: 1, minWidth: 0, marginLeft: 320, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px', overflowX: 'hidden' }}>
         <ReminderBanner />
 
         {/* Top Section - Stats Cards and Manage Projects */}
@@ -437,17 +467,39 @@ export default function DashboardPage() {
                 <div style={{ ...tileTopZone, background: 'rgba(255, 246, 66, 0.6)', borderBottom: '1px solid rgba(220, 200, 0, 0.8)' }}><span style={{ ...tileLabelStyle, color: '#713f12' }}>Open Invoices</span></div>
                 <div style={tileBodyZone}>
                   <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{openInvoicesCount === null ? '...' : openInvoicesCount}</div>
-                  {(overdueInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>{overdueInvoicesCount} overdue</div>}
+                  {(unpaidInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(245, 158, 11, 0.15)', '#d97706')}>{unpaidInvoicesCount} unpaid</div>}
+                  {(overdueInvoicesCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{overdueInvoicesCount} overdue</div>}
                 </div>
               </div>
             </>
           ) : (
             <>
-              {/* Coming Soon placeholder */}
+              {/* Recent Activity feed */}
               <div style={tileStyle(1, kpiColors.comingSoon.border, kpiColors.comingSoon.shadow)} onMouseEnter={() => setHoveredTile(1)} onMouseLeave={() => setHoveredTile(null)}>
-                <div style={{ ...tileTopZone, background: 'rgba(137, 121, 255, 0.4)', borderBottom: '1px solid #8979FF' }}><span style={{ ...tileLabelStyle, color: '#3730a3' }}>Coming Soon</span></div>
-                <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'rgba(0, 0, 0, 0.25)', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>—</div>
+                <div style={{ ...tileTopZone, background: 'rgba(137, 121, 255, 0.4)', borderBottom: '1px solid #8979FF' }}><span style={{ ...tileLabelStyle, color: '#3730a3' }}>Recent Activity</span></div>
+                <div style={{ ...tileBodyZone, padding: '10px 16px', alignItems: 'stretch', justifyContent: 'center' }}>
+                  {activityFeed === null ? (
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center' }}>
+                      {[0, 1, 2].map(i => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#8979FF', opacity: 0.4 }} />)}
+                    </div>
+                  ) : activityFeed.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.3)', fontSize: 14, fontFamily: 'Poppins' }}>No recent activity</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                      {activityFeed.slice(0, 3).map((ev, i) => {
+                        const accentColor = ev.type === 'task' ? '#f97316' : ev.type === 'project' ? '#8979FF' : '#eab308';
+                        return (
+                          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: accentColor, flexShrink: 0 }} />
+                              <div style={{ fontSize: 15, fontFamily: 'Poppins', fontWeight: 600, color: '#1e1e1e', textAlign: 'center' }}>{ev.description}</div>
+                            </div>
+                            <div style={{ fontSize: 13, color: 'rgba(0,0,0,0.4)', fontFamily: 'Poppins' }}>{timeAgo(ev.timestamp)}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -455,8 +507,8 @@ export default function DashboardPage() {
               <div style={tileStyle(2, kpiColors.tasksDue.border, kpiColors.tasksDue.shadow)} onMouseEnter={() => setHoveredTile(2)} onMouseLeave={() => setHoveredTile(null)}>
                 <div style={{ ...tileTopZone, background: '#FF928A', borderBottom: '1px solid #ef4444' }}><span style={{ ...tileLabelStyle, color: '#7f1d1d' }}>My Tasks Due</span></div>
                 <div style={tileBodyZone}>
-                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{tasksDueCount === null ? '...' : tasksDueCount}</div>
-                  {(tasksOverdueCount ?? 0) > 0 && <div style={badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626')}>{tasksOverdueCount} overdue</div>}
+                  <div style={{ textAlign: 'center', color: 'black', fontSize: 48, fontFamily: 'Poppins', fontWeight: '700', lineHeight: 1 }}>{myTasksTotal === null ? '...' : myTasksTotal}</div>
+                  {(myTasksHigh ?? 0) > 0 && <div style={badgeStyle('#FF0000', 'white')}>{myTasksHigh} High</div>}
                 </div>
               </div>
             </>
@@ -474,7 +526,7 @@ export default function DashboardPage() {
                 borderRadius: 20,
                 padding: '20px',
               }}>
-                {/* Header: toggle + sort */}
+                {/* Header: toggle */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => setTaskView('my')} style={{
@@ -490,21 +542,36 @@ export default function DashboardPage() {
                       color: taskView === 'company' ? 'white' : '#f97316',
                     }}>Company Wide</button>
                   </div>
-                  <button onClick={() => setSortByDate(prev => !prev)} style={{
-                    padding: '5px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
-                    border: '1.5px solid #d1d5db', background: sortByDate ? '#f3f4f6' : 'transparent', color: '#374151',
-                  }}>Sort by Date</button>
                 </div>
                 {/* Task rows */}
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {displayTasks.slice(0, 6).map((task, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
-                      <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.name}</div>
-                      {'assignee' in task && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).assignee}</div>}
-                      <span style={{ ...badgeStyle(priorityColors[task.priority].bg, priorityColors[task.priority].text), marginRight: 12 }}>{task.priority}</span>
-                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{task.due}</div>
-                    </div>
-                  ))}
+                  {dashboardTasks === null ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+                  ) : dashboardTasks.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>No upcoming tasks</div>
+                  ) : dashboardTasks.map((task, i) => {
+                    const pl = priorityLabel(task.priority);
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => { window.location.href = `/dashboard/projects/${task.project_id}?task=${task.task_id}`; }}
+                        onMouseEnter={() => setHoveredTask(i)}
+                        onMouseLeave={() => setHoveredTask(null)}
+                        style={{
+                          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          padding: '10px 0', borderBottom: '1px solid #f0f0f0',
+                          cursor: 'pointer',
+                          background: hoveredTask === i ? '#fafafa' : 'transparent',
+                          transition: 'background 150ms ease',
+                        }}
+                      >
+                        <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.title}</div>
+                        {taskView === 'company' && task.assignee_name && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.assignee_name}</div>}
+                        <span style={{ ...badgeStyle(priorityColors[pl].bg, priorityColors[pl].text), marginRight: 12 }}>{pl}</span>
+                        <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{formatTaskDate(task.due_date)}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -530,7 +597,7 @@ export default function DashboardPage() {
                       return (
                         <div
                           key={i}
-                          onClick={() => { window.location.href = '/dashboard/projects'; }}
+                          onClick={() => { window.location.href = row.project_id ? `/dashboard/projects/${row.project_id}` : '/dashboard/projects'; }}
                           onMouseEnter={() => setHoveredRow(i)}
                           onMouseLeave={() => setHoveredRow(null)}
                           style={{
@@ -547,7 +614,7 @@ export default function DashboardPage() {
                         >
                           <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
+                            <Avatar name={row.assignee} avatarUrl={row.assigneeAvatar} size={28} />
                             <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
                           </div>
                           <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>
@@ -574,7 +641,7 @@ export default function DashboardPage() {
                 border: hoveredGantt ? '1.5px solid #f97316' : '1.5px solid transparent',
                 transition: 'border-color 200ms ease',
                 minHeight: 380,
-                marginTop: 16,
+                marginTop: 36,
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -606,13 +673,7 @@ export default function DashboardPage() {
                 <div key={ri} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', alignItems: 'center', borderBottom: ri < displayGanttRows.length - 1 ? '1px solid #f0f0f0' : 'none', padding: '10px 0' }}>
                   {/* Name cell */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%', background: row.avatarBg,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0,
-                    }}>
-                      {row.initials}
-                    </div>
+                    <Avatar name={row.name} size={32} />
                     <div style={{ fontSize: 13, fontFamily: 'Poppins', fontWeight: 600, color: 'black' }}>{row.name}</div>
                   </div>
                   {/* Timeline area */}
@@ -726,7 +787,8 @@ export default function DashboardPage() {
                         textAlign: 'left',
                         fontSize: 13,
                         fontFamily: 'Poppins',
-                        fontWeight: 600
+                        fontWeight: 600,
+                        color: 'black'
                       }}>
                         {item.clientName || item.clientId}
                       </div>
@@ -734,7 +796,8 @@ export default function DashboardPage() {
                       <div style={{
                         textAlign: 'center',
                         fontSize: 13,
-                        fontFamily: 'Poppins'
+                        fontFamily: 'Poppins',
+                        color: 'black'
                       }}>
                         {item.score}
                       </div>
@@ -758,7 +821,8 @@ export default function DashboardPage() {
                         textAlign: 'center',
                         fontSize: 13,
                         fontFamily: 'Poppins',
-                        whiteSpace: 'nowrap'
+                        whiteSpace: 'nowrap',
+                        color: 'rgba(0,0,0,0.6)'
                       }}>
                         {item.updatedAt
                           ? new Date(item.updatedAt).toLocaleDateString('en-US', {
@@ -783,7 +847,7 @@ export default function DashboardPage() {
               borderRadius: 20,
               padding: '20px'
             }}>
-              {/* Header: toggle + sort */}
+              {/* Header: toggle */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => setTaskView('my')} style={{
@@ -799,22 +863,37 @@ export default function DashboardPage() {
                     color: taskView === 'company' ? 'white' : '#f97316',
                   }}>Company Wide</button>
                 </div>
-                <button onClick={() => setSortByDate(prev => !prev)} style={{
-                  padding: '5px 12px', borderRadius: 8, fontSize: 11, fontFamily: 'Poppins', fontWeight: 600, cursor: 'pointer',
-                  border: '1.5px solid #d1d5db', background: sortByDate ? '#f3f4f6' : 'transparent', color: '#374151',
-                }}>Sort by Date</button>
               </div>
               {/* Task rows */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {displayTasks.map((task, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
-                    <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.name}</div>
-                    {'project' in task && <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).project}</div>}
-                    {'assignee' in task && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{(task as typeof companyTasks[number]).assignee}</div>}
-                    <span style={{ ...badgeStyle(priorityColors[task.priority].bg, priorityColors[task.priority].text), marginRight: 12 }}>{task.priority}</span>
-                    <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{task.due}</div>
-                  </div>
-                ))}
+                {dashboardTasks === null ? (
+                  <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>...</div>
+                ) : dashboardTasks.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: 'rgba(0,0,0,0.35)', fontSize: 14, fontFamily: 'Poppins', padding: '20px 0' }}>No upcoming tasks</div>
+                ) : dashboardTasks.map((task, i) => {
+                  const pl = priorityLabel(task.priority);
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => { window.location.href = `/dashboard/projects/${task.project_id}?task=${task.task_id}`; }}
+                      onMouseEnter={() => setHoveredTask(i)}
+                      onMouseLeave={() => setHoveredTask(null)}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '10px 0', borderBottom: '1px solid #f0f0f0',
+                        cursor: 'pointer',
+                        background: hoveredTask === i ? '#fafafa' : 'transparent',
+                        transition: 'background 150ms ease',
+                      }}
+                    >
+                      <div style={{ flex: 1, color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{task.title}</div>
+                      {task.project_name && <div style={{ color: 'rgba(0,0,0,0.45)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.project_name}</div>}
+                      {taskView === 'company' && task.assignee_name && <div style={{ color: 'rgba(0,0,0,0.5)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500', marginRight: 10 }}>{task.assignee_name}</div>}
+                      <span style={{ ...badgeStyle(priorityColors[pl].bg, priorityColors[pl].text), marginRight: 12 }}>{pl}</span>
+                      <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '500', minWidth: 45, textAlign: 'right' }}>{formatTaskDate(task.due_date)}</div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -841,7 +920,7 @@ export default function DashboardPage() {
                     return (
                       <div
                         key={i}
-                        onClick={() => { window.location.href = '/dashboard/projects'; }}
+                        onClick={() => { window.location.href = row.project_id ? `/dashboard/projects/${row.project_id}` : '/dashboard/projects'; }}
                         onMouseEnter={() => setHoveredRow(i)}
                         onMouseLeave={() => setHoveredRow(null)}
                         style={{
@@ -858,7 +937,7 @@ export default function DashboardPage() {
                       >
                         <div style={{ color: 'black', fontSize: 14, fontFamily: 'Poppins', fontWeight: '600' }}>{row.project}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: row.assigneeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'Poppins', fontWeight: 700, color: 'white', flexShrink: 0 }}>{row.assigneeInitials}</div>
+                          <Avatar name={row.assignee} avatarUrl={row.assigneeAvatar} size={28} />
                           <div style={{ color: 'black', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.assignee}</div>
                         </div>
                         <div style={{ color: 'rgba(0,0,0,0.6)', fontSize: 12, fontFamily: 'Poppins', fontWeight: '500' }}>{row.due}</div>

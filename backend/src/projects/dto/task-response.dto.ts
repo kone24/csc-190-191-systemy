@@ -19,8 +19,12 @@ export interface TaskResponseDto {
     assigned_to: string | null;
     /** Resolved name of the primary assignee (nullable) */
     assignee_name: string | null;
+    /** Resolved avatar URL of the primary assignee (nullable) */
+    assignee_avatar: string | null;
     /** Array of additional assignee UUIDs */
     assignees: string[];
     /** Resolved names for the assignees UUIDs */
     assignee_names: string[];
+    /** Resolved avatar URLs for the assignees UUIDs */
+    assignee_avatars: (string | null)[];
 }

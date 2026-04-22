@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useUser } from '@/contexts/UserContext';
+import Avatar from '@/components/Avatar';
 
 interface SidebarProps {
     activePage: 'dashboard' | 'analytics' | 'projects' | 'gantt' | 'clients' | 'vendors' | 'invoices' | 'account' | 'settings' | 'management' | 'recommendations';
@@ -30,15 +31,15 @@ const NavItem = ({ href, icon, label, isActive }: NavItemProps) => {
             display: 'flex',
             cursor: 'pointer'
         }}>
-            <div style={{ width: 20, height: 20, position: 'relative' }}>
-                <img style={{ width: 20, height: 20, left: 0, top: 0, position: 'absolute' }} src={icon} alt={label} />
+            <div style={{ width: 24, height: 24, position: 'relative' }}>
+                <img style={{ width: 24, height: 24, left: 0, top: 0, position: 'absolute' }} src={icon} alt={label} />
             </div>
             <div style={{
                 opacity: isActive ? 1 : 0.75,
                 color: 'black',
-                fontSize: 18,
+                fontSize: 20,
                 fontFamily: 'Poppins',
-                fontWeight: '500',
+                fontWeight: '700',
                 wordWrap: 'break-word'
             }}>
                 {label}
@@ -58,14 +59,20 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
     return (
         <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
             width: 320,
-            minHeight: '100vh',
+            height: '100vh',
+            overflowY: 'hidden',
+            zIndex: 100,
             background: 'linear-gradient(180deg, rgba(255, 172, 128, 0) 1%, rgba(255, 172, 128, 0.30) 100%), white',
             boxShadow: '0px 4px 5px black',
-            flexShrink: 0
         }}>
             <div style={{
                 padding: 10,
+                paddingBottom: 20,
+                boxSizing: 'border-box',
                 flexDirection: 'column',
                 justifyContent: 'flex-start',
                 alignItems: 'flex-start',
@@ -74,6 +81,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 height: '100%'
             }}>
                 {/* Logo */}
+                <a href="https://headword.co" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', alignSelf: 'stretch' }}>
                 <div style={{
                     alignSelf: 'stretch',
                     height: 61.10,
@@ -81,7 +89,8 @@ export default function Sidebar({ activePage }: SidebarProps) {
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                     gap: 10,
-                    display: 'flex'
+                    display: 'flex',
+                    cursor: 'pointer'
                 }}>
                     <div style={{ width: 20, height: 20, position: 'relative' }}>
                         <img style={{
@@ -97,14 +106,15 @@ export default function Sidebar({ activePage }: SidebarProps) {
                     <div style={{
                         opacity: 0.75,
                         color: 'black',
-                        fontSize: 18,
+                        fontSize: 20,
                         fontFamily: 'Poppins',
-                        fontWeight: '500',
+                        fontWeight: '700',
                         wordWrap: 'break-word'
                     }}>
                         Headword!
                     </div>
                 </div>
+                </a>
 
                 {/* Navigation Items */}
                 <NavItem
@@ -130,7 +140,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
                 <NavItem
                     href="/dashboard/gantt"
-                    icon="/images/icons/projects.png"
+                    icon="/images/icons/gantt-chart.png"
                     label="Gantt Chart"
                     isActive={activePage === 'gantt'}
                 />
@@ -144,7 +154,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
                 <NavItem
                     href="/dashboard/vendors"
-                    icon="/images/icons/vendors.png"
+                    icon="/images/icons/vendor.png"
                     label="Vendors"
                     isActive={activePage === 'vendors'}
                 />
@@ -158,7 +168,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
 
                 <NavItem
                     href="/dashboard/recommendations"
-                    icon="/images/icons/analytics.png"
+                    icon="/images/icons/recommendations.png"
                     label="Recommendations"
                     isActive={activePage === 'recommendations'}
                 />
@@ -167,7 +177,7 @@ export default function Sidebar({ activePage }: SidebarProps) {
                 {isAdmin && (
                     <NavItem
                         href="/dashboard/management"
-                        icon="/images/icons/settings.png"
+                        icon="/images/icons/management.png"
                         label="Management"
                         isActive={activePage === 'management'}
                     />
@@ -195,49 +205,18 @@ export default function Sidebar({ activePage }: SidebarProps) {
                             display: 'flex',
                             cursor: 'pointer'
                         }}>
-                            <div style={{ width: 32, height: 32, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {user?.avatar ? (
-                                    <img
-                                        src={user.avatar}
-                                        alt="Account Avatar"
-                                        style={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: '50%',
-                                            objectFit: 'cover',
-                                            border: '2px solid #FF5900',
-                                        }}
-                                    />
-                                ) : user ? (
-                                    <div style={{
-                                        width: 32,
-                                        height: 32,
-                                        borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, #FF5900 0%, #FFAC80 100%)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: 'white',
-                                        fontSize: 16,
-                                        fontFamily: 'Poppins',
-                                        fontWeight: '600'
-                                    }}>
-                                        {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                                    </div>
-                                ) : (
-                                    <img
-                                        src="/images/images/account.png"
-                                        alt="Account"
-                                        style={{ width: 32, height: 32, borderRadius: '50%' }}
-                                    />
-                                )}
-                            </div>
+                            <Avatar
+                                name={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || '?'}
+                                avatarUrl={user?.avatar}
+                                size={32}
+                                border="2px solid #FF5900"
+                            />
                             <div style={{
                                 opacity: activePage === 'account' ? 1 : 0.75,
                                 color: 'black',
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontFamily: 'Poppins',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 wordWrap: 'break-word'
                             }}>
                                 Account

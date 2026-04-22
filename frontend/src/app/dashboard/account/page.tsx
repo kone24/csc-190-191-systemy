@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
+import Avatar from '@/components/Avatar';
 import { useUser, User } from '@/contexts/UserContext';
 
 export default function AccountPage() {
     const { user, setUser, logout } = useUser();
     const [isEditing, setIsEditing] = useState(false);
     const [tempProfile, setTempProfile] = useState<User | null>(user);
-
     useEffect(() => {
         if (user) {
             setTempProfile(user);
@@ -58,14 +58,17 @@ export default function AccountPage() {
             {/* Main Content Area */}
             <div style={{
                 flex: 1,
+                minWidth: 0,
+                marginLeft: 320,
                 display: 'flex',
                 flexDirection: 'column',
                 background: 'rgba(217, 217, 217, 0.15)',
                 padding: '20px 20px 20px 30px',
-                gap: '20px'
+                gap: '20px',
+                overflowX: 'hidden',
             }}>
                 {/* Top Bar */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     {/* Page Title */}
                     <div style={{
                         color: 'black',
@@ -97,35 +100,12 @@ export default function AccountPage() {
                         borderBottom: '1px solid rgba(0, 0, 0, 0.1)'
                     }}>
                         {/* Avatar */}
-                        {user.avatar ? (
-                            <img
-                                src={user.avatar}
-                                alt="User Avatar"
-                                style={{
-                                    width: 80,
-                                    height: 80,
-                                    borderRadius: '50%',
-                                    objectFit: 'cover',
-                                    border: '2px solid #FF5900',
-                                }}
-                            />
-                        ) : (
-                            <div style={{
-                                width: 80,
-                                height: 80,
-                                borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #FF5900 0%, #FFAC80 100%)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                color: 'white',
-                                fontSize: 32,
-                                fontFamily: 'Poppins',
-                                fontWeight: '600'
-                            }}>
-                                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                            </div>
-                        )}
+                        <Avatar
+                            name={`${user.firstName} ${user.lastName}`.trim() || '?'}
+                            avatarUrl={user.avatar}
+                            size={80}
+                            border="2px solid #FF5900"
+                        />
 
                         {/* Profile Info */}
                         <div style={{ flex: 1 }}>
@@ -267,7 +247,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -297,7 +278,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -327,7 +309,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -357,7 +340,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -387,7 +371,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             />
                         </div>
@@ -416,7 +401,8 @@ export default function AccountPage() {
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     background: isEditing ? 'white' : '#f5f5f5',
-                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)'
+                                    color: isEditing ? 'black' : 'rgba(0, 0, 0, 0.7)',
+                                    boxSizing: 'border-box'
                                 }}
                             >
                                 <option value="Administrator">Administrator</option>

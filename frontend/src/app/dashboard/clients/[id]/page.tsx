@@ -413,6 +413,8 @@ export default function ClientProfilePage() {
 
       <div style={{
         flex: 1,
+        minWidth: 0,
+        marginLeft: 320,
         display: 'flex',
         flexDirection: 'column',
         background: 'rgba(217, 217, 217, 0.15)',

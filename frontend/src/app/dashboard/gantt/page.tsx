@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { ResizableBox } from 'react-resizable';
 import Sidebar from '@/components/Sidebar';
-import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { ManagerAndAbove } from '@/components/RoleGuard';
 
@@ -927,12 +926,14 @@ export default function GanttPage() {
 
                 <div style={{
                     flex: 1,
+                    minWidth: 0,
+                    marginLeft: 320,
                     display: 'flex',
                     flexDirection: 'column',
                     background: 'rgba(217, 217, 217, 0.15)',
                     padding: '20px 20px 20px 30px',
                     gap: 20,
-                    overflow: 'hidden',
+                    overflowX: 'hidden',
                 }}>
                     {/* Error toast */}
                     {error && (
@@ -946,11 +947,6 @@ export default function GanttPage() {
                             {error}
                         </div>
                     )}
-
-                    {/* Top bar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <SearchBar placeholder="Search projects..." onSearch={() => { }} />
-                    </div>
 
                     {/* Page title */}
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>

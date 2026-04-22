@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -31,6 +31,18 @@ export class ProjectsController {
     async remove(@Param('id') id: string) {
         await this.projectsService.remove(id);
         return { ok: true };
+    }
+
+    @Get('tasks/stats')
+    async taskStats(@Query('assigned_to') assignedTo: string) {
+        const stats = await this.projectsService.findTaskStats(assignedTo);
+        return { ok: true, ...stats };
+    }
+
+    @Get('tasks')
+    async listTasks(@Query('assigned_to') assignedTo?: string) {
+        const items = await this.projectsService.findDashboardTasks(assignedTo);
+        return { ok: true, items };
     }
 
     @Get('projects/:id/phases')

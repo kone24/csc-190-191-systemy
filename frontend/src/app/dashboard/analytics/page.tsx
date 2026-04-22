@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import SearchBar from '@/components/SearchBar';
 import { usePermissions } from '@/components/RoleGuard';
+import { useUser } from '@/contexts/UserContext';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend,
@@ -56,6 +57,7 @@ const PIE_COLORS: Record<string, string> = {
 };
 
 export default function AnalyticsPage() {
+  const { user } = useUser();
   const { canViewReports } = usePermissions();
   const router = useRouter();
   const [range, setRange] = useState<RangeOption>('30d');
@@ -99,10 +101,10 @@ export default function AnalyticsPage() {
         invoiceRes.json(),
       ]);
 
-      setSummary(summaryJson.data);
-      setRevenueData(revenueJson.data);
-      setClientData(clientJson.data);
-      setInvoiceStatus(invoiceJson.data);
+      setSummary(summaryJson.data ?? null);
+      setRevenueData(revenueJson.data ?? []);
+      setClientData(clientJson.data ?? []);
+      setInvoiceStatus(invoiceJson.data ?? null);
     } catch (err) {
       console.error('Analytics fetch error:', err);
       setError('Unable to connect to the server. Please check your connection.');
@@ -117,6 +119,32 @@ export default function AnalyticsPage() {
     }
   }, [canViewReports, fetchAnalytics]);
 
+  if (!user || loading) {
+    return (
+      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
+        <Sidebar activePage="analytics" />
+        <div style={{ flex: 1, marginLeft: 320, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
+          {/* Top Bar */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
+          </div>
+          {/* Skeleton cards */}
+          <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {[1, 2, 3].map((i) => (
+              <div key={i} style={{ height: 160, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
+            ))}
+          </div>
+          {/* Skeleton charts */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 10 }}>
+            <div style={{ height: 400, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
+            <div style={{ height: 400, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
+          </div>
+          <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
+        </div>
+      </div>
+    );
+  }
+
   if (!canViewReports) {
     return (
       <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
@@ -127,32 +155,6 @@ export default function AnalyticsPage() {
           <div style={{ fontSize: 16, color: '#666', maxWidth: 400, textAlign: 'center', fontFamily: 'Poppins' }}>
             You don&apos;t have permission to view analytics. Please contact your administrator.
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', background: 'white' }}>
-        <Sidebar activePage="analytics" />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
-          {/* Top Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
-          </div>
-          {/* Skeleton cards */}
-          <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(auto-fill, minmax(366px, 1fr))', justifyItems: 'center' }}>
-            {[1, 2, 3].map((i) => (
-              <div key={i} style={{ minWidth: 366, height: 180, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
-            ))}
-          </div>
-          {/* Skeleton charts */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28, marginTop: 10 }}>
-            <div style={{ height: 400, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
-            <div style={{ height: 400, background: '#e9e9e9', borderRadius: 20, animation: 'pulse 1.5s ease-in-out infinite' }} />
-          </div>
-          <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
         </div>
       </div>
     );
@@ -197,9 +199,9 @@ export default function AnalyticsPage() {
       <Sidebar activePage="analytics" />
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
+      <div style={{ flex: 1, minWidth: 0, marginLeft: 320, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px', overflowX: 'hidden' }}>
         {/* Top Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
         </div>
 
@@ -228,58 +230,59 @@ export default function AnalyticsPage() {
         </div>
 
         {/* KPI Cards */}
-        <div style={{ display: 'grid', gap: '28px', marginBottom: '30px', width: '100%', gridTemplateColumns: 'repeat(auto-fill, minmax(366px, 1fr))', justifyItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '28px' }}>
           {/* Total Revenue Card */}
-          <div style={{ minWidth: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
-            <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>$</div>
-            </div>
-            <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 160 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>Total Revenue </span>
-                <span style={{ color: changeColor(summary?.revenueChange || 0), fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>
-                  {changePrefix(summary?.revenueChange || 0)}{summary?.revenueChange || 0}%
+                <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>Total Revenue</div>
+                <span style={{ color: changeColor(summary?.revenueChange ?? 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
+                  {changePrefix(summary?.revenueChange ?? 0)}{summary?.revenueChange ?? 0}% vs last period
                 </span>
               </div>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600' }}>$</span>
+              </div>
             </div>
-            <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>{formatCurrency(summary?.totalRevenue || 0)}</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.invoiceCount || 0} invoices</div>
+            <div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{formatCurrency(summary?.totalRevenue ?? 0)}</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.invoiceCount ?? 0} invoices</div>
             </div>
           </div>
 
           {/* New Clients Card */}
-          <div style={{ minWidth: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
-            <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>👤</div>
-            </div>
-            <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 160 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>New Clients </span>
-                <span style={{ color: changeColor(summary?.clientChange || 0), fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>
-                  {changePrefix(summary?.clientChange || 0)}{summary?.clientChange || 0}%
+                <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>New Clients</div>
+                <span style={{ color: changeColor(summary?.clientChange ?? 0), fontSize: 13, fontFamily: 'Poppins', fontWeight: '600' }}>
+                  {changePrefix(summary?.clientChange ?? 0)}{summary?.clientChange ?? 0}% vs last period
                 </span>
               </div>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 18 }}>👤</span>
+              </div>
             </div>
-            <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.newClients || 0}</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.totalClients || 0} total clients</div>
+            <div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.newClients ?? 0}</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>{summary?.totalClients ?? 0} total clients</div>
             </div>
           </div>
 
           {/* Conversion Rate Card */}
-          <div style={{ width: 366, height: 180, position: 'relative', background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}>
-            <div style={{ width: 60.16, height: 60.16, paddingLeft: 13, paddingRight: 13, paddingTop: 8, paddingBottom: 8, position: 'absolute', right: 44, top: 60, borderRadius: 100, border: '5px solid rgba(255, 89, 0, 0.50)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 20, fontFamily: 'Poppins', fontWeight: '500' }}>%</div>
-            </div>
-            <div style={{ position: 'absolute', left: 6, top: 21, padding: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 20, boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)', padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 160 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <span style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>Conversion Rate </span>
+                <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 14, fontFamily: 'Poppins', fontWeight: '500', marginBottom: 2 }}>Conversion Rate</div>
+                <span style={{ color: 'rgba(0, 0, 0, 0.35)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>paid / total invoices</span>
+              </div>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', border: '4px solid rgba(255, 89, 0, 0.40)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 18, fontFamily: 'Poppins', fontWeight: '600' }}>%</span>
               </div>
             </div>
-            <div style={{ position: 'absolute', left: 23, top: 90, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ color: 'black', fontSize: 25, fontFamily: 'Poppins', fontWeight: '500' }}>{summary?.conversionRate || 0}%</div>
-              <div style={{ color: 'rgba(0, 0, 0, 0.50)', fontSize: 16, fontFamily: 'Poppins', fontWeight: '500' }}>paid / total invoices</div>
+            <div>
+              <div style={{ color: 'black', fontSize: 28, fontFamily: 'Poppins', fontWeight: '600', marginBottom: 4 }}>{summary?.conversionRate ?? 0}%</div>
+              <div style={{ color: 'rgba(0, 0, 0, 0.45)', fontSize: 13, fontFamily: 'Poppins', fontWeight: '400' }}>of invoices fulfilled</div>
             </div>
           </div>
         </div>
@@ -356,11 +359,11 @@ export default function AnalyticsPage() {
             Invoice Status Breakdown
           </div>
           {pieData.length > 0 ? (
-            <ResponsiveContainer width="90%" height={200}>
+            <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
                   data={pieData}
-                  cx="50%"
+                  cx="35%"
                   cy="50%"
                   outerRadius={70}
                   innerRadius={30}
@@ -378,7 +381,6 @@ export default function AnalyticsPage() {
                   layout="vertical"
                   iconType="circle"
                   iconSize={10}
-                  wrapperStyle={{ right: 200, top: 50 }}
                   formatter={(value) => {
                     const dataItem = pieData.find(item => item.name === value);
                     const count = dataItem ? dataItem.value : 0;

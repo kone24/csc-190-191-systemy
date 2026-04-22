@@ -9,6 +9,7 @@ export interface ProjectResponseDto {
     client_name: string | null;
     owner_id: string | null;
     owner_name: string | null;
+    owner_avatar: string | null;
     task_count: number;
     budget: number | null;
     description: string | null;
