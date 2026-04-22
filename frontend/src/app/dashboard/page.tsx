@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
-import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import ReminderBanner from '@/components/dashboard/ReminderBanner';
@@ -425,19 +424,6 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <div style={{ flex: 1, minWidth: 0, marginLeft: 320, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px', overflowX: 'hidden' }}>
-        {/* Top Bar */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
-          {/* Search Container */}
-          <div style={{ flex: 1 }}>
-            <SearchBar placeholder="Search contacts, projects, and more..." onSearch={(value) => {
-              if (value.trim()) {
-                window.location.href = `/dashboard/clients?search=${encodeURIComponent(value)}`;
-              }
-            }} />
-          </div>
-
-        </div>
-
         <ReminderBanner />
 
         {/* Top Section - Stats Cards and Manage Projects */}

@@ -3,7 +3,6 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { ResizableBox } from 'react-resizable';
 import Sidebar from '@/components/Sidebar';
-import SearchBar from '@/components/SearchBar';
 import { DevRoleSwitcher } from '@/components/DevRoleSwitcher';
 import { ManagerAndAbove } from '@/components/RoleGuard';
 
@@ -948,11 +947,6 @@ export default function GanttPage() {
                             {error}
                         </div>
                     )}
-
-                    {/* Top bar */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <SearchBar placeholder="Search projects..." onSearch={() => { }} />
-                    </div>
 
                     {/* Page title */}
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
