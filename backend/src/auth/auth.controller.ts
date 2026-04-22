@@ -13,7 +13,7 @@ export class AuthController {
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
-    res.clearCookie('access_token', { path: '/', httpOnly: true });
+    res.clearCookie('access_token', { path: '/', httpOnly: true, sameSite: 'none', secure: true });
     return { ok: true, message: 'Logged out successfully', redirect: '/login' };
   }
 
