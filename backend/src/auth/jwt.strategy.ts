@@ -1,13 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
-
-function cookieExtractor(req: Request) {
-  return req?.cookies?.['access_token'] ?? null;
-}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -16,13 +11,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly authService: AuthService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([
-        cookieExtractor,
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ]),
+      // Only accept Authorization: Bearer <token> to avoid CSRF via cookies.
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'dev-secret',
+      secretOrKey: configService.get<string>('JWT_SECRET')!,
     });
+
+    // Fail fast in production when JWT secret is missing.
+    if (!this.configService.get<string>('JWT_SECRET') && process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET environment variable is required in production');
+    }
   }
 
   async validate(payload: any) {
