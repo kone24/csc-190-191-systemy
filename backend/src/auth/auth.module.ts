@@ -5,15 +5,25 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt'; // Needed for JSON tokens
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './jwt.guard';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     ConfigModule,
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'dev-secret', // REPLACE AFTER TESTING!
-      signOptions: { expiresIn: '20m' }, // sign in only valid for 20 minutes of inactivity
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>('JWT_SECRET');
+        if (!secret && process.env.NODE_ENV === 'production') {
+          throw new Error('JWT_SECRET environment variable is required in production');
+        }
+        return {
+          secret: secret,
+          signOptions: { expiresIn: '20m' },
+        };
+      },
     }),
   ],
   providers: [AuthService, JwtStrategy, JwtAuthGuard],

@@ -19,7 +19,10 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async me(@Req() req: Request) {
+  async me(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    // Prevent caching of user profile responses to avoid stale 304 responses
+    res.setHeader('Cache-Control', 'no-store');
+
     const payload = req['user'] as { username?: string };
     if (!payload?.username) {
       return { ok: false, message: 'Invalid token payload' };
@@ -85,15 +88,9 @@ export class AuthController {
       return res.redirect(`${frontendUrl}/login?error=${errorParam}`);
     }
 
-    res.cookie('access_token', result.token, {
-      httpOnly: true,
-      sameSite: 'none',
-      secure: true,
-      maxAge: 1000 * 60 * 20, // 20 minutes
-      path: '/',
-    });
-
-    return res.redirect(`${frontendUrl}/dashboard`);
+    // Use URL fragment so token is not sent to servers via Referer or logged
+    // Redirect to the frontend's callback page (match React/Next route name)
+    return res.redirect(`${frontendUrl}/AuthCallback#token=${result.token}`);
   }
 
   /**

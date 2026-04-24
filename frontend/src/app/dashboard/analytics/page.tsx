@@ -57,7 +57,7 @@ const PIE_COLORS: Record<string, string> = {
 };
 
 export default function AnalyticsPage() {
-  const { user } = useUser();
+  const { user, token } = useUser();
   const { canViewReports } = usePermissions();
   const router = useRouter();
   const [range, setRange] = useState<RangeOption>('30d');
@@ -73,14 +73,18 @@ export default function AnalyticsPage() {
     setError(null);
 
     try {
-      const opts: RequestInit = { credentials: 'include' };
+      if (!token) {
+        router.push('/login?from=/dashboard/analytics');
+        return;
+      }
       const qs = `?range=${range}`;
+      const headers = { 'Authorization': `Bearer ${token}` } as Record<string, string>;
 
       const [summaryRes, revenueRes, clientRes, invoiceRes] = await Promise.all([
-        fetch(`${API_BASE}/analytics/summary${qs}`, opts),
-        fetch(`${API_BASE}/analytics/revenue-by-month${qs}`, opts),
-        fetch(`${API_BASE}/analytics/client-growth${qs}`, opts),
-        fetch(`${API_BASE}/analytics/invoice-status${qs}`, opts),
+        fetch(`${API_BASE}/analytics/summary${qs}`, { headers }),
+        fetch(`${API_BASE}/analytics/revenue-by-month${qs}`, { headers }),
+        fetch(`${API_BASE}/analytics/client-growth${qs}`, { headers }),
+        fetch(`${API_BASE}/analytics/invoice-status${qs}`, { headers }),
       ]);
 
       if (summaryRes.status === 401) {
@@ -126,7 +130,7 @@ export default function AnalyticsPage() {
         <div style={{ flex: 1, marginLeft: 320, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px' }}>
           {/* Top Bar */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
+            <SearchBar placeholder="Search analytics..." onSearch={() => { }} />
           </div>
           {/* Skeleton cards */}
           <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'repeat(3, 1fr)' }}>
@@ -180,11 +184,11 @@ export default function AnalyticsPage() {
 
   const pieData = invoiceStatus
     ? [
-        { name: 'Paid', value: invoiceStatus.paid },
-        { name: 'Unpaid', value: invoiceStatus.unpaid },
-        { name: 'Overdue', value: invoiceStatus.overdue },
-        { name: 'Cancelled', value: invoiceStatus.cancelled },
-      ].filter((d) => d.value > 0)
+      { name: 'Paid', value: invoiceStatus.paid },
+      { name: 'Unpaid', value: invoiceStatus.unpaid },
+      { name: 'Overdue', value: invoiceStatus.overdue },
+      { name: 'Cancelled', value: invoiceStatus.cancelled },
+    ].filter((d) => d.value > 0)
     : [];
 
   const formatCurrency = (n: number) =>
@@ -202,7 +206,7 @@ export default function AnalyticsPage() {
       <div style={{ flex: 1, minWidth: 0, marginLeft: 320, display: 'flex', flexDirection: 'column', background: 'rgba(217, 217, 217, 0.15)', padding: '20px 20px 20px 30px', gap: '20px', overflowX: 'hidden' }}>
         {/* Top Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <SearchBar placeholder="Search analytics..." onSearch={() => {}} />
+          <SearchBar placeholder="Search analytics..." onSearch={() => { }} />
         </div>
 
         {/* Date Range Filter Bar */}
