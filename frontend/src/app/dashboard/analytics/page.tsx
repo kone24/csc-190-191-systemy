@@ -73,18 +73,21 @@ export default function AnalyticsPage() {
     setError(null);
 
     try {
-      if (!token) {
-        router.push('/login?from=/dashboard/analytics');
-        return;
-      }
       const qs = `?range=${range}`;
-      const headers = { 'Authorization': `Bearer ${token}` } as Record<string, string>;
+      const requestInit: RequestInit = token
+        ? {
+          credentials: 'include',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+        : {
+          credentials: 'include',
+        };
 
       const [summaryRes, revenueRes, clientRes, invoiceRes] = await Promise.all([
-        fetch(`${API_BASE}/analytics/summary${qs}`, { headers }),
-        fetch(`${API_BASE}/analytics/revenue-by-month${qs}`, { headers }),
-        fetch(`${API_BASE}/analytics/client-growth${qs}`, { headers }),
-        fetch(`${API_BASE}/analytics/invoice-status${qs}`, { headers }),
+        fetch(`${API_BASE}/analytics/summary${qs}`, requestInit),
+        fetch(`${API_BASE}/analytics/revenue-by-month${qs}`, requestInit),
+        fetch(`${API_BASE}/analytics/client-growth${qs}`, requestInit),
+        fetch(`${API_BASE}/analytics/invoice-status${qs}`, requestInit),
       ]);
 
       if (summaryRes.status === 401) {
@@ -115,7 +118,7 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false);
     }
-  }, [range]);
+  }, [range, token, router]);
 
   useEffect(() => {
     if (canViewReports) {

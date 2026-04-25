@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { ManagerAndAbove } from '@/components/RoleGuard';
 import { useUser } from '@/contexts/UserContext';
 
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+
 type RecommendationPriority = 'high' | 'medium' | 'low';
 
 interface RecommendationCardData {
@@ -50,11 +52,12 @@ export default function RecommendationsPage() {
         */
         const endpoint =
           selectedType === 'all'
-            ? 'http://localhost:3001/recommendations'
-            : `http://localhost:3001/recommendations?type=${encodeURIComponent(selectedType)}`;
+            ? `${API_BASE}/recommendations`
+            : `${API_BASE}/recommendations?type=${encodeURIComponent(selectedType)}`;
 
         const res = await fetch(endpoint, {
           method: 'GET',
+          credentials: 'include',
           /*headers: {
             Authorization: `Bearer ${token}`,
           },*/
