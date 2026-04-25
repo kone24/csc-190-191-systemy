@@ -48,6 +48,68 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
+        const originalFetch = window.fetch.bind(window);
+
+        const readCookie = (name: string) => {
+            const cookie = document.cookie
+                .split('; ')
+                .find((entry) => entry.startsWith(`${name}=`));
+            if (!cookie) return '';
+            return decodeURIComponent(cookie.slice(name.length + 1));
+        };
+
+        window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+            const requestUrl =
+                typeof input === 'string'
+                    ? input
+                    : input instanceof URL
+                        ? input.toString()
+                        : input.url;
+
+            const requestMethod = (
+                init?.method ??
+                (typeof input !== 'string' && !(input instanceof URL) ? input.method : 'GET')
+            ).toUpperCase();
+
+            const isStateChanging = !['GET', 'HEAD', 'OPTIONS'].includes(requestMethod);
+            const isBackendRequest =
+                requestUrl.startsWith(backendUrl) ||
+                requestUrl.startsWith('http://localhost:3001') ||
+                requestUrl.startsWith('https://systemy-backend-916103566644.us-east1.run.app');
+
+            if (!isStateChanging || !isBackendRequest) {
+                return originalFetch(input, init);
+            }
+
+            const csrfToken = readCookie('csrf_token');
+            if (!csrfToken) {
+                return originalFetch(input, init);
+            }
+
+            const combinedHeaders = new Headers(
+                init?.headers ??
+                (typeof input !== 'string' && !(input instanceof URL) ? input.headers : undefined),
+            );
+
+            if (!combinedHeaders.has('x-csrf-token')) {
+                combinedHeaders.set('x-csrf-token', csrfToken);
+            }
+
+            return originalFetch(input, {
+                ...init,
+                headers: combinedHeaders,
+            });
+        }) as typeof fetch;
+
+        return () => {
+            window.fetch = originalFetch;
+        };
+    }, []);
+
     // Allow setting a bearer token (SPA flow). When a token is set we fetch the user
     // profile using Authorization header and populate context accordingly.
     const setToken = async (t: string | null) => {
@@ -124,8 +186,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
-        // No credentials: rely on SPA bearer token flow only (prevents cookie-based sessions)
-        fetch(`${backendUrl}/auth/me`)
+        // Fallback to cookie session when no bearer token exists.
+        fetch(`${backendUrl}/auth/me`, { credentials: 'include' })
             .then(res => {
                 if (!res.ok) throw new Error('Not authenticated');
                 return res.json();

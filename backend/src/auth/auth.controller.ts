@@ -1,5 +1,6 @@
 import { Controller, Post, Body, Res, Get, UseGuards, Req, Query } from '@nestjs/common';
 import type { Response, Request } from 'express';
+import { randomBytes } from 'crypto';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
 
@@ -14,6 +15,7 @@ export class AuthController {
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token', { path: '/', httpOnly: true, sameSite: 'none', secure: true });
+    res.clearCookie('csrf_token', { path: '/', sameSite: 'none', secure: true });
     return { ok: true, message: 'Logged out successfully', redirect: '/login' };
   }
 
@@ -87,6 +89,23 @@ export class AuthController {
       const errorParam = result.message.includes('restricted') ? 'domain' : 'oauth';
       return res.redirect(`${frontendUrl}/login?error=${errorParam}`);
     }
+
+    res.cookie('access_token', result.token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      maxAge: 20 * 60 * 1000,
+    });
+
+    const csrfToken = randomBytes(32).toString('hex');
+    res.cookie('csrf_token', csrfToken, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      maxAge: 20 * 60 * 1000,
+    });
 
     // Use URL fragment so token is not sent to servers via Referer or logged
     // Redirect to the frontend's callback page (match React/Next route name)
