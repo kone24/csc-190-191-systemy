@@ -60,6 +60,13 @@ describe('AuthController', () => {
       expect(res.clearCookie).toHaveBeenCalledWith('access_token', {
         path: '/',
         httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+      });
+      expect(res.clearCookie).toHaveBeenCalledWith('csrf_token', {
+        path: '/',
+        sameSite: 'none',
+        secure: true,
       });
       expect(result.ok).toBe(true);
       expect(result.redirect).toBe('/login');
@@ -77,7 +84,8 @@ describe('AuthController', () => {
         user: { user_id: 'uuid-123', name: 'Admin', email: 'admin@futureandsuns.com', role: 'admin' },
       });
 
-      const result = await controller.me(req);
+      const res = { setHeader: jest.fn() } as any;
+      const result = await controller.me(req, res);
 
       expect(mockAuthService.findUserByEmail).toHaveBeenCalledWith('admin@futureandsuns.com');
       expect(result).toEqual({
@@ -88,7 +96,8 @@ describe('AuthController', () => {
 
     it('should return error when JWT payload has no username', async () => {
       const req = fakeReq({ user: {} });
-      const result = await controller.me(req);
+      const res = { setHeader: jest.fn() } as any;
+      const result = await controller.me(req, res);
       expect(result).toEqual({ ok: false, message: 'Invalid token payload' });
     });
   });
@@ -171,7 +180,7 @@ describe('AuthController', () => {
         expect.objectContaining({ httpOnly: true, path: '/' }),
       );
       expect(res.redirect).toHaveBeenCalledWith(
-        'http://localhost:3000/dashboard',
+        'http://localhost:3000/AuthCallback#token=jwt-from-google',
       );
     });
   });
