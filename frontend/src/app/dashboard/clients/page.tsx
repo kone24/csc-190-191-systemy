@@ -44,7 +44,7 @@ type SortOption = 'name-asc' | 'name-desc' | 'company-asc' | 'company-desc' | 'd
 function ClientsPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const initialSearch = searchParams.get('search') || '';
+    const initialSearch = searchParams?.get('search') || '';
 
     const [searchQuery, setSearchQuery] = useState(initialSearch);
     const [searchResults, setSearchResults] = useState<Client[]>([]);

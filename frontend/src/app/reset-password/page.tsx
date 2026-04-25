@@ -16,8 +16,8 @@ function ResetPasswordContent() {
     const [email, setEmail] = useState('');
 
     useEffect(() => {
-        const token = searchParams.get('token');
-        const userEmail = searchParams.get('email');
+        const token = searchParams?.get('token');
+        const userEmail = searchParams?.get('email');
 
         if (userEmail) setEmail(userEmail);
 
@@ -85,7 +85,7 @@ function ResetPasswordContent() {
 
             console.log('Mock password reset:', {
                 email: email,
-                token: searchParams.get('token'),
+                token: searchParams?.get('token'),
                 newPassword: '[HIDDEN]'
             });
 
@@ -251,7 +251,7 @@ function ResetPasswordContent() {
                         🧪 Testing Info:
                     </div>
                     <div style={{ lineHeight: '1.4' }}>
-                        <strong>Token:</strong> {searchParams.get('token')}<br />
+                        <strong>Token:</strong> {searchParams?.get('token')}<br />
                         <strong>Email:</strong> {email}<br />
                         <strong>Status:</strong> Valid reset link ✅
                     </div>

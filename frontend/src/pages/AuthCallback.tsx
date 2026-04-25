@@ -16,7 +16,7 @@ export default function AuthCallback() {
             window.history.replaceState({}, '', '/'); // clean URL
             router.replace('/dashboard');
         } else {
-            navigate('/login?error=oauth');
+            router.replace('/login?error=oauth');
         }
     }, []);
     return null;

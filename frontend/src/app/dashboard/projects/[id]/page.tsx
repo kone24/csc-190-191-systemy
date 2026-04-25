@@ -116,8 +116,8 @@ const COLUMN_COLORS_HOVER = [
 ];
 
 export default function ProjectDetailPage() {
-    const params = useParams();
-    const project_id = params.id as string;
+    const params = useParams<{ id: string }>();
+    const project_id = params?.id ?? '';
     const search_params = useSearchParams();
 
     const [project, set_project] = useState<Project | null>(null);
@@ -199,7 +199,7 @@ export default function ProjectDetailPage() {
 
     // Highlight a task from the ?task= query param for 2.5s on load
     useEffect(() => {
-        const task_param = search_params.get('task');
+        const task_param = search_params?.get('task');
         if (!task_param) return;
         set_highlighted_task_id(task_param);
         const timer = setTimeout(() => set_highlighted_task_id(null), 5000);

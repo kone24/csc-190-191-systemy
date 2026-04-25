@@ -61,7 +61,7 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 }
 
 export default function VendorProfilePage() {
-  const { id } = useParams<{ id: string }>();
+  const id = useParams<{ id: string }>()?.id ?? '';
   const router = useRouter();
 
   const [vendor, setVendor] = useState<VendorData | null>(null);

@@ -7,13 +7,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { user, isAuthenticated, isLoading } = useUser();
     const router = useRouter();
     const pathname = usePathname();
+    const currentPath = pathname ?? '/dashboard';
 
     // Once the auth fetch completes (isLoading = false), redirect if not authenticated.
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
-            router.replace(`/login?from=${encodeURIComponent(pathname)}`);
+            router.replace(`/login?from=${encodeURIComponent(currentPath)}`);
         }
-    }, [isLoading, isAuthenticated, router, pathname]);
+    }, [isLoading, isAuthenticated, router, currentPath]);
 
     // Show spinner while UserContext is fetching /auth/me
     if (isLoading || !user) {

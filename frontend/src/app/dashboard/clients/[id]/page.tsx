@@ -162,7 +162,7 @@ const STATUS_OPTIONS = ['Lead', 'Prospect', 'Active', 'Inactive', 'Churned'];
 const RELATIONSHIP_OPTIONS = ['Cold', 'Warm', 'Hot'];
 
 export default function ClientProfilePage() {
-  const { id } = useParams<{ id: string }>();
+  const id = useParams<{ id: string }>()?.id ?? '';
   const router = useRouter();
 
   const [client, setClient] = useState<ClientData | null>(null);
