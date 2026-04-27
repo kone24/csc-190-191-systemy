@@ -20,6 +20,7 @@ function fakeRes() {
     cookie: jest.fn(),
     clearCookie: jest.fn(),
     redirect: jest.fn(),
+    setHeader: jest.fn(),
   };
   return res;
 }
@@ -79,14 +80,15 @@ describe('AuthController', () => {
   describe('GET /auth/me', () => {
     it('should look up full user profile by email from JWT', async () => {
       const req = fakeReq({ user: { username: 'admin@futureandsuns.com' } });
+      const res = fakeRes();
       mockAuthService.findUserByEmail.mockResolvedValue({
         ok: true,
         user: { user_id: 'uuid-123', name: 'Admin', email: 'admin@futureandsuns.com', role: 'admin' },
       });
 
-      const res = { setHeader: jest.fn() } as any;
       const result = await controller.me(req, res);
 
+      expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
       expect(mockAuthService.findUserByEmail).toHaveBeenCalledWith('admin@futureandsuns.com');
       expect(result).toEqual({
         ok: true,
@@ -96,8 +98,9 @@ describe('AuthController', () => {
 
     it('should return error when JWT payload has no username', async () => {
       const req = fakeReq({ user: {} });
-      const res = { setHeader: jest.fn() } as any;
+      const res = fakeRes();
       const result = await controller.me(req, res);
+      expect(res.setHeader).toHaveBeenCalledWith('Cache-Control', 'no-store');
       expect(result).toEqual({ ok: false, message: 'Invalid token payload' });
     });
   });
@@ -158,7 +161,7 @@ describe('AuthController', () => {
       );
     });
 
-    it('should set cookie and redirect to /dashboard on success', async () => {
+    it('should set cookies and redirect to AuthCallback with token on success', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         json: async () => ({ id_token: 'google-id-token' }),
       }) as any;
@@ -177,7 +180,12 @@ describe('AuthController', () => {
       expect(res.cookie).toHaveBeenCalledWith(
         'access_token',
         'jwt-from-google',
-        expect.objectContaining({ httpOnly: true, path: '/' }),
+        expect.objectContaining({ httpOnly: true, path: '/', sameSite: 'none', secure: true }),
+      );
+      expect(res.cookie).toHaveBeenCalledWith(
+        'csrf_token',
+        expect.any(String),
+        expect.objectContaining({ httpOnly: false, path: '/', sameSite: 'none', secure: true }),
       );
       expect(res.redirect).toHaveBeenCalledWith(
         'http://localhost:3000/AuthCallback#token=jwt-from-google',
